@@ -44,95 +44,114 @@ input::-webkit-inner-spin-button {
 a:not(:hover) {
 	text-decoration: none;
 }
+a:hover {
+	color: white;
+}
 </style>
 
 <template>
 	<v-app :dark="darkTheme">
-		<v-navigation-drawer persistent clipped v-model="drawer" enable-resize-watcher fixed app>
-			<div class="pa-2 hidden-sm-and-up">
-				<connect-btn v-if="isLocal" class="mb-3" block></connect-btn>
-				<emergency-btn block></emergency-btn>
-			</div>
-
-			<v-list class="pt-0" :expand="$vuetify.breakpoint.mdAndUp">
-				<v-list-group v-for="(category, index) in routing" :key="index" :prepend-icon="category.icon" no-action :value="isExpanded(category)">
-					<v-list-tile slot="activator">
-						<v-list-tile-title>{{ $t(category.caption) }}</v-list-tile-title>
-					</v-list-tile>
-
-					<template v-for="(page, pageIndex) in category.pages">
-						<v-list-tile v-if="checkMenuCondition(page.condition)" :key="`${index}-${pageIndex}`" v-ripple :to="page.path" @click.prevent>
-							<v-list-tile-action>
-								<v-icon>{{ page.icon }}</v-icon>
-							</v-list-tile-action>
-							<v-list-tile-title>{{ $t(page.caption) }}</v-list-tile-title>
+		<template v-if="!getTool">
+			<load-tool-panel></load-tool-panel>
+		</template>
+		<template v-if="getTool">
+			<v-navigation-drawer persistent clipped v-model="drawer" enable-resize-watcher fixed app>
+				<div class="pa-2 hidden-md-and-up" v-if="isLocal">
+					<v-btn icon onclick="window.history.back()"><v-icon>arrow_back</v-icon></v-btn>
+					<v-btn icon onclick="location.href = 'http://' + location.host"><v-icon>refresh</v-icon></v-btn>
+					<v-btn icon onclick="window.history.forward()"><v-icon>arrow_forward</v-icon></v-btn>
+				</div>
+				<v-list class="pt-0" :expand="$vuetify.breakpoint.mdAndUp || isLocal">
+					<v-list-group v-for="(category, index) in routing" v-if="checkLynxCatCondition(category.showLocal, category.minLevel)" :key="index" :prepend-icon="category.icon" no-action :value="isExpanded(category)">
+						<v-list-tile slot="activator">
+							<v-list-tile-title>{{ $t(category.caption) }}</v-list-tile-title>
 						</v-list-tile>
-					</template>
-				</v-list-group>
-			</v-list>
-		</v-navigation-drawer>
 
-		<v-toolbar ref="appToolbar" app clipped-left>
-			<v-toolbar-side-icon @click.stop="drawer = !drawer" v-tab-control></v-toolbar-side-icon>
-			<v-toolbar-title>
-				<!-- TODO: Optional OEM branding -->
-				<a id="title" v-tab-control>{{ name }}</a>
-			</v-toolbar-title>
-			<connect-btn v-if="isLocal" class="hidden-xs-only"></connect-btn>
+						<template v-for="(page, pageIndex) in category.pages">
+							<v-list-tile v-if="checkMenuCondition(page.condition) && checkLynxCondition(page.showLocal, page.minLevel)" :key="`${index}-${pageIndex}`" v-ripple :to="page.path" @click.prevent>
+								<v-list-tile-action>
+									<v-icon>{{ page.icon }}</v-icon>
+								</v-list-tile-action>
+								<v-list-tile-title>{{ $t(page.caption) }}</v-list-tile-title>
+							</v-list-tile>
+						</template>
+					</v-list-group>
+				</v-list>
 
-			<v-spacer></v-spacer>
+				<div class="pa-2 hidden-md-and-up">
+					<connect-btn v-if="isLocal" class="mb-3" block></connect-btn>
+					<login-btn v-if="!isLocal || isLocal" class="mb-3" block></login-btn>
+					<emergency-btn v-if="!isLocal" block></emergency-btn>
+				</div>
+			</v-navigation-drawer>
 
-			<code-input class="hidden-sm-and-down"></code-input>
+			<v-toolbar ref="appToolbar" app clipped-left>
+				<v-toolbar-side-icon @click.stop="drawer = !drawer" v-tab-control v-if="!isLocal"></v-toolbar-side-icon>
+				<v-toolbar-side-icon @click.stop="drawer = !drawer" v-tab-control style="transform: scale(1.75)" v-else></v-toolbar-side-icon>
+				<v-toolbar-title>
+					<!-- TODO: Optional OEM branding -->
+					<a id="title" v-tab-control @click="$router.push('/');" style="font-size: large;">{{ (isLocal?name.substring(8):name) }}</a>
+					<!--img src="/img/ressources/logoLynxter-dark.png" style="width:35px;"-->
+					<a id="user" v-tab-control style="color: inherit" v-if="!isLocal">{{ username }} ({{ type }})</a>
+				</v-toolbar-title>
+				<connect-btn v-if="isLocal" class="hidden-sm-and-down"></connect-btn>
+				<login-btn v-if="!isLocal || isLocal" class="hidden-sm-and-down"></login-btn>
 
-			<v-spacer></v-spacer>
+				<v-spacer></v-spacer>
 
-			<upload-btn target="start" class="hidden-sm-and-down"></upload-btn>
-			<emergency-btn class="hidden-xs-only"></emergency-btn>
+				<code-input class="hidden-sm-and-down" v-if="!isLocal"></code-input>
 
-			<v-btn icon class="hidden-md-and-up" :class="toggleGlobalContainerColor" @click="hideGlobalContainer = !hideGlobalContainer">
-				<v-icon>aspect_ratio</v-icon>
-			</v-btn>
-			<!-- TODO: Add quick actions and UI designer here -->
-			<!--<v-btn icon class="hidden-sm-and-down" @click="rightDrawer = !rightDrawer">
-				<v-icon>menu</v-icon>
-			</v-btn>-->
-		</v-toolbar>
+				<v-spacer></v-spacer>
 
-		<v-content id="content">
-			<v-scroll-y-transition>
-				<v-container fluid id="global-container" class="container" v-show="!hideGlobalContainer || $vuetify.breakpoint.mdAndUp">
-					<v-layout row wrap>
-						<v-flex xs12 sm6 md4 lg4>
-							<status-panel></status-panel>
-						</v-flex>
+				<upload-btn target="start" class="hidden-sm-and-down" v-if="!isLocal"></upload-btn>
+				<emergency-btn class="hidden-xs-only"></emergency-btn>
 
-						<v-flex xs12 sm6 md5 lg4>
-							<tools-panel></tools-panel>
-						</v-flex>
+				<v-btn v-if="!isLocal" icon class="hidden-md-and-up" :class="toggleGlobalContainerColor" @click="hideGlobalContainer = !hideGlobalContainer">
+					<v-icon>aspect_ratio</v-icon>
+				</v-btn>
+				<!-- TODO: Add quick actions and UI designer here -->
+				<!--<v-btn icon class="hidden-sm-and-down" @click="rightDrawer = !rightDrawer">
+					<v-icon>menu</v-icon>
+				</v-btn>-->
+			</v-toolbar>
 
-						<v-flex v-if="$vuetify.breakpoint.mdAndUp" d-flex md3 lg4>
-							<temperature-chart></temperature-chart>
-						</v-flex>
-					</v-layout>
+			<v-content id="content">
+				<v-scroll-y-transition>
+					<v-container fluid id="global-container" class="container" v-show="!hideGlobalContainer || $vuetify.breakpoint.mdAndUp" v-if="!isLocal">
+						<v-layout row wrap v-if="!isLocal">
+							<v-flex xs12 sm3 md4 lg4>
+								<status-panel></status-panel>
+							</v-flex>
+
+							<v-flex xs12 sm9 md5 lg4>
+								<tools-panel></tools-panel>
+							</v-flex>
+
+							<v-flex v-if="$vuetify.breakpoint.mdAndUp" d-flex md3 lg4>
+								<temperature-chart></temperature-chart>
+							</v-flex>
+						</v-layout>
+					</v-container>
+				</v-scroll-y-transition>
+
+				<v-divider v-show="!hideGlobalContainer || $vuetify.breakpoint.mdAndUp"></v-divider>
+
+				<v-container fluid id="page-container" class="container">
+					<keep-alive>
+						<router-view></router-view>
+					</keep-alive>
 				</v-container>
-			</v-scroll-y-transition>
+			</v-content>
 
-			<v-divider v-show="!hideGlobalContainer || $vuetify.breakpoint.mdAndUp"></v-divider>
+			<!--<v-navigation-drawer temporary right v-model="rightDrawer" fixed app>
+				TODO Add quick access / component list here in design mode
+			</v-navigation-drawer>-->
 
-			<v-container fluid id="page-container" class="container">
-				<keep-alive>
-					<router-view></router-view>
-				</keep-alive>
-			</v-container>
-		</v-content>
-
-		<!--<v-navigation-drawer temporary right v-model="rightDrawer" fixed app>
-			TODO Add quick access / component list here in design mode
-		</v-navigation-drawer>-->
-
-		<connect-dialog></connect-dialog>
-		<connection-dialog></connection-dialog>
-		<messagebox-dialog></messagebox-dialog>
+			<connect-dialog v-if="selectedMachine === '[default]'"></connect-dialog>
+			<connection-dialog></connection-dialog>
+			<messagebox-dialog></messagebox-dialog>
+			<login-dialog></login-dialog>
+		</template>
 	</v-app>
 </template>
 
@@ -148,10 +167,17 @@ export default {
 	computed: {
 		...mapState({
 			isLocal: state => state.isLocal,
+			selectedMachine: state => state.selectedMachine,
+			getTool: state => {console.log(state.user.loadedTool); return state.user.loadedTool},
+
 			globalShowConnectDialog: state => state.showConnectDialog,
+			globalShowLoginDialog: state => state.showLoginDialog,
 
 			isPrinting: state => state.machine.model.state.isPrinting,
 			name: state => state.machine.model.network.name,
+			level: state => state.user.level,
+			type: state => state.user.type,
+			username: state => state.user.username,
 
 			darkTheme: state => state.settings.darkTheme,
 			webcam: state => state.settings.webcam
@@ -170,12 +196,14 @@ export default {
 			hideGlobalContainer: false,
 			rightDrawer: false,
 			routing: Routing,
-			wasXs: this.$vuetify.breakpoint.xsOnly
+			wasXs: this.$vuetify.breakpoint.xsOnly,
 		}
 	},
 	methods: {
 		...mapActions(['connect', 'disconnectAll']),
+		...mapActions('machine', ['getFileList']),
 		...mapActions('settings', ['load']),
+		...mapActions(['loadTool']),
 		checkMenuCondition(condition) {
 			if (condition === 'webcam') {
 				return (this.webcam.url !== '');
@@ -184,6 +212,12 @@ export default {
 				return this.board.hasDisplay;
 			}
 			return true;
+		},
+		checkLynxCondition(show, level) {
+			return !(this.isLocal && !show) && (level === undefined || level <= this.level);
+		},
+		checkLynxCatCondition(show, level) {
+			return !(this.isLocal && !show) && (level === undefined || level <= this.level);
 		},
 		isExpanded(category) {
 			if (this.$vuetify.breakpoint.xsOnly) {
@@ -205,8 +239,11 @@ export default {
 		window.addEventListener('unload', this.disconnectAll);
 
 		// Connect if running on a board
-		if (!this.isLocal) {
+		if (!this.isLocal || ((location.port === "80") || (location.port === ""))) {
 			this.connect();
+		}
+		if(this.isLocal && ((location.port === "8080") || (location.port === "8081"))){
+			this.connect({hostname: "192.168.1.243"});
 		}
 
 		// Attempt to load the settings
@@ -215,6 +252,8 @@ export default {
 		// Validate navigation
 		const that = this;
 		this.$router.beforeEach((to, from, next) => {
+			//console.log("Page: ");
+			//console.log(Routing.some(group => group.pages.some(page => { if(page.path === to.path) console.log(that.isLocal && !page.showLocal);})));
 			if (Routing.some(group => group.pages.some(page => page.path === to.path && !that.checkMenuCondition(page.condition)))) {
 				next('/');
 			} else {
@@ -229,10 +268,10 @@ export default {
 
 		// Set up Piecon
 		Piecon.setOptions({
-			color: '#00f',			// Pie chart color
-			background: '#bbb',		// Empty pie chart color
-			shadow: '#fff',			// Outer ring color
-			fallback: false			// Toggles displaying percentage in the title bar (possible values - true, false, 'force')
+			color: '#FDB913',				// Pie chart color
+			background: '#403E3D',		// Empty pie chart color
+			shadow: '#2D4EA2',				// Outer ring color
+			fallback: false				// Toggles displaying percentage in the title bar (possible values - true, false, 'force')
 		});
 	},
 	watch: {
@@ -242,7 +281,14 @@ export default {
 				this.$router.push('/Job/Status');
 			}
 		},
-		name() { this.updateTitle(); },
+		name() {
+		this.updateTitle();
+		if ((this.name).substring(0,8).includes("S600D")){
+			console.log("new name: " + this.name.substring(8))
+			this.loadTool((this.name).substring(8));
+		} else {
+			this.loadTool();
+		} },
 		jobProgress(to) {
 			if (to === undefined || to == 1) {
 				Piecon.reset();

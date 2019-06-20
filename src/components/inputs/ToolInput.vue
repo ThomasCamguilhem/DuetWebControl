@@ -1,6 +1,13 @@
 <template>
-	<v-combobox ref="input" type="number" min="-273" max="1999" step="any" v-model.number="value" :items="items" @keydown.native="onkeydown" @keyup.enter="apply" @change="onchange" @blur="onblur" :label="label" :loading="applying" :disabled="uiFrozen" :menu-props="$vuetify.breakpoint.xsOnly ? { maxHeight: 125 } : undefined">
+	<v-combobox v-if="!isLocal" ref="input" type="number" min="-273" max="1999" step="any" v-model.number="value" :items="items" @keydown.native="onkeydown" @keyup.enter="apply" @change="onchange" @blur="onblur" :label="label" :loading="applying" :disabled="uiFrozen" :menu-props="$vuetify.breakpoint.xsOnly ? { maxHeight: 125 } : undefined">
 	</v-combobox>
+	<div v-else class="control number">
+		<number-control v-model.number="value" ref="input" :min="0" :max="1999" :step="5" @keydown.native="onkeydown" @keyup.enter="apply" @change="onnumchange" @blur="onblur" :title="title" :loading="applying" :disabled="uiFrozen" v-if="shown">
+		</number-control>
+		<span v-else>
+		 {{ value +" C" }}
+		</span>
+	</div>
 </template>
 
 <script>
@@ -10,6 +17,7 @@ import { mapState, mapGetters, mapActions } from 'vuex'
 
 export default {
 	computed: {
+		...mapState({isLocal: state => state.isLocal}),
 		...mapGetters(['uiFrozen']),
 		...mapState('machine/model', ['heat', 'tools']),
 		...mapState('machine/settings', ['spindleRPM', 'temperatures']),
@@ -30,14 +38,18 @@ export default {
 
 			console.warn('[tool-input] Failed to retrieve temperature presets');
 			return [];
-		}
+		},
+		title()
+		{
+			return this.tool ? "Select T" + this.tool.number + " " + (this.active ? "Active": "Standby" ) + " temperature" : undefined
+		},
 	},
 	data() {
 		return {
 			applying: false,
 			input: null,
 			actualValue: 0,
-			value: 0
+			value: 0,
 		}
 	},
 	props: {
@@ -55,13 +67,18 @@ export default {
 		chamberIndex: Number,
 
 		spindle: Object,
-		spindleIndex: Number
+		spindleIndex: Number,
+		shown: {
+			type: Boolean,
+			required: true
+		},
 	},
 	methods: {
 		...mapActions('machine', ['sendCode']),
 		async apply() {
 			this.$refs.input.isMenuActive = false;			// FIXME There must be a better solution than this
-
+			if (this.$refs.input.currentValue)
+				this.value = this.$refs.input.currentValue;
 			if (!this.applying && this.isNumber(this.value)) {
 				this.applying = true;
 				try {
@@ -131,6 +148,14 @@ export default {
 		onchange(value) {
 			// Note that value is of type String when a user enters a value and then leaves it without confirming...
 			if (value.constructor === Number) {
+				this.apply();
+			}
+		},
+		onnumchange(value) {
+			// Note that value is of type String when a user enters a value and then leaves it without confirming...
+			if (value.constructor === Number) {
+				console.log(value)
+				this.value = value;
 				this.apply();
 			}
 		},

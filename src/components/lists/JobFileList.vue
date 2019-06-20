@@ -1,7 +1,7 @@
 <template>
 	<div class="component">
 		<v-toolbar>
-			<sd-card-btn class="hidden-sm-and-down" :directory="directory" @storageSelected="selectStorage"></sd-card-btn>
+			<sd-card-btn class="hidden-sm-and-down" :directory="directory" @storageSelected="selectStorage" v-if="!isLocal"></sd-card-btn>
 			<directory-breadcrumbs v-model="directory"></directory-breadcrumbs>
 
 			<v-spacer></v-spacer>
@@ -12,9 +12,12 @@
 			<v-btn class="hidden-sm-and-down" color="info" :loading="loading" :disabled="uiFrozen" @click="refresh">
 				<v-icon class="mr-1">refresh</v-icon> {{ $t('button.refresh.caption') }}
 			</v-btn>
+			<v-btn v-if="isLocal" color="grey darken-3" :loading="loading" :disabled="uiFrozen" @click="refresh">
+				<v-icon class="mr-1">refresh</v-icon>
+			</v-btn>
 			<upload-btn class="hidden-sm-and-down" :directory="directory" target="gcodes" color="primary"></upload-btn>
 		</v-toolbar>
-		
+
 		<base-file-list ref="filelist" v-model="selection" :headers="headers" :directory.sync="directory" :filelist.sync="filelist" :loading.sync="loading" sort-table="jobs" @directoryLoaded="directoryLoaded" @fileClicked="fileClicked">
 			<v-progress-linear slot="progress" :indeterminate="fileinfoProgress === -1" :value="(fileinfoProgress / filelist.length) * 100"></v-progress-linear>
 
@@ -35,18 +38,18 @@
 		</base-file-list>
 
 		<v-layout class="hidden-md-and-up mt-2" row wrap justify-space-around>
-			<sd-card-btn :directory="directory" @storageSelected="selectStorage"></sd-card-btn>
-			<v-btn :disabled="uiFrozen" @click="showNewDirectory = true">
+			<sd-card-btn :directory="directory" @storageSelected="selectStorage" v-if="!isLocal"></sd-card-btn>
+			<v-btn :disabled="uiFrozen" @click="showNewDirectory = true" v-if="!isLocal">
 				<v-icon class="mr-1">create_new_folder</v-icon> {{ $t('button.newDirectory.caption') }}
 			</v-btn>
-			<v-btn color="info" :loading="loading" :disabled="uiFrozen" @click="refresh">
+			<v-btn color="info" :loading="loading" :disabled="uiFrozen" @click="refresh" v-if="!isLocal">
 				<v-icon class="mr-1">refresh</v-icon> {{ $t('button.refresh.caption') }}
 			</v-btn>
-			<upload-btn :directory="directory" target="gcodes" color="primary"></upload-btn>
+			<upload-btn :directory="directory" target="gcodes" color="primary" v-if="!isLocal"></upload-btn>
 		</v-layout>
 
 		<new-directory-dialog :shown.sync="showNewDirectory" :directory="directory"></new-directory-dialog>
-		<confirm-dialog :shown.sync="startJobDialog.shown" :question="startJobDialog.question" :prompt="startJobDialog.prompt" @confirmed="start(startJobDialog.item)"></confirm-dialog>
+		<confirm-dialog :shown.sync="startJobDialog.shown" :question="startJobDialog.question" :prompt="startJobDialog.prompt" @confirmed="start(startJobDialog.item)" :item="startJobDialog.item"></confirm-dialog>
 	</div>
 </template>
 
@@ -64,6 +67,8 @@ export default {
 		...mapGetters(['isConnected', 'uiFrozen']),
 		...mapState('machine/model', ['state', 'storages']),
 		...mapState('settings', ['language']),
+		...mapState({selectedMachine: state => state.selectedMachine}),
+		...mapState({isLocal: state => state.isLocal,}),
 		isFile() {
 			return (this.selection.length === 1) && !this.selection[0].isDirectory;
 		},
@@ -216,6 +221,18 @@ export default {
 					file.generatedBy = generatedBy;
 					file.printTime = printTime;
 					file.simulatedTime = simulatedTime;
+					file.dir = directory;
+					if ( file.name.substring(file.name.lastIndexOf("/")+1,file.name.lastIndexOf(".")).length > 0){
+						var dir = file.name.substring(file.name.lastIndexOf("/")+1,file.name.lastIndexOf("."));
+						//console.log(file.dir);
+						//file.name =  dir;
+						while(dir.includes(" "))
+							dir = dir.replace(/ /g, "_");
+						file.ico = "http://" + this.selectedMachine + "/img/GCodePreview/"+directory.substring(10).replace(/ /g, "_") + "/" + dir + "/" + dir + "_ico.jpg";//fileIco;
+					} else {
+						file.dir += '/'+file.name
+						//console.log(file.dir);
+					}
 
 					// Move on to the next item
 					await this.requestFileInfo(directory, fileIndex + 1, fileCount);
@@ -243,7 +260,7 @@ export default {
 		},
 		fileClicked(item) {
 			if (!this.state.isPrinting) {
-				this.startJobDialog.question = this.$t('dialog.startJob.title', [item.name]);
+				this.startJobDialog.question = this.$t('dialog.startJob.title', [item.name.substring(0, item.name.lastIndexOf('.'))]);
 				this.startJobDialog.prompt = this.$t('dialog.startJob.prompt', [item.name]);
 				this.startJobDialog.item = item;
 				this.startJobDialog.shown = true;
@@ -255,6 +272,6 @@ export default {
 		simulate(item) {
 			this.sendCode(`M37 P"${Path.combine(this.directory, (item && item.name) ? item.name : this.selection[0].name)}"`);
 		}
-	}
+	},
 }
 </script>

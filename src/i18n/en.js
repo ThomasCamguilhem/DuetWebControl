@@ -24,6 +24,12 @@ export default {
 			disconnect: 'Disconnect',
 			disconnecting: 'Disconnecting...'
 		},
+		login: {
+			login: 'Log in',
+			loggingin: 'Logging in...',
+			logout: 'Log out',
+			loggingout: 'Logging out...'
+		},
 		emergencyStop: {
 			caption: 'Emergency Stop',
 			title: 'Enforce an immediate software reset (M112+M999)'
@@ -37,8 +43,14 @@ export default {
 		newDirectory: {
 			caption: 'New Directory'
 		},
+		newMaterial: {
+			caption: 'New Material'
+		},
 		newFilament: {
 			caption: 'New Filament'
+		},
+		newLiquid: {
+			caption: 'New Liquid'
 		},
 		newFile: {
 			caption: 'New File'
@@ -59,9 +71,17 @@ export default {
 				caption: 'Upload Macro File(s)',
 				title: 'Upload one or more macro files (drag&drop is supported as well)'
 			},
+			materials: {
+				caption: 'Upload Material Configs',
+				title: 'Upload one or more material configurations (drag&drop is supported as well)'
+			},
 			filaments: {
 				caption: 'Upload Filament Configs',
 				title: 'Upload one or more filament configurations (drag&drop is supported as well)'
+			},
+			liquids: {
+				caption: 'Upload Liquid Configs',
+				title: 'Upload one or more liquid configurations (drag&drop is supported as well)'
 			},
 			display: {
 				caption: 'Upload Menu Files',
@@ -120,9 +140,21 @@ export default {
 			passwordRequired: 'Password is required',
 			connect: 'Connect'
 		},
+		login: {
+			title: 'Login to account',
+			prompt: 'Please enter your login and password:',
+			hostPlaceholder: 'Login',
+			hostRequired: 'Login is required',
+			passwordPlaceholderOptional: 'Password (optional)',
+			passwordPlaceholder: 'Password',
+			passwordRequired: 'Password is required',
+			connect: 'Log in'
+		},
 		connection: {
 			connecting: 'Connecting...',
 			disconnecting: 'Disconnecting...',
+			loggingin: 'Logging In...',
+			loggingout: 'Logging Out...',
 			reconnecting: 'Connection lost, attempting to reconnect...',
 			standBy: 'Please stand by...'
 		},
@@ -174,7 +206,7 @@ export default {
 		},
 		resetHeaterFault: {
 			title: 'Reset Heater Fault',
-			prompt: 'A heater fault has occurred on heater {0}. It is strongly advised to turn off your machine now and to check your wiring before you continue. If you are absolutely sure that this is not a phsical problem, you can reset the heater fault ON YOUR OWN RISK. Be aware that this is NOT RECOMMENDED and can lead to further problems. How would you like to proceed?',
+			prompt: 'A heater fault has occurred on heater {0}. It is strongly advised to turn off your machine now and to check your wiring before you continue. If you are absolutely sure that this is not a phsical problem, you can reset the heater fault <span style="color: red; font-weight: bold;">ON YOUR OWN RISK</span>. Be aware that this is <span style="color: red; font-weight: bold;">NOT RECOMMENDED</span> and can lead to further problems. How would you like to proceed?',
 			resetFault: 'Reset Fault'
 		},
 		runMacro: {
@@ -188,6 +220,10 @@ export default {
 		update: {
 			title: 'Install updates?',
 			prompt: 'You have uploaded at least one firmware update. Would you like to install them now?'
+		},
+		tool: {
+			titleLoad: 'Load tool',
+			prompt: 'Please choose a tool:'
 		},
 		inputRequired: 'Please enter a value',
 		numberRequired: 'Please enter a valid number'
@@ -311,7 +347,8 @@ export default {
 			delete: 'Delete',
 			downloadZIP: 'Download as ZIP',
 			noFiles: 'No Files or Directories',
-			goUp: 'Go up'
+			goUp: 'Go up',
+			showMore: 'Show More'
 		},
 		display: {
 			noFiles: 'No Display Files'
@@ -326,13 +363,25 @@ export default {
 			downloadText: 'Download as Text',
 			downloadCSV: 'Download as CSV'
 		},
+		material: {
+			noMaterials: "No Materials"
+		},
 		filament: {
 			noFilaments: 'No Filaments'
+		},
+		liquid: {
+			noLiquids: 'No Liquids'
 		},
 		macro: {
 			caption: 'Macros',
 			noMacros: 'No Macros',
 			run: 'Run Macro',
+			root: 'Root'
+		},
+		gcode: {
+			caption: 'Gcodes',
+			noGcodes: 'No Gcodes',
+			run: 'Run Gcode',
 			root: 'Root'
 		},
 		jobs: {
@@ -373,11 +422,26 @@ export default {
 			system: 'System',
 			web: 'Web'
 		},
+		material: {
+			materials: 'Materials',
+			filaments: 'Filaments',
+			liquids: 'Liquids',
+			pellets: 'Pellets',
+			fibers: 'Fibers',
+			hybrids: 'Hybrids',
+		},
 		settings: {
 			caption: 'Settings',
 			general: 'General',
 			machine: 'Machine-Specific',
-			update: 'Update'
+			update: 'Update',
+			setup: 'Equipement/Setup',
+			support: 'Support',
+			maintenance:'Maintnance',
+		},
+		lynx: {
+			control: 'Controls',
+			calibrate: 'Calibrate',
 		}
 	},
 	notification: {
@@ -439,6 +503,13 @@ export default {
 			success: 'Upload of {0} successful after {1}',
 			successMulti: 'Successfully uploaded {0} files',
 			error: 'Failed to upload {0}'
+		},
+		parse: {
+			title: 'Parsing {0} {2}% complete eta: {3}',
+			message: 'Please stand by while the file is being parsed...',
+			success: 'Parsing of {0} successful after {1}',
+			successMulti: 'Successfully parsed {0} files',
+			error: 'Failed to parse {0}'
 		}
 	},
 	panel: {
@@ -551,6 +622,7 @@ export default {
 		settingsAbout: {
 			caption: 'About',
 			developedBy: 'Web Interface developed by',
+			updatededBy: 'updated by',
 			for: 'for',
 			licensedUnder: 'Licensed under the terms of the'
 		},
@@ -648,6 +720,7 @@ export default {
 			current: 'Current',
 			active: 'Active',
 			standby: 'Standby',
+			target: 'Target',
 			bed: 'Bed {0}',
 			chamber: 'Chamber {0}',
 			extra: {
@@ -657,7 +730,8 @@ export default {
 				showInChart: 'Show in Chart',
 				noItems: 'No Extra Heaters'
 			},
-			noTools: 'No Tools'
+			noTools: 'No Tools',
+			noTool: 'Load a tool first'
 		},
 		webcam: {
 			caption: 'Webcam Surveillance',

@@ -45,6 +45,54 @@ export default {
 		return connector;
 	},
 
+	async doLogin(user, password, hostname) {
+		let connector = null, lastError = null;
+		for (let i = 0; i < connectors.length; i++) {
+			try {
+				if(connectors[i].prototype.doLogin) {
+					console.log(connectors[i].prototype.doLogin);
+					connector = await connectors[i].prototype.doLogin(user, password, hostname);
+					lastError = null;
+					break;
+				}
+			} catch (e) {
+				lastError = e;
+				if (e instanceof LoginError) {
+					// This connector could establish a connection but the firmware refused it
+					break;
+				}
+			}
+		}
+
+		if (lastError !== null) {
+			throw lastError;
+		}
+		return connector;
+	},
+
+	async doLogout(hostname) {
+		let connector = null, lastError = null;
+		for (let i = 0; i < connectors.length; i++) {
+			try {
+				connector = await connectors[i].prototype.doLogout(hostname);
+				lastError = null;
+				break;
+			} catch (e) {
+				lastError = e;
+				if (e instanceof LoginError) {
+					// This connector could establish a connection but the firmware refused it
+					break;
+				}
+			}
+		}
+
+		if (lastError !== null) {
+			throw lastError;
+		}
+		return connector;
+	},
+
+
 	// Install the global Vuex store
 	installStore(store) {
 		BaseConnector.installStore(store);

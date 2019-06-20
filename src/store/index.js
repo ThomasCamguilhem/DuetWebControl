@@ -27,15 +27,22 @@ const store = new Vuex.Store({
 	state: {
 		isConnecting: false,
 		isDisconnecting: false,
-		isLocal: (location.hostname === 'localhost') || (location.hostname === '127.0.0.1') || (location.hostname === '[::1]'),
-		connectDialogShown: (location.hostname === 'localhost') || (location.hostname === '127.0.0.1') || (location.hostname === '[::1]'),
+		isLoggingIn: false,
+		isLoggingOut: false,
+		isLocal: ((location.hostname === 'localhost') || (location.hostname === '127.0.0.1') || (location.hostname === '[::1]')),
+		connectDialogShown: ((location.hostname === 'localhost') || (location.hostname === '127.0.0.1') || (location.hostname === '[::1]')) && ((location.port !== "80") && (location.port !== "")),
+		loginDialogShown: false,
 		passwordRequired: false,
-		selectedMachine: defaultMachine
+		selectedMachine: defaultMachine,
+		user: {},
 	},
 	getters: {
 		connectedMachines: () => Object.keys(machines).filter(machine => machine !== defaultMachine),
 		isConnected: state => state.selectedMachine !== defaultMachine && !state.machine.isReconnecting,
-		uiFrozen: (state, getters) => state.isConnecting || state.isDisconnecting || !getters.isConnected
+		isLogedIn: state => state.user.username != undefined && state.user.username != "",
+		uiFrozen: (state, getters) => state.isConnecting || state.isDisconnecting || !getters.isConnected,
+		getUser: state => state.user,
+		getTool: state => state.user.loadedTool,
 	},
 	actions: {
 		// Connect to the given hostname using the specified credentials
@@ -66,7 +73,7 @@ const store = new Vuex.Store({
 				await dispatch('machine/settings/load');
 				await dispatch('machine/cache/load');
 			} catch (e) {
-				if (!(e instanceof InvalidPasswordError) || password !== defaultPassword)  {
+				if (!(e instanceof InvalidPasswordError) || password !== defaultPassword) {
 					logGlobal('error', i18n.t('error.connect', [hostname]), e.message);
 				}
 				if (e instanceof InvalidPasswordError) {
@@ -91,6 +98,7 @@ const store = new Vuex.Store({
 			if (doDisconnect) {
 				commit('setDisconnecting', true);
 				try {
+					commit('setTool', undefined)
 					await dispatch(`machines/${hostname}/disconnect`);
 					logGlobal('success', i18n.t('events.disconnected', [hostname]));
 					// Disconnecting must always work - even if it does not always happen cleanly
@@ -126,18 +134,83 @@ const store = new Vuex.Store({
 				commit('askForPassword');
 			} else if (state.isLocal) {
 				logGlobal('error', i18n.t('events.connectionLost', [hostname]), error.message);
+				commit('setTool', undefined)
 				await dispatch('disconnect', { hostname, doDisconnect: false });
 			} else {
 				logGlobal('warning', i18n.t('events.reconnecting', [hostname]), error.message);
 				dispatch(`machines/${hostname}/reconnect`);
 			}
+		},
+
+		async login({ state, commit}, {usrLogin, usrPasswd}) {
+				//console.log("logging in");
+				//console.log(usrLogin + ": " + usrPasswd);
+				if (state.machines.hasOwnProperty(usrLogin)) {
+					throw new Error(`User ${usrLogin} is already connected!`);
+				}
+				if (state.isLoggingIn) {
+					throw new Error('Already logging in');
+				}
+				commit('setLoggingin', true);
+				try {
+					let hostname;
+					if (hostname == undefined)
+						hostname = state.selectedMachine; //Object.keys(machines)[1];
+					let result = await connector.doLogin(usrLogin, usrPasswd, hostname);
+					commit('setLoggingin', false);
+					commit(`setUser`, result.data);
+
+				} catch (e) {
+					/*if (!(e instanceof InvalidPasswordError) || password !== defaultPassword) {
+						logGlobal('error', i18n.t('error.connect', [hostname]), e.message);
+					}
+					if (e instanceof InvalidPasswordError) {
+						commit('askForPassword');
+					}*/
+					commit('setLoggingin', false);
+					//commit('setLogedin', false);
+					state.loginDialogShown = true;
+					console.error(e);
+				}
+		},
+
+		async logout({ state, commit}) {
+			console.log("logging out");
+			if (state.username == "") {
+				throw new Error('Already loged out');
+			}
+			if (state.isLoggingOut) {
+				throw new Error('Already logging out');
+			}
+			commit('setLoggingout', true);
+
+			try {
+				let hostname;
+				if (hostname == undefined)
+					hostname = state.selectedMachine; //location.host;
+					await connector.doLogout();
+					//console.log(result.data);
+					commit('setLoggingout', false);
+					commit(`setUser`, {});
+
+			} catch (e) {
+				commit('setLoggingout', false);
+				console.error(e);
+			}
+		},
+		async loadTool({state, commit}, name){
+			commit('setTool', name)
 		}
 	},
 	mutations: {
 		showConnectDialog: state => state.connectDialogShown = true,
+		showLoginDialog: state => state.loginDialogShown = true,
 		hideConnectDialog(state) {
 			state.connectDialogShown = false;
 			state.passwordRequired = false;
+		},
+		hideLoginDialog(state) {
+			state.loginDialogShown = false;
 		},
 		askForPassword(state) {
 			state.connectDialogShown = true;
@@ -155,11 +228,40 @@ const store = new Vuex.Store({
 			delete machines[hostname];
 		},
 
+		setLoggingin: (state, loggingin) => state.isLoggingIn = loggingin,
+
+		setLoggingout: (state, loggingout) => state.isLoggingOut = loggingout,
+
 		setSelectedMachine(state, selectedMachine) {
 			this.unregisterModule('machine');
 			this.registerModule('machine', machines[selectedMachine]);
 			state.selectedMachine = selectedMachine
-		}
+		},
+
+		setUser(state, user) {
+			let tmpUser = state.user;
+			state.user = {};
+			tmpUser.username = user.username;
+			tmpUser.level = user.level;
+			tmpUser.last_connect = user.date;
+			tmpUser.type = user.type;
+			console.log(state.user);
+			state.user = tmpUser;
+			if (state.user.username) {
+				console.log("Welcome back " + state.user.username);
+				console.log("you're " + state.user.type +"(" + state.user.level + ")")
+				console.log("last connection " + state.user.last_connect);
+			}
+
+			console.log(state.user);
+		},
+
+		setTool(state, tool) {
+				let tmpUser = state.user;
+				state.user = {};
+				tmpUser.loadedTool = tool
+				state.user = tmpUser;
+		},
 	},
 
 	modules: {

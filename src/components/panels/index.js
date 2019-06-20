@@ -14,6 +14,8 @@ import JobControlPanel from './JobControlPanel.vue'
 import JobDataPanel from './JobDataPanel.vue'
 import JobEstimationsPanel from './JobEstimationsPanel.vue'
 import JobInfoPanel from './JobInfoPanel.vue'
+import LoadToolPanel from './LoadToolPanel.vue'
+import LynxterPanel from './gcode-viewer.vue'
 import SettingsAboutPanel from './SettingsAboutPanel.vue'
 import SettingsAppearancePanel from './SettingsAppearancePanel.vue'
 import SettingsCommunicationPanel from './SettingsCommunicationPanel.vue'
@@ -39,6 +41,8 @@ Vue.component('job-control-panel', JobControlPanel)
 Vue.component('job-data-panel', JobDataPanel)
 Vue.component('job-estimations-panel', JobEstimationsPanel)
 Vue.component('job-info-panel', JobInfoPanel)
+Vue.component('load-tool-panel', LoadToolPanel)
+Vue.component('gcode-panel', LynxterPanel)
 Vue.component('movement-panel', MovementPanel)
 Vue.component('settings-about-panel', SettingsAboutPanel)
 Vue.component('settings-apperance-panel', SettingsAppearancePanel)
@@ -66,6 +70,7 @@ export default {
 	JobDataPanel,
 	JobEstimationsPanel,
 	JobInfoPanel,
+	LoadToolPanel,
 	MovementPanel,
 	SettingsAboutPanel,
 	SettingsAppearancePanel,

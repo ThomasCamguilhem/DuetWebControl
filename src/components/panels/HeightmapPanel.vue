@@ -47,44 +47,48 @@ canvas {
 					</v-flex>
 
 					<v-flex class="pa-2" xs12 sm12 md3 lg2 xl2>
-						<v-layout column fill-height justifiy-space-between>
-							<v-flex class="pt-2">
-								{{ $t('panel.heightmap.numPoints', [$display(numPoints, 0)]) }}
-							</v-flex>
-							<v-flex>
-								{{ $t('panel.heightmap.radius', [$display(radius, 0, 'mm')]) }}
-							</v-flex>
-							<v-flex>
-								{{ $t('panel.heightmap.area', [$display(area / 100, 1, 'cm²')]) }}
-							</v-flex>
-							<v-flex>
-								{{ $t('panel.heightmap.maxDeviations', [$display(minDiff, 3), $display(maxDiff, 3, 'mm')]) }}
-							</v-flex>
-							<v-flex>
-								{{ $t('panel.heightmap.meanError', [$display(meanError, 3, 'mm')]) }}
-							</v-flex>
-							<v-flex>
-								{{ $t('panel.heightmap.rmsError', [$display(rmsError, 3, 'mm')]) }}
-							</v-flex>
-							<v-flex shrink>
-								{{ $t('panel.heightmap.colorScheme') }}
-							</v-flex>
-							<v-flex>
-								<v-btn-toggle v-model="colorScheme">
-									<v-btn value="terrain">{{ $t('panel.heightmap.terrain') }}</v-btn>
-									<v-btn value="heat">{{ $t('panel.heightmap.heat') }}</v-btn>
-								</v-btn-toggle>
-							</v-flex>
-							<v-flex>
-								<v-btn class="ml-0" :disabled="!ready" @click="topView">
-									<v-icon small class="mr-1">vertical_align_bottom</v-icon> {{ $t('panel.heightmap.topView') }}
-								</v-btn>
-							</v-flex>
-							<v-flex shrink>
-								<v-btn class="ml-0" :loading="loading" @click="getHeightmap()">
-									<v-icon class="mr-1">refresh</v-icon> {{ $t('panel.heightmap.reload') }}
-								</v-btn>
-							</v-flex>
+						<v-layout v-bind:class="$vuetify.breakpoint.smAndDown?'row':'column'"" fill-height justifiy-space-between>
+							<v-layout column>
+								<v-flex class="pt-2">
+									{{ $t('panel.heightmap.numPoints', [$display(numPoints, 0)]) }}
+								</v-flex>
+								<v-flex>
+									{{ $t('panel.heightmap.radius', [$display(radius, 0, 'mm')]) }}
+								</v-flex>
+								<v-flex>
+									{{ $t('panel.heightmap.area', [$display(area / 100, 1, 'cm²')]) }}
+								</v-flex>
+								<v-flex>
+									{{ $t('panel.heightmap.maxDeviations', [$display(minDiff, 3), $display(maxDiff, 3, 'mm')]) }}
+								</v-flex>
+								<v-flex>
+									{{ $t('panel.heightmap.meanError', [$display(meanError, 3, 'mm')]) }}
+								</v-flex>
+								<v-flex>
+									{{ $t('panel.heightmap.rmsError', [$display(rmsError, 3, 'mm')]) }}
+								</v-flex>
+							</v-layout>
+							<v-layout column>
+								<v-flex shrink>
+									{{ $t('panel.heightmap.colorScheme') }}
+								</v-flex>
+								<v-flex>
+									<v-btn-toggle v-model="colorScheme">
+										<v-btn value="terrain">{{ $t('panel.heightmap.terrain') }}</v-btn>
+										<v-btn value="heat">{{ $t('panel.heightmap.heat') }}</v-btn>
+									</v-btn-toggle>
+								</v-flex>
+								<v-flex>
+									<v-btn class="ml-0" :disabled="!ready" @click="topView">
+										<v-icon small class="mr-1">vertical_align_bottom</v-icon> {{ $t('panel.heightmap.topView') }}
+									</v-btn>
+								</v-flex>
+								<v-flex shrink>
+									<v-btn class="ml-0" :loading="loading" @click="getHeightmap()">
+										<v-icon class="mr-1">refresh</v-icon> {{ $t('panel.heightmap.reload') }}
+									</v-btn>
+								</v-flex>
+							</v-layout>
 						</v-layout>
 					</v-flex>
 				</v-layout>
@@ -106,7 +110,7 @@ canvas {
 
 import { mapState, mapGetters, mapActions } from 'vuex'
 
-import { Scene, PerspectiveCamera, WebGLRenderer, Raycaster, Mesh, MeshBasicMaterial, Vector2, Vector3, VertexColors, DoubleSide, ArrowHelper, GridHelper } from 'three'
+import { Scene, PerspectiveCamera, WebGLRenderer, Raycaster, Mesh, MeshBasicMaterial, Vector2, Vector3, VertexColors, DoubleSide, ArrowHelper, GridHelper, Geometry, LineSegments, LineBasicMaterial, EllipseCurve, Line, BufferGeometry } from 'three'
 import OrbitControls from 'three-orbitcontrols'
 
 import { drawLegend, setFaceColors, generateIndicators, generateMeshGeometry } from '../../utils/3d.js'
@@ -302,15 +306,41 @@ export default {
 			}, this.three.scene);
 
 			if (!this.three.hasHelpers) {
-				// Make axis arrows for XYZ
-				this.three.scene.add(new ArrowHelper(new Vector3(1, 0, 0), new Vector3(-0.6, -0.6, 0), 0.5, 0xFF0000));
-				this.three.scene.add(new ArrowHelper(new Vector3(0, 1, 0), new Vector3(-0.6, -0.6, 0), 0.5, 0x00FF00));
-				this.three.scene.add(new ArrowHelper(new Vector3(0, 0, 1), new Vector3(-0.6, -0.6, 0), 0.5, 0x0000FF));
+				if(!probeRadius) {
+					// Make axis arrows for XYZ
+					this.three.scene.add(new ArrowHelper(new Vector3(1, 0, 0), new Vector3(-0.6, -0.6, 0), 0.5, 0xFF0000));
+					this.three.scene.add(new ArrowHelper(new Vector3(0, 1, 0), new Vector3(-0.6, -0.6, 0), 0.5, 0x00FF00));
+					this.three.scene.add(new ArrowHelper(new Vector3(0, 0, 1), new Vector3(-0.6, -0.6, 0), 0.5, 0x0000FF));
 
-				// Make grid on XY plane
-				const grid = new GridHelper(1.1, 15);
-				grid.rotation.x = -Math.PI / 2;
-				this.three.scene.add(grid);
+					// Make grid on XY plane
+					const grid = new GridHelper(1.1, 15);
+					grid.rotation.x = -Math.PI / 2;
+					this.three.scene.add(grid);
+				} else if (probeRadius) {
+					// Make axis arrows for XYZ
+					this.three.scene.add(new ArrowHelper(new Vector3(1, 0, 0), new Vector3(0, 0, 0), 0.5, 0xFF0000));
+					this.three.scene.add(new ArrowHelper(new Vector3(0, 1, 0), new Vector3(0, 0, 0), 0.5, 0x00FF00));
+					this.three.scene.add(new ArrowHelper(new Vector3(0, 0, 1), new Vector3(0, 0, 0), 0.5, 0x0000FF));
+
+					// Make grid on XY plane
+					var gridPrimeGeo = new Geometry();
+					var gridSecGeo = new Geometry();
+
+					this.prepareGridBPGeoPreview(gridPrimeGeo, gridSecGeo);
+
+					this.three.scene.add(new LineSegments(gridPrimeGeo, new LineBasicMaterial({ color:  0xafafaf})));
+					this.three.scene.add(new LineSegments(gridSecGeo, new LineBasicMaterial({ color: 0x7f7f7f})));
+
+					var curve = new EllipseCurve(
+						0,  0,            // ax, aY
+						0.6, 0.6,           // xRadius, yRadius
+						0,  2 * Math.PI,  // aStartAngle, aEndAngle
+						false,            // aClockwise
+						0                 // aRotation
+					);
+				}
+				// Create the final object to add to the scene
+				this.three.scene.add(new Line( new BufferGeometry().setFromPoints(curve.getPoints(64)), new LineBasicMaterial( { color : 0xafafaf})));
 
 				// Don't add these helpers again
 				this.three.hasHelpers = true;
@@ -320,6 +350,24 @@ export default {
 			this.ready = true;
 			this.resize();
 			this.render();
+		},
+		prepareGridBPGeoPreview(gridPrime, gridSec) {
+			for (var posY = -0.6; posY < 0.6; posY += 0.24) {
+				var miniX = -0.6 * Math.sqrt(1 - ((posY/0.6) * (posY/0.6)));
+				var maxiX =  0.6 * Math.sqrt(1 - ((posY/0.6) * (posY/0.6)));
+				gridPrime.vertices.push(new Vector3(miniX, posY, 0));
+				gridPrime.vertices.push(new Vector3(maxiX, posY, 0));
+				gridPrime.vertices.push(new Vector3(posY, miniX, 0));
+				gridPrime.vertices.push(new Vector3(posY, maxiX, 0));
+				for (var posX = posY + 0.06; posX < posY + 0.24; posX += 0.06) {
+					miniX = -0.6 * Math.sqrt(1 - ((posX/0.6) * (posX/0.6)));
+					maxiX =  0.6 * Math.sqrt(1 - ((posX/0.6) * (posX/0.6)));
+					gridSec.vertices.push(new Vector3(miniX, posX, 0));
+					gridSec.vertices.push(new Vector3(maxiX, posX, 0));
+					gridSec.vertices.push(new Vector3(posX, miniX, 0));
+					gridSec.vertices.push(new Vector3(posX, maxiX, 0));
+				}
+			}
 		},
 		render() {
 			if (this.three.renderer) {

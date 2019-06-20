@@ -8,12 +8,16 @@
 .center-menu-item > div {
 	justify-content: center;
 }
+
+.local {
+ font-size: large;
+}
 </style>
 
 <template>
 	<v-card>
-		<v-card-title class="pt-2 pb-0">
-			<code-btn color="primary" small code="G28" :title="$t('button.home.titleAll')" class="ml-0 hidden-sm-and-down">
+		<v-card-title class="pt-2 pb-0" v-bind:class="{local: isLocal}">
+			<code-btn color="primary" small code="G28" :title="$t('button.home.titleAll')" class="ml-0 hidden-sm-and-down" >
 				{{ $t('button.home.captionAll') }}
 			</code-btn>
 
@@ -44,9 +48,8 @@
 							<v-icon class="mr-1">view_module</v-icon> {{ $t(move.geometry.type === 'delta' ? 'panel.movement.runDelta' : 'panel.movement.runBed') }}
 						</v-list-tile>
 						<v-list-tile :disabled="!move.compensation || move.compensation.indexOf('Point') === -1" @click="sendCode('M561')">
-							<v-icon class="mr-1">clear</v-icon> {{ $t('panel.movement.disableBedCompensation') }} 
+							<v-icon class="mr-1">clear</v-icon> {{ $t('panel.movement.disableBedCompensation') }}
 						</v-list-tile>
-
 						<v-divider></v-divider>
 
 						<v-list-tile @click="sendCode('G29')">
@@ -57,6 +60,9 @@
 						</v-list-tile>
 						<v-list-tile @click="sendCode('G29 S1')">
 							<v-icon class="mr-1">save</v-icon> {{ $t('panel.movement.loadMesh') }}
+						</v-list-tile>
+						<v-list-tile @click="$router.push('/Heightmap')">
+							<v-icon class="mr-1">grid_on</v-icon> {{ 'Show the Height map' }}
 						</v-list-tile>
 						<v-list-tile :disabled="move.compensation !== 'Mesh'" @click="sendCode('G29 S2')">
 							<v-icon class="mr-1">grid_off</v-icon> {{ $t('panel.movement.disableMeshCompensation') }}
@@ -70,11 +76,11 @@
 			<!-- Mobile home buttons -->
 			<v-layout justify-center row wrap class="hidden-md-and-up">
 				<v-flex>
-					<code-btn color="primary" code="G28" :title="$t('button.home.titleAll')" block>
+					<code-btn color="primary" code="G28" :title="$t('button.home.titleAll')" v-bind:class="{local: isLocal}" block>
 						{{ $t('button.home.captionAll') }}
 					</code-btn>
 				</v-flex>
-				<v-flex v-for="axis in displayedAxes" :key="axis.letter">
+				<v-flex v-if="false" v-for="axis in displayedAxes" :key="axis.letter">
 					<code-btn :color="axis.homed ? 'primary' : 'warning'" :disabled="uiFrozen" :title="$t('button.home.title', [axis.letter])" :code="`G28 ${axis.letter}`" block>
 
 						{{ $t('button.home.caption', [axis.letter]) }}
@@ -88,7 +94,6 @@
 					<v-layout column>
 						<v-flex v-for="axis in displayedAxes" :key="axis.letter">
 							<code-btn :color="axis.homed ? 'primary' : 'warning'" :disabled="uiFrozen" :title="$t('button.home.title', [axis.letter])" :code="`G28 ${axis.letter}`" class="ml-0">
-
 								{{ $t('button.home.caption', [axis.letter]) }}
 							</code-btn>
 						</v-flex>
@@ -105,7 +110,7 @@
 								<v-flex v-for="index in numMoveSteps" :key="-index" :class="getMoveCellClass(index - 1)">
 									<v-layout column>
 										<v-flex v-for="axis in displayedAxes" :key="axis.letter">
-											<code-btn :code="`G91\nG1 ${axis.letter}${-moveSteps(axis.letter)[index - 1]} F${Math.round(moveFeedrate * 60)}\nG90`" no-wait @contextmenu.prevent="showMoveStepDialog(axis.letter, index - 1)" block class="move-btn">
+											<code-btn :code="`G91\nG1 ${axis.letter}${-moveSteps(axis.letter)[index - 1]} F${Math.round(moveFeedrate * 60)}\nG90`" no-wait @contextmenu.prevent="showMoveStepDialog(axis.letter, index - 1)" block class="move-btn"  v-bind:class="{local: isLocal}">
 												<v-icon>keyboard_arrow_left</v-icon> {{ axis.letter + -moveSteps(axis.letter)[index - 1] }}
 											</code-btn>
 										</v-flex>
@@ -122,7 +127,7 @@
 								<v-flex v-for="index in numMoveSteps" :key="index" :class="getMoveCellClass(numMoveSteps - index)">
 									<v-layout column>
 										<v-flex v-for="axis in displayedAxes" :key="axis.letter">
-											<code-btn :code="`G91\nG1 ${axis.letter}${moveSteps(axis.letter)[numMoveSteps - index]} F${Math.round(moveFeedrate * 60)}\nG90`" no-wait @contextmenu.prevent="showMoveStepDialog(axis.letter, numMoveSteps - index)" block class="move-btn">
+											<code-btn :code="`G91\nG1 ${axis.letter}${moveSteps(axis.letter)[numMoveSteps - index]} F${Math.round(moveFeedrate * 60)}\nG90`" no-wait @contextmenu.prevent="showMoveStepDialog(axis.letter, numMoveSteps - index)" block class="move-btn"  v-bind:class="{local: isLocal}">
 												{{ axis.letter + '+' + moveSteps(axis.letter)[numMoveSteps - index] }} <v-icon>keyboard_arrow_right</v-icon>
 											</code-btn>
 										</v-flex>
@@ -163,7 +168,10 @@ export default {
 		...mapState('machine/settings', ['moveFeedrate']),
 		...mapGetters('machine/settings', ['moveSteps', 'numMoveSteps']),
 		displayedAxes() { return this.move.axes.filter(axis => axis.visible); },
-		unhomedAxes() { return this.move.axes.filter(axis => axis.visible && !axis.homed); }
+		unhomedAxes() { return this.move.axes.filter(axis => axis.visible && !axis.homed); },
+		...mapState({
+			isLocal: state => state.isLocal,
+		}),
 	},
 	data() {
 		return {

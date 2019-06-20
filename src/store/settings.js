@@ -11,7 +11,7 @@ export default {
 	state: {
 		language: 'en',
 		lastHostname: location.host,
-		darkTheme: false,
+		darkTheme: true,
 		useBinaryPrefix: true,
 		settingsStorageLocal: false,
 		settingsSaveDelay: 2000,						// ms - how long to wait before settings updates are saved

@@ -81,7 +81,11 @@ export function makeNotification(type, title, message = '', timeout) {
 
 export function makeFileTransferNotification(type, destination, cancelSource, num, count) {
 	const filename = extractFileName(destination), titlePrefix = count ? `(${num}/${count}) ` : '';
-
+	console.log(type);
+	console.log(destination);
+	console.log(cancelSource);
+	console.log(num);
+	console.log(count);
 	// Prepare toast
 	iziToast.info({
 		class: 'file-transfer',
@@ -110,8 +114,30 @@ export function makeFileTransferNotification(type, destination, cancelSource, nu
 	return {
 		domElement: toast,
 		onProgress(e) {
+			function toHMS(delta, toStr) {
+					var sec = delta % 60,
+							min = (delta = (delta - sec) / 60) % 60,
+							hour = (delta = (delta - min) / 60) % 24,
+							day = delta = (delta - hour) / 24;
+					if (toStr) {
+							var strTime = day + "d "
+													+ hour + "h "
+													+ ( min < 10 ? "0" : "" ) + min + "m "
+													+ ( sec < 10 ? "0" : "" ) + sec + "s";
+							return strTime = strTime.replace(/(?:0. )+/, "")
+					}
+					return {
+							d: day,
+							h: hour,
+							m: min,
+							s: sec
+					}
+			}
+			var elt = ((new Date() - startTime)/(e.loaded/e.total));
+			var ert = elt * (1-(e.loaded/e.total));
+
 			const uploadSpeed = e.loaded / (((new Date()) - startTime) / 1000), progress = (e.loaded / e.total) * 100;
-			title.textContent = titlePrefix + i18n.t(`notification.${type}.title`, [filename, displaySpeed(uploadSpeed), Math.round(progress)]);
+			title.textContent = titlePrefix + i18n.t(`notification.${type}.title`, [filename, displaySpeed(uploadSpeed), Math.round(progress), toHMS(Math.round(ert/1000), true)]);
 			progressBar.style.width = progress.toFixed(1) + '%';
 		},
 		hide() {

@@ -1,4 +1,8 @@
 <style scoped>
+.local {
+	font-size: large;
+}
+
 .equal-width {
 	flex-basis: 0;
 }
@@ -25,9 +29,9 @@ a:not(:hover) {
 </style>
 
 <template>
-	<v-card>
+	<v-card v-bind:class="{local: isLocal}">
 		<v-card-title class="py-2">
-			<v-icon small class="mr-1">info</v-icon> {{ $t('panel.status.caption') }}
+			<v-icon small class="mr-1" v-if="!isLocal">info</v-icon> {{ $t('panel.status.caption') }}
 
 			<v-spacer></v-spacer>
 
@@ -42,16 +46,16 @@ a:not(:hover) {
 			<v-layout column class="content-layout">
 				<v-flex v-show="move.axes.length">
 					<v-layout row align-center>
-						<v-flex tag="strong" class="category-header">
+						<v-flex tag="strong" class="category-header" v-if="!isLocal">
 							<a href="#" @click.prevent="displayToolPosition = !displayToolPosition">
 								{{ $t(displayToolPosition ? 'panel.status.toolPosition' : 'panel.status.machinePosition') }}
 							</a>
 						</v-flex>
 
 						<v-flex>
-							<v-layout row wrap>
+							<v-layout v-bind:class="{column: isLocal, row: !isLocal}" wrap>
 								<v-flex v-for="(axis, index) in move.axes" :key="index" grow class="equal-width">
-									<v-layout column>
+									<v-layout v-bind:class="{column: !isLocal, row: isLocal}">
 										<v-flex v-if="axis.visible" tag="strong">
 											{{ axis.letter }}
 										</v-flex>
@@ -69,16 +73,16 @@ a:not(:hover) {
 
 				<v-flex v-show="move.extruders.length">
 					<v-layout row align-center>
-						<v-flex tag="strong" class="category-header">
+						<v-flex tag="strong" class="category-header"  v-if="!isLocal">
 							{{ $t('panel.status.extruders') }}
 						</v-flex>
 
 						<v-flex>
 							<v-layout row wrap>
 								<v-flex v-for="(extruder, index) in move.extruders" :key="index" class="equal-width">
-									<v-layout column>
+									<v-layout v-bind:class="{column:!isLocal, row: isLocal}">
 										<v-flex tag="strong">
-											{{ $t('panel.status.extruderDrive', [index]) }}
+											{{ isLocal ? 'E' + index : $t('panel.status.extruderDrive', [index]) }}
 										</v-flex>
 										<v-flex tag="span">
 											{{ $display(move.drives[index + move.axes.length].position, 1) }}
@@ -90,9 +94,9 @@ a:not(:hover) {
 					</v-layout>
 				</v-flex>
 
-				<v-divider class="my-2" v-show="move.axes.length + move.extruders.length"></v-divider>
+				<v-divider class="my-2" v-show="move.axes.length + move.extruders.length" v-if="!isLocal"></v-divider>
 
-				<v-flex v-show="move.axes.length">
+				<v-flex v-show="move.axes.length" v-if="!isLocal">
 					<v-layout row align-center>
 						<v-flex tag="strong" class="category-header">
 							{{ $t('panel.status.speeds') }}
@@ -126,9 +130,9 @@ a:not(:hover) {
 					</v-layout>
 				</v-flex>
 
-				<v-divider class="my-2" v-show="sensorsPresent && (move.axes.length + move.extruders.length)"></v-divider>
+				<v-divider class="my-2" v-show="sensorsPresent && (move.axes.length + move.extruders.length)" v-if="!isLocal"></v-divider>
 
-				<v-flex v-show="sensorsPresent">
+				<v-flex v-show="sensorsPresent" v-if="!isLocal">
 					<v-layout row align-center>
 						<v-flex tag="strong" class="category-header">
 							{{ $t('panel.status.sensors') }}
@@ -216,7 +220,10 @@ export default {
 		...mapState('machine/model', ['electronics', 'move', 'sensors', 'state']),
 		sensorsPresent() {
 			return (this.electronics.vIn.current !== null) || (this.electronics.mcuTemp.current !== null) || (this.sensors.probes.length);
-		}
+		},
+		...mapState({
+			isLocal: state => state.isLocal,
+		}),
 	},
 	data() {
 		return {

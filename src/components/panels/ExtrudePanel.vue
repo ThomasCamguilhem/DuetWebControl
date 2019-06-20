@@ -6,11 +6,14 @@
 	display: flex;
 	flex: 1 1 auto;
 }
+.local {
+	font-size: large;
+}
 </style>
 
 <template>
-	<v-card>
-		<v-card-title class="pb-0">
+	<v-card  >
+		<v-card-title class="pb-0" v-bind:class="{local: isLocal}">
 			<v-icon small class="mr-1">opacity</v-icon> {{ $t('panel.extrude.caption') }}
 		</v-card-title>
 
@@ -31,32 +34,33 @@
 						</v-btn-toggle>
 					</v-flex>
 					<v-flex class="ma-1">
-						<p class="mb-1">
+						<p class="mb-1"  v-bind:class="{local: isLocal}">
 							{{ $t('panel.extrude.amount', ['mm']) }}
 						</p>
 						<v-btn-toggle v-model="amount" mandatory>
-							<v-btn flat v-for="(amount, index) in extruderAmounts" :key="index" :value="amount" :disabled="uiFrozen" color="primary" @contextmenu.prevent="editAmount(index)">
+							<v-btn flat v-for="(amount, index) in extruderAmounts" :key="index" :value="amount" :disabled="uiFrozen" color="primary" @contextmenu.prevent="editAmount(index)"  v-bind:class="{local: isLocal}">
 								{{ amount }}
 							</v-btn>
 						</v-btn-toggle>
 					</v-flex>
 					<v-flex class="ma-1">
-						<p class="mb-1">
+						<p class="mb-1" v-bind:class="{local: isLocal}">
 							{{ $t('panel.extrude.feedrate', ['mm/s']) }}
 						</p>
 						<v-btn-toggle v-model="feedrate" mandatory>
-							<v-btn flat v-for="(feedrate, index) in extruderFeedrates" :key="index" :value="feedrate" :disabled="uiFrozen" color="primary" @contextmenu.prevent="editFeedrate(index)">
+							<v-btn flat v-for="(feedrate, index) in extruderFeedrates" :key="index" :value="feedrate" :disabled="uiFrozen" color="primary" @contextmenu.prevent="editFeedrate(index)"  v-bind:class="{local: isLocal}">
 								{{ feedrate }}
 							</v-btn>
 						</v-btn-toggle>
 					</v-flex>
 				</v-layout>
 			</v-flex>
-			<v-flex shrink class="ml-2 mb-1">
-				<v-btn block :disabled="uiFrozen || !canRetract" :loading="busy" @click="buttonClicked(false)">
+			<v-flex shrink class="ml-2 mb-1"  v-bind:style="{'margin-top: 25px': isLocal}">
+				<v-btn block :disabled="uiFrozen || !canRetract" :loading="busy" @click="buttonClicked(false)"  v-bind:class="{local: isLocal}">
 					<v-icon>arrow_upward</v-icon> {{ $t('panel.extrude.retract') }}
 				</v-btn>
-				<v-btn block :disabled="uiFrozen || !canExtrude" :loading="busy" @click="buttonClicked(true)">
+				<br>
+				<v-btn block :disabled="uiFrozen || !canExtrude" :loading="busy" @click="buttonClicked(true)"  v-bind:class="{local: isLocal}">
 					<v-icon>arrow_downward</v-icon> {{ $t('panel.extrude.extrude') }}
 				</v-btn>
 			</v-flex>
@@ -78,6 +82,9 @@ export default {
 		...mapState('machine/model', ['heat', 'tools']),
 		...mapGetters('machine/model', ['currentTool']),
 		...mapState('machine/settings', ['extruderAmounts', 'extruderFeedrates']),
+		...mapState({
+			isLocal: state => state.isLocal,
+		}),
 		canExtrude() {
 			if (this.currentTool && this.currentTool.heaters.length) {
 				const selectedHeaters = (this.mixValue[0] === 'mix') ? this.currentTool.heaters : this.mixValue;

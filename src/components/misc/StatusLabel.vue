@@ -1,4 +1,8 @@
 <style scoped>
+* {
+	font-family: Roboto Light, sans-serif;
+	text-transform: none;
+}
 span {
 	border-radius: 5px;
 }

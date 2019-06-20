@@ -1,6 +1,6 @@
 <template>
 	<v-card>
-		<v-card-title class="pb-1">
+		<v-card-title class="pb-1" v-bind:style="isLocal?'font-size: large':''">
 			<v-icon small class="mr-1">build</v-icon> {{ $t('panel.jobControl.caption') }}
 		</v-card-title>
 
@@ -30,6 +30,7 @@ import { mapState, mapGetters, mapMutations } from 'vuex'
 export default {
 	computed: {
 		...mapGetters(['uiFrozen']),
+		...mapState(['isLocal']),
 		...mapState('machine', ['autoSleep']),
 		...mapState('machine/model', ['job', 'state']),
 		...mapGetters('machine/model', ['isPaused']),

@@ -7,7 +7,7 @@
 			</v-card-title>
 
 			<v-card-text>
-				{{ $t('dialog.resetHeaterFault.prompt', [this.heater]) }}
+				<p v-html="$t('dialog.resetHeaterFault.prompt', [this.heater])"></p>
 			</v-card-text>
 
 			<v-card-actions>
@@ -57,7 +57,7 @@ export default {
 		},
 		countDown() {
 			this.counter--;
-			if (this.counter) {
+			if (this.counter > 0) {
 				setTimeout(this.countDown, 1000);
 			}
 		}
@@ -65,7 +65,7 @@ export default {
 	watch: {
 		shown(to) {
 			if (to) {
-				this.counter = 10;
+				this.counter = 5;
 				this.countDown();
 			}
 		}

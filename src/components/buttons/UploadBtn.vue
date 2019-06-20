@@ -21,12 +21,13 @@ import VBtn from 'vuetify/es5/components/VBtn'
 
 import { mapState, mapGetters, mapActions } from 'vuex'
 import Path from '../../utils/path.js'
+let GcodeReader = require('../../lynxmod/gcode_reader.js');
 
 const webExtensions = ['.htm', '.html', '.ico', '.xml', '.css', '.map', '.js', '.ttf', '.eot', '.svg', '.woff', '.woff2', '.jpeg', '.jpg', '.png']
 
 export default {
 	computed: {
-		...mapState(['isLocal']),
+		...mapState(['isLocal','selectedMachine']),
 		...mapGetters(['isConnected', 'uiFrozen']),
 		...mapGetters('machine/model', ['board']),
 		caption() {
@@ -80,6 +81,7 @@ export default {
 			innerColor: this.color,
 			extracting: false,
 			uploading: false,
+			gcodeReader: Object.assign(GcodeReader.default.methods, GcodeReader.default.data),
 
 			confirmUpdate: false,
 			updates: {
@@ -208,8 +210,22 @@ export default {
 					// Start uploading
 					if (files.length > 1) {
 						await this.upload({ filename, content, showSuccess: !zipName, num: i + 1, count: files.length });
+						if(this.target === 'gcodes')
+						{
+							filename = filename.substring(10,filename.lastIndexOf("."));
+							console.log(filename);
+						}
 					} else {
 						await this.upload({ filename, content });
+						if(this.target === 'gcodes')
+						{
+							filename = filename.substring(10,filename.lastIndexOf("."));
+							console.log(content);
+							console.log(filename);
+							if(content.size <= 2*1024*1024) {
+								this.gcodeReader.lectDonnees(content, filename, this.selectedMachine);
+							}
+						}
 					}
 
 					// Run it (if required)

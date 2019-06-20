@@ -71,7 +71,8 @@ export default class PollConnector extends BaseConnector {
 		this.axios = axios.create({
 			baseURL: `http://${hostname}/`,
 			cancelToken: this.cancelSource.token,
-			timeout: this.sessionTimeout
+			timeout: this.sessionTimeout,
+			withCredentials: true,
 		});
 	}
 
@@ -244,7 +245,10 @@ export default class PollConnector extends BaseConnector {
 		}
 
 		// Standard Status Response
-		const fanRPMs = (response.data.sensors.fanRPM instanceof Array) ? response.data.sensors.fanRPM : [response.data.sensors.fanRPM];
+		const fanRPMs = (response.data.sensors !== undefined ? ((response.data.sensors.fanRPM instanceof Array) ? response.data.sensors.fanRPM : [response.data.sensors.fanRPM]) : []);
+		if (response.data.sensors === undefined || response.data.params === undefined || response.data.params.fanPercent === undefined)
+			console.log(response.data);
+		else
 		quickPatch(newData, {
 			fans: response.data.params.fanPercent.map((fanPercent, index) => ({
 				rpm: (index < fanRPMs.length) ? fanRPMs[index] : null,
@@ -257,7 +261,7 @@ export default class PollConnector extends BaseConnector {
 						standby: (response.data.temps.bed.standby === undefined) ? [] : [response.data.temps.bed.standby]
 					} : null
 				],
-				chambers: [
+				chambers: (response.data.temps.chamber || response.data.temps.cabinet) ? [
 					response.data.temps.chamber ? {
 						active: [response.data.temps.chamber.active],
 						standby: (response.data.temps.chamber.standby === undefined) ? [] : [response.data.temps.chamber.standby]
@@ -266,7 +270,7 @@ export default class PollConnector extends BaseConnector {
 						active: [response.data.temps.cabinet.active],
 						standby: (response.data.temps.cabinet.standby === undefined) ? [] : [response.data.temps.cabinet.standby]
 					} : null
-				],
+				] : [],
 				extra: response.data.temps.extra.map((extraHeater) => ({
 					current: extraHeater.temp,
 					name: extraHeater.name
@@ -283,8 +287,8 @@ export default class PollConnector extends BaseConnector {
 				})),
 				babystepZ: response.data.params.babystep,
 				currentMove: {
-					requestedSpeed: response.data.speeds.requested,
-					topSpeed: response.data.speeds.top
+					requestedSpeed: (response.data.speeds && response.data.speeds.requested ? response.data.speeds.requested : undefined),
+					topSpeed: (response.data.speeds && response.data.speeds.top ? response.data.speeds.top : undefined),
 				},
 				drives: [].concat(response.data.coords.xyz, response.data.coords.extr).map((xyz, drive) => ({
 					position: (drive < response.data.coords.xyz.length) ? xyz : response.data.coords.extr[drive - response.data.coords.xyz.length]
@@ -358,10 +362,11 @@ export default class PollConnector extends BaseConnector {
 					],
 					coldExtrudeTemperature: response.data.coldExtrudeTemp,
 					coldRetractTemperature: response.data.coldRetractTemp,
-					heaters: response.data.temps.names.map(name => ({
-						max: response.data.tempLimit,
-						name
-					}))
+					heaters: (response.data.temps.names ?
+						response.data.temps.names.map(name => ({
+							max: response.data.tempLimit,
+							name
+						})) : [{}])
 				},
 				move: {
 					axes: response.data.axisNames.split('').map((axis, index) => ({
@@ -856,7 +861,12 @@ export default class PollConnector extends BaseConnector {
 		});
 	}
 
-	async getFileList(directory) {
+	async getFileList(directory, recursive) {
+		if (typeof(directory) === typeof({})){
+			recursive = directory.recursive;
+			directory = directory.dir;
+		}
+		//console.log(recursive);
 		let fileList = [], next = 0;
 		do {
 			const response = await this.axios.get('rr_filelist', {
@@ -873,14 +883,23 @@ export default class PollConnector extends BaseConnector {
 			}
 
 			fileList = fileList.concat(response.data.files);
-			next = response.data.next;
-		} while (next !== 0);
+			next = (response.data.next?response.data.next:0);
+		} while (next !== undefined && next !== 0);
+		let directories = fileList.filter(file => (file.type === "d"));
+		if (directories.length > 0 && recursive) {
+			for (var i = 0; i < directories.length; i++){
+				let item = directories[i];
+				fileList = fileList.concat(await this.getFileList(directory + "/" + item.name, recursive))
+			}
+			//console.log(fileList);
+		}
 
 		return fileList.map(item => ({
-			isDirectory: item.type === 'd',
+			isDirectory: item.isDirectory || item.type === 'd',
 			name: item.name,
 			size: (item.type === 'd') ? null : item.size,
-			lastModified: strToTime(item.date)
+			directory: item.directory ? item.directory : directory,
+			lastModified: item.lastModified ? item.lastModified : strToTime(item.date)
 		}));
 	}
 
@@ -895,5 +914,45 @@ export default class PollConnector extends BaseConnector {
 		delete response.data.err;
 
 		return new FileInfo(response.data);
+	}
+
+	async doLogin(login, password, hostname) {
+		if (!this.axios){
+			this.axios = await axios.create({
+				baseURL:`http://`+hostname+`/`,
+				cancelToken: BaseConnector.getCancelSource().token,
+				timeout: 8000,	// default session timeout in RepRapFirmware
+				withCredentials: true,
+			});
+		}
+		const response = await this.axios.get('pc_login', {
+			withCredentials: true,
+			params: { username: login, password: password }
+		});
+
+		if (response.data.err) {
+			throw new OperationFailedError(`err ${response.data.err}`);
+		}
+		return response;
+	}
+
+	async doLogout(hostname) {
+		if (!this.axios){
+			this.axios = await axios.create({
+				baseURL:`http://`+hostname+`/`,
+				cancelToken: BaseConnector.getCancelSource().token,
+				timeout: 8000,	// default session timeout in RepRapFirmware
+				withCredentials: true,
+			});
+		}
+		const response = await this.axios.get('pc_logout', {
+			withCredentials: true,
+			params: {}
+		});
+
+		if (response.data.err) {
+			throw new OperationFailedError(`err ${response.data.err}`);
+		}
+		return response;
 	}
 }

@@ -11,7 +11,7 @@
 <script>
 'use strict'
 
-import { mapActions } from 'vuex'
+import { mapActions, mapState } from 'vuex'
 
 import Path from '../../utils/path.js'
 
@@ -30,6 +30,13 @@ export default {
 				if (this.value.startsWith(Path.gcodes)) {
 					pathItems.shift();
 					pathItems[0] = Path.gcodes;
+					/*if (this.getTool)
+					{
+						let rootPath = pathItems[0] + '/_'+ this.getTool.substring(0, this.getTool.indexOf("_"));
+						pathItems.shift();
+						pathItems[0] = rootPath;
+						//console.log(pathItems)
+					}*/
 					rootCaption = this.$t('directory.gcodes');
 				} else if (this.value.startsWith(Path.macros)) {
 					pathItems.shift();
@@ -38,7 +45,15 @@ export default {
 				} else if (this.value.startsWith(Path.filaments)) {
 					pathItems.shift();
 					pathItems[0] = Path.filaments;
-					rootCaption = this.$t('directory.filaments');
+					rootCaption = 'Filaments Directory';
+				} else if (this.value.startsWith(Path.liquids)) {
+						pathItems.shift();
+						pathItems[0] = Path.liquids;
+						rootCaption = 'Liquids Directory';
+				} else if (this.value.startsWith(Path.materials)) {
+					pathItems.shift();
+					pathItems[0] = Path.materials;
+					rootCaption = 'Materials Directory';
 				} else if (this.value.startsWith(Path.display)) {
 					pathItems.shift();
 					pathItems[0] = Path.display;
@@ -73,7 +88,10 @@ export default {
 				}
 			});
 			return items;
-		}
+		},
+		...mapState({
+			getTool: state => {/*console.log(state.user.loadedTool);*/ return state.user.loadedTool}
+		}),
 	},
 	methods: {
 		...mapActions('machine', ['move']),

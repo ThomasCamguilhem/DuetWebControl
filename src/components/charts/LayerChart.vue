@@ -43,7 +43,9 @@ import { mapState } from 'vuex'
 
 import { display, displayZ, displayTime } from '../../plugins/display.js'
 
-let layers
+let layers;
+var maxLayerTime = 30;
+var maxLastLayerTime = 30;
 
 export default {
 	computed: {
@@ -61,13 +63,38 @@ export default {
 			layers = this.job.layers;
 			this.chart.data.labels = layers.map((dummy, index) => index + 1);
 			this.chart.data.datasets[0].data = layers.map(layer => layer.duration);
-
+			if (layers.length > 2) {
+				layers.forEach((layer) => {
+					if (layer.duration > maxLayerTime)
+						maxLayerTime = layer.duration;
+				});
+				maxLastLayerTime = 0;
+				for(var i = Math.max(0, layers.length-30); i < layers.length; i++) {
+					if (layers[i].duration > maxLastLayerTime){
+						maxLastLayerTime = layers[i].duration;
+					}
+				}
+			} else {
+				maxLayerTime = 0;
+				layers.forEach((layer) => {
+					if (layer.duration > maxLayerTime)
+						maxLayerTime = layer.duration;
+				});
+			}
+			console.log(maxLayerTime + "s");
+			console.log(maxLastLayerTime + "s");
 			if (this.showAllLayers) {
 				this.chart.config.options.scales.xAxes[0].ticks.min = 1;
 				this.chart.config.options.scales.xAxes[0].ticks.max = layers.length;
+				this.chart.config.options.scales.xAxes[0].ticks.stepSize = 5;
+				this.chart.config.options.scales.yAxes[0].ticks.max = (maxLayerTime > 30? (Math.ceil(maxLayerTime/60)*60) : 30);
+				this.chart.config.options.scales.yAxes[0].ticks.stepSize = (maxLayerTime <= 60? 10 : (maxLayerTime <= 600? 60 : (maxLayerTime <= 1200 ? 120 : 300)));
 			} else {
 				this.chart.config.options.scales.xAxes[0].ticks.min = Math.max((layers.length > 2) ? 2 : 1, layers.length - 30);
 				this.chart.config.options.scales.xAxes[0].ticks.max = Math.max(30, layers.length);
+				this.chart.config.options.scales.xAxes[0].ticks.stepSize = 1;
+				this.chart.config.options.scales.yAxes[0].ticks.max = (maxLastLayerTime > 30? (Math.ceil(maxLastLayerTime/60)*60) : 30);
+				this.chart.config.options.scales.yAxes[0].ticks.stepSize = (maxLastLayerTime <= 60 ? 10 : (maxLastLayerTime <= 600? 60 : (maxLastLayerTime <= 1200 ? 120 : 300)));
 			}
 			this.chart.update();
 		},
@@ -138,6 +165,7 @@ export default {
 								fontFamily: 'Roboto,sans-serif'
 							},
 							beginAtZero: true,
+							stepSize: 10,
 							suggestedMax: 30,
 							callback: function(value) {
 								return displayTime(value, false);

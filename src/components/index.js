@@ -7,6 +7,8 @@ import inputs from './inputs'
 import lists from './lists'
 import misc from './misc'
 import panels from './panels'
+import controls from './controls'
+
 
 export default {
 	buttons,
@@ -15,5 +17,6 @@ export default {
 	inputs,
 	lists,
 	misc,
-	panels
+	panels,
+	controls
 }
