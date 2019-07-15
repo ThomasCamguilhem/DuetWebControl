@@ -81,7 +81,7 @@ export default {
         }
     },
     methods: {
-        lectDonnees: function(file, path, target) {
+        lectDonnees: async function(file, path, target) {
             this.extruders = [];
             this.preview = true;
             this.DEBUG = false;
@@ -224,9 +224,11 @@ export default {
                 console.log(self.scene.preview.pointCloud);
                 console.log(self.extruders);
             });
-
-            self.lineReader.read(self.fileInput);
-            self.toast = makeFileTransferNotification('parse', '0:/gcodes/Test/', {cancel:function(){console.log("canceled")}}, null, null);
+            return new Promise(resolve => {
+              self.lineReader.read(self.fileInput);
+              self.toast = makeFileTransferNotification('parse', '0:/gcodes/Test/', {cancel:function(){console.log("canceled")}}, null, null);
+              resolve('')
+            });
             //console.log(self.onProgress)
         },
         parseGCode: function(line) {
@@ -355,6 +357,7 @@ export default {
                         if (this.preview) {
                             /* ====== SHOW BOUNDING BOX ====== */
                             if (this.gcodeLayers[this.curLay - 1] || this.gcodeLayers[this.curLay] || ((this.slicer == undefined || this.slicer == this.Slicer.SLIC) && this.nbLayers > 0)) {
+                              if ((this.boundingBox.max.x > this.boundingBox.min.x) || (this.boundingBox.max.y > this.boundingBox.min.y) || (this.boundingBox.max.z > this.boundingBox.min.y)) {
                                 if (!this.scene.preview.previewScene.getObjectByName("bbox")) {
                                     this.centerX = (this.boundingBox.max.x + this.boundingBox.min.x) / 2;
                                     this.centerY = (this.boundingBox.max.y + this.boundingBox.min.y) / 2;
@@ -423,6 +426,7 @@ export default {
                                   this.scene.preview.previewControls.target.y = (this.boundingBox.max.z + this.boundingBox.min.z) / 2;
                                 }
                                 this.scene.preview.previewControls.update();
+                              }
                             }
                             this.nbKey = 0;
                             for (key in this.scene.preview.pointCloud) {

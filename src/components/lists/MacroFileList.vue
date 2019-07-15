@@ -14,7 +14,7 @@
 			<v-btn class="hidden-sm-and-down" color="info" :loading="loading" :disabled="uiFrozen" @click="refresh">
 				<v-icon class="mr-1">refresh</v-icon> {{ $t('button.refresh.caption') }}
 			</v-btn>
-			<v-btn class="visible-sm" color="grey darken-3" :loading="loading" :disabled="uiFrozen" @click="refresh">
+			<v-btn class="hidden-md-and-up" color="grey darken-3" :loading="loading" :disabled="uiFrozen" @click="refresh">
 				<v-icon class="mr-1">refresh</v-icon>
 			</v-btn>
 			<upload-btn class="hidden-sm-and-down" :directory="directory" target="macros" color="primary" v-if="!isLocal"></upload-btn>

@@ -182,7 +182,10 @@
   </div>
 </template>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
-<script type="text/javascript">
+<script>
+'use strict'
+
+import { mapActions } from 'vuex'
   let $ = require('jquery');
 
 export default {
@@ -195,8 +198,10 @@ export default {
     }
   },
 	methods: {
+    ...mapActions('machine', ['sendCode']),
   },
   mounted() {
+    let keyIn = this;
     $('#keyboard li').click(function(){
       var $write = $('#write');
       this.style.background = "gray";
@@ -247,7 +252,10 @@ export default {
       if ($this.hasClass('symbol')) character = $('span:visible', $this).html();
       if ($this.hasClass('space')) character = ' ';
       if ($this.hasClass('tab')) character = "\t";
-      if ($this.hasClass('return')) character = "\n";
+      if ($this.hasClass('return')){
+        keyIn.sendCode($write[0].value);
+        character = "\n";
+      }
 
       // Uppercase letter
       if ($this.hasClass('uppercase')) character = character.toUpperCase();
@@ -272,11 +280,8 @@ export default {
 
       // Add the character
       $write[0].value = ($write[0].value + character);
-      console.log(character);
-      console.log($write);
-      console.log($write[0].value);
     });
-    console.log('keyboard initialized')
+    //console.log('keyboard initialized')
   }
 }
 </script>

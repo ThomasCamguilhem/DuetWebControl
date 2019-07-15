@@ -20,7 +20,8 @@ export default class PollConnector extends BaseConnector {
 	static async connect(hostname, username, password) {
 		let response;
 		try {
-			response = await axios.get(`http://${hostname}/rr_connect`, {
+			let protocol = location.protocol;
+			response = await axios.get(`${protocol}//${hostname}/rr_connect`, {
 				params: {
 					password,
 					time: timeToStr(new Date())
@@ -67,9 +68,9 @@ export default class PollConnector extends BaseConnector {
 		this.password = password;
 		this.boardType = responseData.boardType;
 		this.sessionTimeout = responseData.sessionTimeout || 8000;	/// default timeout in RRF is 8000ms
-
+		let protocol = location.protocol;
 		this.axios = axios.create({
-			baseURL: `http://${hostname}/`,
+			baseURL: `${protocol}//${hostname}/`,
 			cancelToken: this.cancelSource.token,
 			timeout: this.sessionTimeout,
 			withCredentials: true,
@@ -86,7 +87,8 @@ export default class PollConnector extends BaseConnector {
 
 		// Attempt to reconnect
 		try {
-			const response = await axios.get(`http://${this.hostname}/rr_connect`, {
+			let protocol = location.protocol;
+			const response = await axios.get(`${protocol}//${this.hostname}/rr_connect`, {
 				params: {
 					password: this.password,
 					time: timeToStr(new Date())
@@ -918,8 +920,9 @@ export default class PollConnector extends BaseConnector {
 
 	async doLogin(login, password, hostname) {
 		if (!this.axios){
+			let protocol = location.protocol;
 			this.axios = await axios.create({
-				baseURL:`http://`+hostname+`/`,
+				baseURL:`${protocol}//`+hostname+`/`,
 				cancelToken: BaseConnector.getCancelSource().token,
 				timeout: 8000,	// default session timeout in RepRapFirmware
 				withCredentials: true,
@@ -938,14 +941,35 @@ export default class PollConnector extends BaseConnector {
 
 	async doLogout(hostname) {
 		if (!this.axios){
+			let protocol = location.protocol;
 			this.axios = await axios.create({
-				baseURL:`http://`+hostname+`/`,
+				baseURL:`${protocol}//`+hostname+`/`,
 				cancelToken: BaseConnector.getCancelSource().token,
 				timeout: 8000,	// default session timeout in RepRapFirmware
 				withCredentials: true,
 			});
 		}
 		const response = await this.axios.get('pc_logout', {
+			withCredentials: true,
+			params: {}
+		});
+
+		if (response.data.err) {
+			throw new OperationFailedError(`err ${response.data.err}`);
+		}
+		return response;
+	}
+	async doShutdown(hostname) {
+		if (!this.axios){
+			let protocol = location.protocol;
+			this.axios = await axios.create({
+				baseURL:`${protocol}//`+hostname+`/`,
+				cancelToken: BaseConnector.getCancelSource().token,
+				timeout: 8000,	// default session timeout in RepRapFirmware
+				withCredentials: true,
+			});
+		}
+		const response = await this.axios.get('pc_shutdown', {
 			withCredentials: true,
 			params: {}
 		});

@@ -155,7 +155,7 @@
 					</v-flex>
 				</v-layout>
 				<!-- @fileClicked="fileClicked"-->
-				<v-layout sm4 shrink v-for="(item, index) in filelist" v-if="(index < 8 && (!item.isDirectory || true)) || !isLocal" :key="item.name" @click="fileClicked(item)" v-bind:class="{'icon': item.ico}" :class="(item.isDirectory ? 'grey darken-1 white--text' : 'grey darken-2 white--text')" style="cursor: pointer;">
+				<v-layout sm4 shrink v-for="(item, index) in filelist" v-if="(index < 9 && (!item.isDirectory || true)) || !isLocal" :key="item.name" @click="fileClicked(item)" v-bind:class="{'icon': item.ico}" :class="(item.isDirectory ? 'grey darken-1 white--text' : 'grey darken-2 white--text')" style="cursor: pointer;">
 					<v-flex class="content">
 						<object :data="item.ico" v-if="item.ico || true" class="list-icon">
 							<img :src="item.isDirectory ? '/img/ressources/folder.svg' : '/img/ressources/file.png'" style="width: 90%; height: 90%; margin-top: 0%"/>
@@ -204,7 +204,7 @@ export default {
 		...mapState(['selectedMachine']),
 		...mapGetters(['isConnected', 'uiFrozen']),
 		...mapState('machine/model', ['storages']),
-		isRootDirectory() { return this.directory === Path.macros; },
+		isRootDirectory() { return this.directory === Path.macros + (this.isLocal ? "/_Machine": ""); },
 		...mapState({isLocal: state => state.isLocal,}),
 	},
 	data () {
@@ -225,7 +225,7 @@ export default {
 	},
 	methods: {
 		...mapActions('machine', ['sendCode', 'getFileList']),
-		async loadDirectory(directory = Path.macros) {
+		async loadDirectory(directory = Path.macros  + (this.isLocal ? "/_Machine": "")) {
 			if (this.loading) {
 				return;
 			}

@@ -415,7 +415,7 @@ export default {
 		},
 		files: {
 			caption: 'File Management',
-			jobs: 'G-Code Jobs',
+			jobs: 'G-Code Files',
 			filaments: 'Filaments',
 			macros: 'Macros',
 			display: 'Display',

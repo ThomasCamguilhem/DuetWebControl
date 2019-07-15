@@ -69,7 +69,7 @@ export default {
 		},
 		async send() {
 			this.$refs.input.isMenuActive = false;			// FIXME There must be a better solution than this
-
+			this.code = (this.code == '' ? document.getElementById('write').value : this.code);
 			const code = (this.code.constructor === String) ? this.code : this.code.value;
 			if (code && code.trim() !== '' && !this.sendingCode) {
 				// Convert the input to upper-case and remove comments

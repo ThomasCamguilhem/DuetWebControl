@@ -29,6 +29,9 @@ import SpeedFactorPanel from './SpeedFactorPanel.vue'
 import StatusPanel from './StatusPanel.vue'
 import ToolsPanel from './ToolsPanel.vue'
 import WebcamPanel from './WebcamPanel.vue'
+import XYTiltPanel from './XYTiltPanel.vue'
+import XYToolOffsetPanel from './XYToolOffsetPanel.vue'
+import ZProbeOffsetPanel from './ZProbeOffsetPanel.vue'
 
 Vue.component('atx-panel', ATXPanel)
 Vue.component('babystepping-panel', BabysteppingPanel)
@@ -57,6 +60,9 @@ Vue.component('status-panel', StatusPanel)
 Vue.component('speed-factor-panel', SpeedFactorPanel)
 Vue.component('tools-panel', ToolsPanel)
 Vue.component('webcam-panel', WebcamPanel)
+Vue.component('xy-tilt-panel', XYTiltPanel)
+Vue.component('xy-tool-offset', XYToolOffsetPanel)
+Vue.component('z-probe-offset', ZProbeOffsetPanel)
 
 export default {
 	ATXPanel,
@@ -84,5 +90,8 @@ export default {
 	SpeedFactorPanel,
 	StatusPanel,
 	ToolsPanel,
-	WebcamPanel
+	WebcamPanel,
+	XYTiltPanel,
+	XYToolOffsetPanel,
+	ZProbeOffsetPanel
 }

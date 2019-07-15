@@ -3,9 +3,17 @@
 		<v-flex>
 			<job-progress></job-progress>
 		</v-flex>
+		<v-layout row wrap>
+			<v-flex v-if="isLocal" shrink md6 sm12>
+				<temperature-chart></temperature-chart>
+			</v-flex>
+			<v-flex d-flex v-if="isLocal" md6 sm12>
+				<layer-chart></layer-chart>
+			</v-flex>
+		</v-layout>
 		<v-flex>
 			<v-layout row wrap full-height>
-				<v-flex order-sm2 order-md1 md3 xl2>
+				<v-flex order-sm1 order-md1 md3 xl2>
 					<v-layout row wrap align-center>
 						<v-flex xs7 sm6 md12>
 							<job-control-panel></job-control-panel>
@@ -18,12 +26,9 @@
 						</v-flex>
 					</v-layout>
 				</v-flex>
-				<v-flex order-sm1 order-md2 md6 xl7 d-flex>
+				<v-flex order-sm2 order-md2 md6 xl7 d-flex>
 					<v-layout column>
-						<v-flex v-if="isLocal" shrink>
-							<temperature-chart></temperature-chart>
-						</v-flex>
-						<v-flex d-flex>
+						<v-flex d-flex v-if="!isLocal">
 							<layer-chart></layer-chart>
 						</v-flex>
 						<v-flex shrink>

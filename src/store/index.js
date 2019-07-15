@@ -200,6 +200,18 @@ const store = new Vuex.Store({
 		},
 		async loadTool({state, commit}, name){
 			commit('setTool', name)
+		},
+		async shutdown({state, commit}) {
+			console.log('Shutting down');
+			try {
+				let hostname;
+				if (hostname == undefined)
+					hostname = state.selectedMachine; //location.host;
+					await connector.doShutdown(hostname);
+					//console.log(result.data);
+			} catch (e) {
+				console.error(e);
+			}
 		}
 	},
 	mutations: {

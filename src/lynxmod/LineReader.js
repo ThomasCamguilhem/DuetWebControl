@@ -22,7 +22,7 @@
     }
 	},
 	methods:{
-		LineReader: function(options) {
+		LineReader:async function(options) {
 
 		/**
 		 * We'll use '_internals' to store data we don't want public facing

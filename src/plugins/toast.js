@@ -81,11 +81,6 @@ export function makeNotification(type, title, message = '', timeout) {
 
 export function makeFileTransferNotification(type, destination, cancelSource, num, count) {
 	const filename = extractFileName(destination), titlePrefix = count ? `(${num}/${count}) ` : '';
-	console.log(type);
-	console.log(destination);
-	console.log(cancelSource);
-	console.log(num);
-	console.log(count);
 	// Prepare toast
 	iziToast.info({
 		class: 'file-transfer',

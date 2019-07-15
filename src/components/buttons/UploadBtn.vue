@@ -220,10 +220,10 @@ export default {
 						if(this.target === 'gcodes')
 						{
 							filename = filename.substring(10,filename.lastIndexOf("."));
-							console.log(content);
-							console.log(filename);
-							if(content.size <= 2*1024*1024) {
-								this.gcodeReader.lectDonnees(content, filename, this.selectedMachine);
+							//console.log(content);
+							//console.log(filename);
+							if(content.size <= 1*1024*1024) {
+								console.log(this.gcodeReader.lectDonnees(content, filename, this.selectedMachine));
 							}
 						}
 					}

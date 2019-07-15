@@ -92,6 +92,28 @@ export default {
 		return connector;
 	},
 
+	async doShutdown(hostname) {
+		let connector = null, lastError = null;
+		for (let i = 0; i < connectors.length; i++) {
+			try {
+				connector = await connectors[i].prototype.doShutdown(hostname);
+				lastError = null;
+				break;
+			} catch (e) {
+				lastError = e;
+				if (e instanceof ShutdownError) {
+					// This connector could establish a connection but the firmware refused it
+					break;
+				}
+			}
+		}
+
+		if (lastError !== null) {
+			throw lastError;
+		}
+		return connector;
+	},
+
 
 	// Install the global Vuex store
 	installStore(store) {

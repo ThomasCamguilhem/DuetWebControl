@@ -82,6 +82,13 @@ a:hover {
 					<connect-btn v-if="isLocal" class="mb-3" block></connect-btn>
 					<login-btn v-if="!isLocal || isLocal" class="mb-3" block></login-btn>
 					<emergency-btn v-if="!isLocal" block></emergency-btn>
+					<v-spacer></v-spacer>
+					<v-btn block v-if="isLocal" color="" @click="confirmShutdownDialog.shown = !confirmShutdownDialog.shown">
+						<v-icon mr-1 >
+							power_settings_new
+						</v-icon>
+						Shutdown printer
+					</v-btn>
 				</div>
 			</v-navigation-drawer>
 
@@ -151,6 +158,7 @@ a:hover {
 			<connection-dialog></connection-dialog>
 			<messagebox-dialog></messagebox-dialog>
 			<login-dialog></login-dialog>
+			<confirm-dialog :shown.sync="confirmShutdownDialog.shown" :question="confirmShutdownDialog.question" :prompt="confirmShutdownDialog.prompt" @confirmed="shutdown"></confirm-dialog>
 		</template>
 	</v-app>
 </template>
@@ -168,7 +176,7 @@ export default {
 		...mapState({
 			isLocal: state => state.isLocal,
 			selectedMachine: state => state.selectedMachine,
-			getTool: state => {console.log(state.user.loadedTool); return state.user.loadedTool},
+			getTool: state => state.user.loadedTool,
 
 			globalShowConnectDialog: state => state.showConnectDialog,
 			globalShowLoginDialog: state => state.showLoginDialog,
@@ -197,13 +205,18 @@ export default {
 			rightDrawer: false,
 			routing: Routing,
 			wasXs: this.$vuetify.breakpoint.xsOnly,
+			confirmShutdownDialog: {
+				question: 'Shutdown the Printer',
+				prompt: "Are you sure you want to shutdown the Printer (this operation will need a restart of the printer after)",
+				shown: false
+			},
 		}
 	},
 	methods: {
 		...mapActions(['connect', 'disconnectAll']),
 		...mapActions('machine', ['getFileList']),
 		...mapActions('settings', ['load']),
-		...mapActions(['loadTool']),
+		...mapActions(['loadTool', 'shutdown']),
 		checkMenuCondition(condition) {
 			if (condition === 'webcam') {
 				return (this.webcam.url !== '');
@@ -284,7 +297,7 @@ export default {
 		name() {
 		this.updateTitle();
 		if ((this.name).substring(0,8).includes("S600D")){
-			console.log("new name: " + this.name.substring(8))
+			//console.log("new name: " + this.name.substring(8))
 			this.loadTool((this.name).substring(8));
 		} else {
 			this.loadTool();

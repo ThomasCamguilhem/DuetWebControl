@@ -176,7 +176,7 @@ export default {
 				//console.log(tempSamples[this.selectedMachine].times.length);
 			}
 			this.chart.config.options.scales.xAxes[0].ticks.max = new Date();
-			this.chart.config.options.scales.yAxes[0].ticks.max = this.maxHeaterTemperature || maxTemperature;
+			this.chart.config.options.scales.yAxes[0].ticks.max = maxTemperature;
 			this.chart.config.options.scales.yAxes[0].ticks.stepSize = (maxTemperature <= 50 ? 10 : (maxTemperature <= 150 ? 25 : (maxTemperature <= 300 ? 50 : 100)))
 			this.chart.update();
 		},

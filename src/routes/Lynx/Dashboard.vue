@@ -1,15 +1,15 @@
 <template>
 	<v-layout row wrap>
-		<v-flex v-bind:class="{'lg9': !isLocal, 'lg12': isLocal}" xs12 sm12 md8 lg9 xl9>
+		<v-flex v-bind:class="{'lg9': !isLocal, 'lg12': isLocal}" xs12 sm12 md8 lg12 xl12>
 			<v-layout v-bind:class="{'row': $vuetify.breakpoint.mdAndUp, 'column': $vuetify.breakpoint.smAndDown}">
-				<v-flex xs12 sm12 md6 lg6 v-if="isLocal && false">
+				<v-flex xs12 sm12 md6 lg6 v-if="isLocal && $vuetify.breakpoint.mdAndUp">
 					<status-panel></status-panel>
 				</v-flex>
 				<v-flex xs12 sm12 md6 lg6 v-if="isLocal">
 					<tools-panel></tools-panel>
 				</v-flex>
 				<v-flex v-if="$vuetify.breakpoint.mdAndUp && isLocal" md6 lg6>
-					<temperature-chart></temperature-chart>
+					<temperature-chart style="min-height: 300px"></temperature-chart>
 				</v-flex>
 			</v-layout>
 			<v-layout column>
@@ -26,9 +26,6 @@
 							<extrude-panel></extrude-panel>
 						</v-flex>
 
-						<v-flex class="hidden-sm-and-down" v-if="false" align-self-center md3 lg3 xl2>
-							<atx-panel></atx-panel>
-						</v-flex>
 					</v-layout>
 				</v-flex>
 

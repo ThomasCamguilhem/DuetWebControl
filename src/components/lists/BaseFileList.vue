@@ -51,6 +51,11 @@ tr:hover:not(.v-datatable__expand-row).isLocal  {
 	//margin-left: 10%;
 	width: 190px;
 }
+
+.md3 {
+	display: inline-flex;
+	margin: 5px;
+}
 </style>
 <style scoped v-if="isLocal">
 table.v-table tbody td,
@@ -95,7 +100,18 @@ table.v-table tbody th {
 			</template>
 
 			<template slot="items" slot-scope="props">
-				<tr v-if="displayMode.asList" :active="props.selected" @touchstart="onItemTouchStart(props, $event)" @touchend="onItemTouchEnd" @click="onItemClick(props)" @contextmenu.prevent="onItemContextmenu(props, $event)" :data-filename="(props.item.isDirectory ? '*' : '') + props.item.name" draggable="true" @dragstart="onItemDragStart(props.item, $event)" @dragover="onItemDragOver(props.item, $event)" @drop.prevent="onItemDragDrop(props.item, $event)" v-tab-control.contextmenu @keydown.space="props.selected = !props.selected">
+				<tr  v-if="displayMode.asList"
+						:active="props.selected"
+						@touchstart="onItemTouchStart(props, $event)"
+						@touchend="onItemTouchEnd"
+						@click="onItemClick(props)"
+						@contextmenu.prevent="onItemContextmenu(props, $event)"
+						:data-filename="(props.item.isDirectory ? '*' : '') + props.item.name"
+						draggable="true"
+						@dragstart="onItemDragStart(props.item, $event)"
+						@dragover="onItemDragOver(props.item, $event)"
+						@drop.prevent="onItemDragDrop(props.item, $event)"
+						v-tab-control.contextmenu @keydown.space="props.selected = !props.selected">
 					<td class="pr-0">
 						<v-checkbox :input-value="props.selected" @touchstart.stop="" @touchend.stop="" @click.stop.prevent="props.selected = !props.selected" primary hide-details></v-checkbox>
 					</td>
@@ -137,68 +153,69 @@ table.v-table tbody th {
 						</td>
 					</template>
 				</tr>
-				<tr v-else-if="displayMode.asMini && props.item.name == innerFilelist[0].name" v-for="row in rows" v-bind:key="row" class="isLocal">
-					<td v-for="col in cols"
-						v-bind:key="col"
-						v-if="innerFilelist[col+row*cols.length] !== undefined"
-						v-tab-control.contextmenu.dblclick
-						:active="innerFilelist[col+row*cols.length].selected"
-						:data-filename="(innerFilelist[col+row*cols.length].isDirectory ? '*' : '') + innerFilelist[col+row*cols.length].name" draggable="true"
-						@click="onItemClick({item:innerFilelist[col+row*cols.length], index:col*rows.length+row})"
-						@dblclick="onItemClick({item:innerFilelist[col+row*cols.length], index:col*rows.length+row})"
-						@contextmenu.prevent="onItemContextmenu(props, $event)"
-						@dragstart="dragStart(innerFilelist[col+row*cols.length], $event)"
-						@dragover="dragOver(innerFilelist[col+row*cols.length], $event)"
-						@drop.prevent="dragDrop(innerFilelist[col+row*cols.length], $event)"
-						@keydown.space="innerFilelist[col+row*cols.length].selected = !innerFilelist[col+row*cols.length].selected" >
-						<v-layout sm4 shrink :class="(innerFilelist[col+row*cols.length].isDirectory ? 'grey darken-2 white--text' : 'grey darken-2 white--text')">
-						<v-tooltip bottom class="pr-0" v-if="innerFilelist[col+row*cols.length]">
-							<a slot="activator" href="#" @click.prevent.stop="onItemClick({item:innerFilelist[col+row*cols.length], index:col*rows.length+row})" tabindex="-1">
-								<v-layout column align-center>
-									<div style="height: 150px; margin-bottom: 10px;">
-										<object :data="innerFilelist[col+row*cols.length].ico" v-if="!innerFilelist[col+row*cols.length].isDirectory" class="img_gcode_miniature" style="margin: 10px 0px;border-radius: 10px;width: 150px;">
-											<img src="/img/ressources/file.png" width="150px"/>
-										</object>
-										<img src="/img/ressources/folder.svg" v-if="innerFilelist[col+row*cols.length].isDirectory" class="a-gcode-miniature" width="150px"/>
-										<!--img :src="'/img/ressources/Medium_universe_' + (innerFilelist[col+row*cols.length].dir ? (innerFilelist[col+row*cols.length].dir.toLowerCase().includes('/_filament') ? 'FIL' : (innerFilelist[col+row*cols.length].dir.toLowerCase().includes('/_liquid') ? 'LIQ' : (innerFilelist[col+row*cols.length].dir.toLowerCase().includes('/_paste') ? 'PAS' : ''))) : '') + '.svg'" v-if = "innerFilelist[col+row*cols.length].isDirectory" class="a-gcode-miniature" style="position: absolute;margin: 62px 0 0 -80px; transform: skew(-16deg); filter: invert(30%);" width="60px"-->
-										<v-icon class="mr-1" v-if="false && !innerFilelist[col+row*cols.length].ico && !innerFilelist[col+row*cols.length].isDirectory"> {{ (innerFilelist[col+row*cols.length].isDirectory ? 'folder' : 'assignment') }} </v-icon>
-									</div>
-									<div style=" width: 200px;text-align: center;">
-										{{ /*(col*rows.length+row) + ': ' +*/ innerFilelist[col+row*cols.length].name.lastIndexOf('.') > 0 ? innerFilelist[col+row*cols.length].name.substring(0, innerFilelist[col+row*cols.length].name.lastIndexOf('.')): innerFilelist[col+row*cols.length].name }}
-									</div>
-								</v-layout>
-							</a>
-							<span v-if="!innerFilelist[col+row*cols.length].isDirectory">
-								<template v-for="header in headers">
-									<p v-if="header.unit === 'bytes' && (innerFilelist[col+row*cols.length][header.value] != undefined)" :key="header.value" style="margin: 0px; padding: 0px">
-										{{getHeaderText(header)}}: {{ (innerFilelist[col+row*cols.length][header.value] != undefined) ? $displaySize(innerFilelist[col+row*cols.length][header.value]) : '' }}
-									</p>
-									<p v-else-if="header.unit === 'date' && innerFilelist[col+row*cols.length].lastModified && (innerFilelist[col+row*cols.length][header.value] !== 'n/a')" :key="header.value" style="margin: 0px; padding: 0px">
-										{{getHeaderText(header)}}: {{ innerFilelist[col+row*cols.length].lastModified ? innerFilelist[col+row*cols.length].lastModified.toLocaleString() : $t('generic.novalue') }}
-									</p>
-									<p v-else-if="header.unit === 'filaments'" :key="header.value" style="margin: 0px; padding: 0px">
-										<span v-if="innerFilelist[col+row*cols.length].filament && innerFilelist[col+row*cols.length].filament.length >= 1" :key="header.value" style="margin: 0px; padding: 0px">
-												{{getHeaderText(header)}}: {{ $display(innerFilelist[col+row*cols.length].filament, 1, 'mm') }}
-										</span>
-										<span v-else style="margin: 0px; padding: 0px">
-												{{getHeaderText(header)}}: {{ displayLoadingValue(innerFilelist[col+row*cols.length], 'filament', 1, 'mm') }}
-										</span>
-									</p>
-									<p v-else-if="header.unit === 'time' && innerFilelist[col+row*cols.length]" :key="header.value" style="margin: 0px; padding: 0px">
-										{{getHeaderText(header)}}: {{ displayTimeValue(innerFilelist[col+row*cols.length], header.value) }}
-									</p>
-									<p v-else-if="innerFilelist[col+row*cols.length]" :key="header.value" style="margin: 0px; padding: 0px">
-										{{getHeaderText(header)}}: {{ displayLoadingValue(innerFilelist[col+row*cols.length], header.value, header.precision, header.unit) }}
-									</p>
-								</template>
-							</span>
-						</v-tooltip>
-						</v-layout>
-					</td>
-				</tr>
+				<!--v-layout row wrap md12 v-if="displayMode.asMini"-->
+					<v-flex shrink md3 v-if="displayMode.asMini" v-for="row in rows" v-bind:key="row" class="isLocal">
+						<div v-for="col in cols"
+							v-bind:key="col"
+							v-if="((innerFilelist[col+row*cols.length] !== undefined) && (props.index == col+row*cols.length))"
+							v-tab-control.contextmenu.dblclick
+							:active="innerFilelist[col+row*cols.length].selected"
+							:data-filename="(innerFilelist[col+row*cols.length].isDirectory ? '*' : '') + innerFilelist[col+row*cols.length].name" draggable="true"
+							@click="onItemClick({item:innerFilelist[col+row*cols.length], index:col*rows.length+row})"
+							@dblclick="onItemClick({item:innerFilelist[col+row*cols.length], index:col*rows.length+row})"
+							@contextmenu.prevent="onItemContextmenu(props, $event)"
+							@dragstart="dragStart(innerFilelist[col+row*cols.length], $event)"
+							@dragover="dragOver(innerFilelist[col+row*cols.length], $event)"
+							@drop.prevent="dragDrop(innerFilelist[col+row*cols.length], $event)"
+							@keydown.space="innerFilelist[col+row*cols.length].selected = !innerFilelist[col+row*cols.length].selected" >
+							<v-layout sm4 shrink :class="(innerFilelist[col+row*cols.length].isDirectory ? 'grey darken-2 white--text' : 'grey darken-2 white--text')">
+								<v-tooltip bottom class="pr-0" v-if="innerFilelist[col+row*cols.length]">
+									<a slot="activator" href="#" @click.prevent.stop="onItemClick({item:innerFilelist[col+row*cols.length], index:col*rows.length+row})" tabindex="-1">
+										<v-layout column align-center>
+											<div style="height: 150px; margin-bottom: 10px;">
+												<object :data="innerFilelist[col+row*cols.length].ico" v-if="!innerFilelist[col+row*cols.length].isDirectory" class="img_gcode_miniature" style="margin: 10px 0px;border-radius: 10px;width: 150px;">
+													<img src="/img/ressources/file.png" width="150px"/>
+												</object>
+												<img src="/img/ressources/folder.svg" v-if="innerFilelist[col+row*cols.length].isDirectory" class="a-gcode-miniature" width="150px"/>
+												<!--img :src="'/img/ressources/Medium_universe_' + (innerFilelist[col+row*cols.length].dir ? (innerFilelist[col+row*cols.length].dir.toLowerCase().includes('/_filament') ? 'FIL' : (innerFilelist[col+row*cols.length].dir.toLowerCase().includes('/_liquid') ? 'LIQ' : (innerFilelist[col+row*cols.length].dir.toLowerCase().includes('/_paste') ? 'PAS' : ''))) : '') + '.svg'" v-if = "innerFilelist[col+row*cols.length].isDirectory" class="a-gcode-miniature" style="position: absolute;margin: 62px 0 0 -80px; transform: skew(-16deg); filter: invert(30%);" width="60px"-->
+												<v-icon class="mr-1" v-if="false && !innerFilelist[col+row*cols.length].ico && !innerFilelist[col+row*cols.length].isDirectory"> {{ (innerFilelist[col+row*cols.length].isDirectory ? 'folder' : 'assignment') }} </v-icon>
+											</div>
+											<div style=" width: 200px;text-align: center;">
+												{{ /*(col*rows.length+row) + ': ' +*/ innerFilelist[col+row*cols.length].name.lastIndexOf('.') > 0 ? innerFilelist[col+row*cols.length].name.substring(0, innerFilelist[col+row*cols.length].name.lastIndexOf('.')): innerFilelist[col+row*cols.length].name }}
+											</div>
+										</v-layout>
+									</a>
+									<span v-if="!innerFilelist[col+row*cols.length].isDirectory">
+										<template v-for="header in headers">
+											<p v-if="header.unit === 'bytes' && (innerFilelist[col+row*cols.length][header.value] != undefined)" :key="header.value" style="margin: 0px; padding: 0px">
+												{{getHeaderText(header)}}: {{ (innerFilelist[col+row*cols.length][header.value] != undefined) ? $displaySize(innerFilelist[col+row*cols.length][header.value]) : '' }}
+											</p>
+											<p v-else-if="header.unit === 'date' && innerFilelist[col+row*cols.length].lastModified && (innerFilelist[col+row*cols.length][header.value] !== 'n/a')" :key="header.value" style="margin: 0px; padding: 0px">
+												{{getHeaderText(header)}}: {{ innerFilelist[col+row*cols.length].lastModified ? innerFilelist[col+row*cols.length].lastModified.toLocaleString() : $t('generic.novalue') }}
+											</p>
+											<p v-else-if="header.unit === 'filaments'" :key="header.value" style="margin: 0px; padding: 0px">
+												<span v-if="innerFilelist[col+row*cols.length].filament && innerFilelist[col+row*cols.length].filament.length >= 1" :key="header.value" style="margin: 0px; padding: 0px">
+														{{getHeaderText(header)}}: {{ $display(innerFilelist[col+row*cols.length].filament, 1, 'mm') }}
+												</span>
+												<span v-else style="margin: 0px; padding: 0px">
+														{{getHeaderText(header)}}: {{ displayLoadingValue(innerFilelist[col+row*cols.length], 'filament', 1, 'mm') }}
+												</span>
+											</p>
+											<p v-else-if="header.unit === 'time' && innerFilelist[col+row*cols.length]" :key="header.value" style="margin: 0px; padding: 0px">
+												{{getHeaderText(header)}}: {{ displayTimeValue(innerFilelist[col+row*cols.length], header.value) }}
+											</p>
+											<p v-else-if="innerFilelist[col+row*cols.length]" :key="header.value" style="margin: 0px; padding: 0px">
+												{{getHeaderText(header)}}: {{ displayLoadingValue(innerFilelist[col+row*cols.length], header.value, header.precision, header.unit) }}
+											</p>
+										</template>
+									</span>
+								</v-tooltip>
+							</v-layout>
+						</div>
+					</v-flex>
+				<!--/v-layout-->
 			</template>
 		</v-data-table>
-
 		<v-menu v-model="contextMenu.shown" :position-x="contextMenu.x" :position-y="contextMenu.y" absolute offset-y v-tab-control.contextmenu>
 			<v-list>
 				<slot name="context-menu"></slot>
@@ -503,11 +520,17 @@ export default {
 			}
 		},
 		onItemContextmenu(props, e) {
+
 			this.onItemTouchEnd();
 
 			// Deal with selection
 			if (!props.selected) {
 				props.selected = true;
+			}
+
+			if (this.innerValue.length > 1 && (this.displayMode.asMini || (this.isLocal && !this.displayMode.asList))){
+				console.log(this.innerValue);
+				this.innerValue.shift();
 			}
 
 			// Open the context menu

@@ -13,8 +13,8 @@ import Lynx from './Lynx'
 import store from '../store'
 
 Vue.use(VueRouter)
-console.log("isLocal: " + store.state.isLocal);
-console.log("user: "+ store.getters.getUser.level);
+//console.log("isLocal: " + store.state.isLocal);
+//console.log("user: "+ store.getters.getUser.level);
 export const Routing = ( store.state.isLocal? [
 	// access Pannel
 	{
@@ -46,14 +46,14 @@ export const Routing = ( store.state.isLocal? [
 				component: Lynx.Control,
 				showLocal: true,
 			},
-			/*// Calibration
+			// Calibration
 			{
 				icon: 'build',
 				caption: 'menu.lynx.calibrate',
 				path: '/Lynxter/Calibration',
 				component: Lynx.Calibration,
 				showLocal: true,
-			},*/
+			},
 		]
 	},
 	// Settings
@@ -316,6 +316,14 @@ export const Routing = ( store.state.isLocal? [
 				path: '/Settings/Machine',
 				component: Settings.Machine,
 				//minLevel: 3
+			},
+			// Calibration
+			{
+				icon: 'build',
+				caption: 'menu.lynx.calibrate',
+				path: '/Lynxter/Calibration',
+				component: Lynx.Calibration,
+				showLocal: true,
 			},
 			// Setup
 			/*{
