@@ -19,7 +19,7 @@
 					</v-list-tile>
 
 					<template v-for="(fan, index) in fans">
-						<v-list-tile v-if="!fan.thermostatic.control" :key="index" @click="toggleFanVisibility(index)">
+						<v-list-tile v-if="!fan.thermostatic.control && index != 0" :key="index" @click="toggleFanVisibility(index)">
 							<v-icon class="mr-1">
 								{{ (displayedFans.indexOf(index) !== -1) ? 'check_box' : 'check_box_outline_blank' }}
 							</v-icon>
@@ -29,7 +29,7 @@
 				</v-list>
 			</v-menu>
 		</v-card-title>
-		
+
 		<v-layout v-if="visibleFans.length" column class="px-3">
 			<v-flex v-for="fan in visibleFans" :key="fan" class="pt-2">
 				<span>

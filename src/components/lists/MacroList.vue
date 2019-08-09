@@ -1,6 +1,6 @@
 <style scoped>
 .sm4 {
-	width: 30%;
+	width: 23%;
 	height: 100%;
 	border-radius: 10%;
 	margin: 1%;
@@ -88,7 +88,7 @@
 
 <template>
 <div>
-	<v-card v-bind:class="{local: isLocal}" class="card" v-bind:style="isLocal?'height:700px':''">
+	<v-card v-bind:class="{local: isLocal}" class="card" v-bind:style="isLocal?'min-height:650px':''">
 		<v-card-title v-if="!isLocal">
 			<v-icon small class="mr-1">polymer</v-icon> {{ $t('list.macro.caption') }}
 			<v-spacer></v-spacer>
@@ -98,7 +98,7 @@
 		<v-card-title v-else>
 			<v-icon small class="mr-1">polymer</v-icon> {{ $t('list.macro.caption') }}
 			<v-spacer></v-spacer>
-			<v-btn> <!--@click="showJob"-->
+			<v-btn @click="showJob"> <!---->
 				{{ $t('list.baseFileList.showMore') }}
 			</v-btn>
 		</v-card-title>
@@ -121,12 +121,12 @@
 
 				<v-list-tile v-for="item in filelist" :key="item.name" @click="fileClicked(item)" v-tab-control>
 					<v-list-tile-avatar v-bind:class="{'icon': item.ico}">
-						<!-- object :data="item.ico" v-if="true" class="list-icon" :class="(item.isDirectory ? 'grey darken-1 white--text' : 'grey darken-2 white--text')" style="border-radius: 50%; padding: 10%">
-							<img :src="item.isDirectory ? '/img/ressources/folder.svg' : '/img/ressources/file.png'" style="width: 100%; height: 100%; margin-top: 0%"/>
-						</object-->
-						<v-icon class="list-icon" :class="item.isDirectory ? 'grey darken-1 white--text' : 'grey darken-2 white--text'">
+						<object :data="item.ico" v-if="true" class="list-icon" :class="item.isDirectory ? 'grey darken-1 white--text' : 'grey darken-2 white--text'" style="border-radius: 50%; padding: 10%">
+							<img :src="item.isDirectory ? '/img/ressources/folder.svg' : '/img/ressources/file.png'" style="width: 80%; height: 80%; margin-top: 9%;margin-bottom: 8%;"/>
+						</object>
+						<!--v-icon class="list-icon" :class="item.isDirectory ? 'grey darken-1 white--text' : 'grey darken-2 white--text'">
 							{{ item.isDirectory ? 'folder' : 'assignment' }}
-						</v-icon>
+						</v-icon-->
 					</v-list-tile-avatar>
 
 					<v-list-tile-content>
@@ -158,7 +158,7 @@
 				<v-layout sm4 shrink v-for="(item, index) in filelist" v-if="(index < 9 && (!item.isDirectory || true)) || !isLocal" :key="item.name" @click="fileClicked(item)" v-bind:class="{'icon': item.ico}" :class="(item.isDirectory ? 'grey darken-1 white--text' : 'grey darken-2 white--text')" style="cursor: pointer;">
 					<v-flex class="content">
 						<object :data="item.ico" v-if="item.ico || true" class="list-icon">
-							<img :src="item.isDirectory ? '/img/ressources/folder.svg' : '/img/ressources/file.png'" style="width: 90%; height: 90%; margin-top: 0%"/>
+							<img :src="item.isDirectory ? '/img/ressources/folder.svg' : '/img/ressources/file.png'" style="width: 70%; height: 70%; margin-top: 11%;margin-bottom: 6%;"/>
 						</object>
 						<v-list-tile-title v-bind:class="{local: isLocal}" style="width:90%; margin: -5px 0 5px 5%;">
 							{{ item.displayName }}
@@ -167,7 +167,7 @@
 				</v-layout>
 			</v-layout>
 
-			<v-list-tile v-tab-control v-if="false && isLocal && filelist.length > 6"> <!-- @click="showJob" -->
+			<v-list-tile v-tab-control v-if="false && isLocal && filelist.length > 8"> <!-- @click="showJob" -->
 				<v-list-tile-avatar>
 					<v-icon class="list-icon grey darken-1 white--text">
 						add

@@ -9,10 +9,12 @@
   }
   #container {
     position: fixed;
+    background: #414141;
+    border-radius: 15px;
     bottom: 0;
-    width: 100%;
-    /*margin: 85% auto;*/
-    width: 688px;
+    margin: 1% 1%;
+    padding: 10px 15px;
+    width: 650px;
   }
   #write {
     margin: 0 0 5px;
@@ -114,19 +116,19 @@
   <div id="container">
       <!--textarea id="write" rows="6" cols="60"></textarea-->
       <ul id="keyboard">
-          <li class="symbol"><span class="off">²</span><span class="on"> </span></li>
-          <li class="symbol"><span class="off">&</span><span class="on">1</span></li>
-          <li class="symbol"><span class="off">é</span><span class="on">2</span><span class="alt-key">~</span></li>
-          <li class="symbol"><span class="off">"</span><span class="on">3</span><span class="alt-key">#</span></li>
-          <li class="symbol"><span class="off">'</span><span class="on">4</span><span class="alt-key">{</span></li>
-          <li class="symbol"><span class="off">(</span><span class="on">5</span><span class="alt-key">[</span></li>
-          <li class="symbol"><span class="off">-</span><span class="on">6</span><span class="alt-key">|</span></li>
-          <li class="symbol"><span class="off">è</span><span class="on">7</span><span class="alt-key">`</span></li>
-          <li class="symbol"><span class="off">_</span><span class="on">8</span><span class="alt-key">\</span></li>
-          <li class="symbol"><span class="off">ç</span><span class="on">9</span><span class="alt-key">^</span></li>
-          <li class="symbol"><span class="off">à</span><span class="on">0</span><span class="alt-key">@</span></li>
-          <li class="symbol"><span class="off">)</span><span class="on">°</span><span class="alt-key">]</span></li>
-          <li class="symbol"><span class="off">=</span><span class="on">+</span><span class="alt-key">}</span></li>
+          <li class="symbol"><span class="on">²</span><span class="off"> </span></li>
+          <li class="symbol"><span class="on">&</span><span class="off">1</span></li>
+          <li class="symbol"><span class="on">é</span><span class="off">2</span><span class="alt-key">~</span></li>
+          <li class="symbol"><span class="on">"</span><span class="off">3</span><span class="alt-key">#</span></li>
+          <li class="symbol"><span class="on">'</span><span class="off">4</span><span class="alt-key">{</span></li>
+          <li class="symbol"><span class="on">(</span><span class="off">5</span><span class="alt-key">[</span></li>
+          <li class="symbol"><span class="on">-</span><span class="off">6</span><span class="alt-key">|</span></li>
+          <li class="symbol"><span class="on">è</span><span class="off">7</span><span class="alt-key">`</span></li>
+          <li class="symbol"><span class="on">_</span><span class="off">8</span><span class="alt-key">\</span></li>
+          <li class="symbol"><span class="on">ç</span><span class="off">9</span><span class="alt-key">^</span></li>
+          <li class="symbol"><span class="on">à</span><span class="off">0</span><span class="alt-key">@</span></li>
+          <li class="symbol"><span class="on">)</span><span class="off">°</span><span class="alt-key">]</span></li>
+          <li class="symbol"><span class="on">=</span><span class="off">+</span><span class="alt-key">}</span></li>
           <li class="delete lastitem">Retour<!--span class="material-icons" style="margin-top: 8px">keyboard_backspace</span--></li>
           <li class="tab">Tab<!--span class="material-icons" style="margin-top: 8px">keyboard_tab</span--></li>
           <li class="letter">a</li>

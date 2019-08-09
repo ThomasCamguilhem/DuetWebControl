@@ -17,7 +17,7 @@
 <template>
 	<v-card>
 		<v-card-title class="pt-2 pb-0" v-bind:class="{local: isLocal}">
-			<code-btn color="primary" small code="G28" :title="$t('button.home.titleAll')" class="ml-0 hidden-sm-and-down" >
+			<code-btn color="primary darken-1" small code="G28" :title="$t('button.home.titleAll')" class="ml-0 hidden-sm-and-down" >
 				{{ $t('button.home.captionAll') }}
 			</code-btn>
 
@@ -29,7 +29,7 @@
 
 			<v-menu offset-y left :disabled="uiFrozen" v-tab-control>
 				<template slot="activator">
-					<v-btn color="primary" small class="mx-0" :disabled="uiFrozen">
+					<v-btn color="primary darken-1" small class="mx-0" :disabled="uiFrozen">
 						{{ $t('panel.movement.compensation') }} <v-icon>arrow_drop_down</v-icon>
 					</v-btn>
 				</template>
@@ -76,12 +76,12 @@
 			<!-- Mobile home buttons -->
 			<v-layout justify-center row wrap class="hidden-md-and-up">
 				<v-flex>
-					<code-btn color="primary" code="G28" :title="$t('button.home.titleAll')" v-bind:class="{local: isLocal}" block>
+					<code-btn color="primary darken-1" code="G28" :title="$t('button.home.titleAll')" v-bind:class="{local: isLocal}" block>
 						{{ $t('button.home.captionAll') }}
 					</code-btn>
 				</v-flex>
 				<v-flex v-if="false" v-for="axis in displayedAxes" :key="axis.letter">
-					<code-btn :color="axis.homed ? 'primary' : 'warning'" :disabled="uiFrozen" :title="$t('button.home.title', [axis.letter])" :code="`G28 ${axis.letter}`" block>
+					<code-btn :color="axis.homed ? 'primary darken-1' : 'warning'" :disabled="uiFrozen" :title="$t('button.home.title', [axis.letter])" :code="`G28 ${axis.letter}`" block>
 
 						{{ $t('button.home.caption', [axis.letter]) }}
 					</code-btn>
@@ -93,7 +93,7 @@
 				<v-flex shrink class="hidden-sm-and-down">
 					<v-layout column>
 						<v-flex v-for="axis in displayedAxes" :key="axis.letter">
-							<code-btn :color="axis.homed ? 'primary' : 'warning'" :disabled="uiFrozen" :title="$t('button.home.title', [axis.letter])" :code="`G28 ${axis.letter}`" class="ml-0">
+							<code-btn :color="axis.homed ? 'primary darken-1' : 'warning'" :disabled="uiFrozen" :title="$t('button.home.title', [axis.letter])" :code="`G28 ${axis.letter}`" class="ml-0">
 								{{ $t('button.home.caption', [axis.letter]) }}
 							</code-btn>
 						</v-flex>

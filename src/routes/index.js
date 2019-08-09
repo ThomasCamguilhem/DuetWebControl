@@ -46,13 +46,14 @@ export const Routing = ( store.state.isLocal? [
 				component: Lynx.Control,
 				showLocal: true,
 			},
-			// Calibration
+			// Jobs
 			{
-				icon: 'build',
-				caption: 'menu.lynx.calibrate',
-				path: '/Lynxter/Calibration',
-				component: Lynx.Calibration,
-				showLocal: true,
+					icon: 'play_arrow',
+					caption: 'menu.files.jobs',
+					path: '/Files/Jobs',
+					component: Files.Jobs,
+					showLocal: true,
+					//minLevel: 1,
 			},
 		]
 	},
@@ -90,15 +91,6 @@ export const Routing = ( store.state.isLocal? [
 					showLocal: true,
 					//minLevel: 1,
 				},
-				// Jobs
-				{
-						icon: 'play_arrow',
-						caption: 'menu.files.jobs',
-						path: '/Files/Jobs',
-						component: Files.Jobs,
-						showLocal: true,
-						//minLevel: 1,
-				},
 				// Macros
 				{
 						icon: 'polymer',
@@ -108,6 +100,23 @@ export const Routing = ( store.state.isLocal? [
 						showLocal: true,
 						//minLevel: 1,
 				},
+				// Calibration
+				{
+					icon: 'build',
+					caption: 'menu.lynx.calibrate',
+					path: '/Lynxter/Calibration',
+					component: Lynx.Calibration,
+					showLocal: true,
+				},
+				// System
+				/*{
+					icon: 'settings',
+					caption: 'menu.files.system',
+					path: '/Files/System',
+					component: Files.System,
+					showLocal: true,
+					//minLevel: 3,
+				}*/
 			]
 		},
 		// Settings
@@ -134,7 +143,7 @@ export const Routing = ( store.state.isLocal? [
 					component: Settings.Machine,
 					showLocal: true,
 					minLevel: 2,
-				},
+				}
 			]
 		}
 	] : [
@@ -240,19 +249,19 @@ export const Routing = ( store.state.isLocal? [
 		]
 	},
 	// Materials
-	{
+	/*{
 		icon: 'widgets',
 		caption: 'menu.material.materials',
 		//minLevel: 1,
 		pages: [
 			// Materials
-			/*{
+			{
 				icon: 'radio_button_checked',
 				caption: 'menu.material.materials',
 				path: '/Files/Materials',
 				component: Files.Materials,
 				showLocal: false,
-			},*/
+			},
 			// Filaments
 			{
 				icon: 'album',
@@ -270,7 +279,7 @@ export const Routing = ( store.state.isLocal? [
 				//minLevel: 1,
 			},
 			// Pellets
-			/*{
+			{
 				icon: 'radio_button_checked',
 				caption: 'menu.material.pellets',
 				path: '/Files/Pellets',
@@ -292,9 +301,9 @@ export const Routing = ( store.state.isLocal? [
 				path: '/Files/Hybrids',
 				component: Files.Hybrids,
 				//minLevel: 1,
-			},*/
+			},
 		]
-	},
+	},*/
 	// Settings
 	{
 		icon: 'build',

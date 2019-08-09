@@ -48,10 +48,10 @@
 
 			<v-card-actions v-if="messageBox.mode">
 				<v-spacer></v-spacer>
-				<v-btn v-if="messageBox.mode === 1 || messageBox.mode === 3" color="blue darken-1" flat @click="cancel">
+				<v-btn v-if="messageBox.mode === 1 || messageBox.mode === 3" color="primary darken-1" flat @click="cancel">
 					{{ $t(messageBox.mode === 1 ? 'generic.close' : 'generic.cancel') }}
 				</v-btn>
-				<v-btn v-if="messageBox.mode === 2 || messageBox.mode === 3" color="blue darken-1" flat @click="ok">
+				<v-btn v-if="messageBox.mode === 2 || messageBox.mode === 3" color="primary darken-1" flat @click="ok">
 					{{ $t('generic.ok') }}
 				</v-btn>
 				<v-spacer></v-spacer>

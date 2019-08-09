@@ -91,8 +91,8 @@
 </style>
 
 <template>
-	<v-dialog :value="isConnecting || isReconnecting || isDisconnecting || isLoggingIn || isLoggingOut" persistent width="480">
-		<v-card color="primary" dark style="height: 150px;">
+	<v-dialog :value="isConnecting || isReconnecting || isDisconnecting || isLoggingIn || isLoggingOut || isLoadingTool" persistent width="480">
+		<v-card dark style="height: 150px; background: #403E3D">
 			<v-card-text>
 				{{ message }}<br/>
 				<v-progress-linear indeterminate color="white" class="mb-0" v-if="false"></v-progress-linear>
@@ -115,7 +115,7 @@ import { mapState } from 'vuex'
 
 export default {
 	computed: {
-		...mapState(['isConnecting', 'isDisconnecting', 'isLoggingIn', 'isLoggingOut']),
+		...mapState(['isConnecting', 'isDisconnecting', 'isLoggingIn', 'isLoggingOut', 'isLoadingTool']),
 		...mapState('machine', ['isReconnecting']),
 		message() {
 			if (this.isConnecting) {
@@ -132,6 +132,8 @@ export default {
 			}
 			if (this.isLoggingOut) {
 				return this.$t('dialog.connection.loggingout');
+			} if (this.isLoadingTool) {
+				return "Loading Tool plaese wait";
 			}
 			return this.$t('dialog.connection.standBy');
 		}

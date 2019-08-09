@@ -29,6 +29,7 @@ const store = new Vuex.Store({
 		isDisconnecting: false,
 		isLoggingIn: false,
 		isLoggingOut: false,
+		isLoadingTool: false,
 		isLocal: ((location.hostname === 'localhost') || (location.hostname === '127.0.0.1') || (location.hostname === '[::1]')),
 		connectDialogShown: ((location.hostname === 'localhost') || (location.hostname === '127.0.0.1') || (location.hostname === '[::1]')) && ((location.port !== "80") && (location.port !== "")),
 		loginDialogShown: false,
@@ -139,6 +140,7 @@ const store = new Vuex.Store({
 			} else {
 				logGlobal('warning', i18n.t('events.reconnecting', [hostname]), error.message);
 				dispatch(`machines/${hostname}/reconnect`);
+				commit('setSelectedMachine', defaultMachine);
 			}
 		},
 

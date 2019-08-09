@@ -19,8 +19,12 @@ let settings, openNotifications = []
 
 export function makeNotification(type, title, message = '', timeout) {
 	// If there is already an equal notification, reset its time and don't display a new one
-	const equalNotification = openNotifications.find(item => item.type === type && item.title == title && item.message === message);
+	const equalNotification = openNotifications.find(item => item.type === type /*&& item.title == title && item.message === message*/);
+
 	if (equalNotification) {
+		console.log(equalNotification.toSource());
+		equalNotification.title = title;
+		equalNotification.message = message;
 		equalNotification.resetTimeout();
 		return equalNotification;
 	}

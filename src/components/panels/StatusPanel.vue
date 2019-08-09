@@ -31,11 +31,11 @@ a:not(:hover) {
 <template>
 	<v-card v-bind:class="{local: isLocal}">
 		<v-card-title class="py-2">
-			<v-icon small class="mr-1" v-if="!isLocal">info</v-icon> {{ $t('panel.status.caption') }}
+			<v-icon small class="mr-1">info</v-icon> {{ $t('panel.status.caption') }}
 
 			<v-spacer></v-spacer>
 
-			<status-label v-if="this.state.status"></status-label>
+			<status-label v-if="this.state.status && !isLocal"></status-label>
 
 			<v-spacer></v-spacer>
 
@@ -43,7 +43,7 @@ a:not(:hover) {
 		</v-card-title>
 
 		<v-card-text class="px-0 pt-0 pb-2 content text-xs-center" v-show="sensorsPresent || (move.axes.length + move.extruders.length)">
-			<v-layout column class="content-layout">
+			<v-layout v-bind:class="{column: !isLocal, row: isLocal}" class="content-layout">
 				<v-flex v-show="move.axes.length">
 					<v-layout row align-center>
 						<v-flex tag="strong" class="category-header" v-if="!isLocal">
@@ -69,7 +69,7 @@ a:not(:hover) {
 					</v-layout>
 				</v-flex>
 
-				<v-divider class="my-2" v-show="move.axes.length + move.extruders.length"></v-divider>
+				<v-divider class="my-2" v-show="move.axes.length + move.extruders.length" v-bind:class="{'v-divider--vertical': isLocal}" ></v-divider>
 
 				<v-flex v-show="move.extruders.length">
 					<v-layout row align-center>
@@ -78,7 +78,7 @@ a:not(:hover) {
 						</v-flex>
 
 						<v-flex>
-							<v-layout row wrap>
+							<v-layout v-bind:class="{column: isLocal, row: !isLocal}" wrap>
 								<v-flex v-for="(extruder, index) in move.extruders" :key="index" class="equal-width">
 									<v-layout v-bind:class="{column:!isLocal, row: isLocal}">
 										<v-flex tag="strong">
@@ -179,6 +179,25 @@ a:not(:hover) {
 										</v-tooltip>
 									</v-layout>
 								</v-flex>
+								<v-flex v-if="electronics.cpuTemp.current !== null">
+									<v-layout column>
+										<v-flex tag="strong">
+											{{ $t('panel.status.cpuTemp') }}
+										</v-flex>
+
+										<v-tooltip bottom>
+											<template slot="activator">
+												<v-flex tag="span">
+													{{ $display(electronics.cpuTemp.current, 1, 'C') }}
+												</v-flex>
+											</template>
+
+											<span>
+												{{ $t('panel.status.cpuTempTitle', [$display(electronics.cpuTemp.min, 1, 'C'), $display(electronics.cpuTemp.max, 1, 'C')]) }}
+											</span>
+										</v-tooltip>
+									</v-layout>
+								</v-flex>
 
 								<v-flex v-if="sensors.probes.length">
 									<v-layout column>
@@ -219,7 +238,7 @@ export default {
 		...mapGetters(['isConnected']),
 		...mapState('machine/model', ['electronics', 'move', 'sensors', 'state']),
 		sensorsPresent() {
-			return (this.electronics.vIn.current !== null) || (this.electronics.mcuTemp.current !== null) || (this.sensors.probes.length);
+			return (this.electronics.vIn.current !== null) || (this.electronics.mcuTemp.current !== null) || (this.electronics.cpuTemp.current !== null) || (this.sensors.probes.length);
 		},
 		...mapState({
 			isLocal: state => state.isLocal,

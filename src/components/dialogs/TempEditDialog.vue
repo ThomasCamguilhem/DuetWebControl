@@ -41,8 +41,8 @@
 
 				<v-card-actions>
 					<v-spacer></v-spacer>
-					<v-btn color="blue darken-1" flat @click="hide">{{ $t('generic.cancel') }}</v-btn>
-					<v-btn color="blue darken-1" flat type="submit">{{ $t('generic.ok') }}</v-btn>
+					<v-btn color="primary darken-1" flat @click="hide">{{ $t('generic.cancel') }}</v-btn>
+					<v-btn color="primary darken-1" flat type="submit">{{ $t('generic.ok') }}</v-btn>
 				</v-card-actions>
 			</v-form>
 		</v-card>
@@ -104,6 +104,11 @@ export default {
         if (char == "<" || char == "&lt;")
         {
           this.input = this.input.substring(0, this.input.length-1);
+        }
+        if (char == "." || char == ",") {
+          if (this.input == undefined)
+            this.input = "";
+          this.input += char;//(1.1).toLocaleString().substring(1, 2);
         }
       } else {
         if (this.input == undefined)

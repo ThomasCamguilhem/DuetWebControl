@@ -15,7 +15,7 @@
 		width: 100%;
 		height: 100%;
 		text-align: center;
-		transition: transform 0.5s;
+		/*transition: transform 0.5s;*/
 		transform-style: preserve-3d;
 	}
 
@@ -32,7 +32,9 @@
 		width: 100%;
 		height: 100%;
 		backface-visibility: hidden;
-		background-color: #2e3338;
+		background-color: #403E3D;
+		border-radius: 20px;
+		overflow: hidden;
 	}
 
 	/* Style the front side (fallback if image is missing) */
@@ -49,7 +51,7 @@
 </style>
 <template>
 	<v-dialog v-model="shown" persistent width="480">
-		<v-card>
+		<v-card  style="background-color: #403E3D">
 			<v-card-title>
 				<span class="headline">{{ question }}</span>
 			</v-card-title>
@@ -62,26 +64,26 @@
 				<div class="flip-box" v-if="item.ico">
 					<div class="flip-box-inner">
 						<div class="flip-box-front">
+							<img :src="item.ico.substring(0,item.ico.length-7)+'bp.jpg'" style="width: 100%;">
 							<v-btn color="blue darken-1" onclick="
 								document.getElementsByTagName('video')[0].load();
-								document.getElementsByClassName('flip-box-inner')[0].style.transform = 'rotateY(180deg)';" @click="attachListener">Show preview</v-btn>
-							<img :src="item.ico.substring(0,item.ico.length-7)+'bp.jpg'" style="width: 100%;">
+								document.getElementsByClassName('flip-box-inner')[0].style.transform = 'rotateY(180deg)';" @click="attachListener" style=" margin-top: 44px">Show preview</v-btn>
 						</div>
 						<div class="flip-box-back">
-							<v-btn color="blue darken-1" onclick="document.getElementsByTagName('video')[0].pause();
-								document.getElementsByClassName('flip-box-inner')[0].style.transform = 'rotateY(0deg)';" id="back" class="sm6">
-									Show buildplate
-							</v-btn>
 							<video :poster="item.ico" style="width: 100%;" @timeupdate="videoUpdate" @ended="videoEnded" @progress="videoBuffer" preload>
 								<source :src="item.ico.substring(0,item.ico.length-8)+'.mp4'" type="video/mp4">
 							</video>
 							<div id="video-controls">
 								<v-btn icon id="play-pause" @click="playPause" style="margin: 0 5px 5px 0;"><v-icon>{{ playIcon }}</v-icon></v-btn>
-								<v-slider min="0" max="100" v-model="buffer" :buffer-value="bufferValue" id="seek-bar" style="width: 160px; display: inline-flex" @change="seekChange(buffer)" @mousedown="seekMouseDown" @mouseup="seekMouseUp"></v-slider>
+								<v-slider min="0" max="100" v-model="buffer" :buffer-value="bufferValue" id="seek-bar" style="width: 160px; display: inline-flex;margin-top:0px" @change="seekChange(buffer)" @mousedown="seekMouseDown" @mouseup="seekMouseUp"></v-slider>
 								<!--button type="button" id="mute"><span class="material-icons">volume_up</span>/<span class="material-icons">volume_off</span></button>
 								<input type="range" id="volume-bar" min="0" max="1" step="0.1" value="1"-->
-								<v-btn icon id="full-screen" style="margin:  0  0 5px 5px;"><span class="material-icons">fullscreen</span></v-btn>
+								<!--v-btn icon id="full-screen" style="margin:  0  0 5px 5px;"><span class="material-icons">fullscreen</span></v-btn-->
 							</div>
+							<v-btn color="blue darken-1" onclick="document.getElementsByTagName('video')[0].pause();
+								document.getElementsByClassName('flip-box-inner')[0].style.transform = 'rotateY(0deg)';" id="back" class="sm6" style="margin-top:-5px">
+									Show buildplate
+							</v-btn>
 						</div>
 					</div>
 				</div>
@@ -101,8 +103,8 @@
 
 			<v-card-actions>
 				<v-spacer></v-spacer>
-				<v-btn v-bind:color="(item?'red':'blue') +' darken-1'" flat @click="dismissed">{{ item?'Cancel':$t('generic.no') }}</v-btn>
-				<v-btn :class="item?'success':'v-btn--flat blue--text text--darken-1'" @click="confirmed">{{ item?'Print':$t('generic.yes') }}</v-btn>
+				<v-btn v-bind:color="(item?'red':'primary') +' darken-1'" flat @click="dismissed">{{ item?'Cancel':$t('generic.no') }}</v-btn>
+				<v-btn :class="item?'success':'v-btn--flat primary--text text--darken-1'" @click="confirmed">{{ item?'Print':$t('generic.yes') }}</v-btn>
 			</v-card-actions>
 		</v-card>
 	</v-dialog>
@@ -171,20 +173,22 @@ export default {
 			document.getElementsByClassName('flip-box')[0].onclick = this.back;
 		},
 		attachListener(){
-			var fullscreen = document.getElementById('full-screen');
+			/*var fullscreen = document.getElementById('full-screen');
 			var video = document.getElementsByTagName('video')[0];
 			fullscreen.addEventListener("click", function() {
 				if (video.requestFullscreen) {
 					video.requestFullscreen();
 				}
-			});
+			});*/
 		},
 		playPause() {
 			if (!document.getElementsByTagName('video')[0].paused) {
+				console.log("Pause");
 				document.getElementsByTagName('video')[0].pause();
 				this.playIcon = 'play_arrow';
 				this.playing = false;
 			} else {
+				console.log("Play");
 				document.getElementsByTagName('video')[0].play();
 				this.playIcon = 'pause';
 				this.playing = true;

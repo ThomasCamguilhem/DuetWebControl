@@ -2,10 +2,10 @@
 	<v-combobox v-if="!isLocal" ref="input" type="number" min="-273" max="1999" step="any" v-model.number="value" :items="items" @keydown.native="onkeydown" @keyup.enter="apply" @change="onchange" @blur="onblur" :label="label" :loading="applying" :disabled="uiFrozen" :menu-props="$vuetify.breakpoint.xsOnly ? { maxHeight: 125 } : undefined">
 	</v-combobox>
 	<div v-else class="control number">
-		<number-control v-model.number="value" ref="input" :min="0" :max="1999" :step="5" @keydown.native="onkeydown" @keyup.enter="apply" @change="onnumchange" @blur="onblur" :title="title" :loading="applying" :disabled="uiFrozen" v-if="shown">
+		<number-control v-model.number="value" ref="input" :min="0" :max="1999" :step="1" @keydown.native="onkeydown" @keyup.enter="apply" @change="onnumchange" @blur="onblur" :title="title" :loading="applying" :disabled="uiFrozen" v-if="shown">
 		</number-control>
 		<span v-else>
-		 {{ value +" C" }}
+		 	{{ (tool ? (active?tool.active.toLocaleString():tool.standby.toLocaleString()) : (bed? (active?bed.active.toLocaleString():bed.standby.toLocaleString()): chamber.active.toLocaleString())) + " C"}}
 		</span>
 	</div>
 </template>
@@ -41,7 +41,8 @@ export default {
 		},
 		title()
 		{
-			return this.tool ? "Select T" + this.tool.number + " " + (this.active ? "Active": "Standby" ) + " temperature" : undefined
+			return this.tool ? "Select T" + this.tool.number + " " + (this.active ? "Active": "Standby" ) + " temperature" :
+						( this.bed ? "Select Bed " + (this.active ? "Active": "Standby" ) + " temperature" : "Select Chamber target temperature")
 		},
 	},
 	data() {

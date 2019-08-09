@@ -222,6 +222,7 @@ export default {
 			prompt: 'You have uploaded at least one firmware update. Would you like to install them now?'
 		},
 		tool: {
+			titleUnload: 'Unload tool',
 			titleLoad: 'Load tool',
 			prompt: 'Please choose a tool:'
 		},
@@ -262,6 +263,7 @@ export default {
 		filelistRequestFailed: 'Failed to get file list',
 		fileinfoRequestFailed: 'Failed to get file info for {0}',
 		filamentsLoadFailed: 'Failed to load filaments',
+		toolsLoadFailed: 'Failed to load the Tools list',
 		move: 'Failed to move {0} to {1}'
 	},
 	events: {
@@ -699,7 +701,9 @@ export default {
 			requestedSpeed: 'Requested Speed',
 			topSpeed: 'Top Speed',
 			sensors: 'Sensors',
-			mcuTemp: 'MCU Temperature',
+			cpuTemp: 'CPU',
+			cpuTempTitle: 'Minimum: {0}, Maximum: {1}',
+			mcuTemp: 'MCU',
 			mcuTempTitle: 'Minimum: {0}, Maximum: {1}',
 			vIn: 'Vin',
 			vInTitle: 'Minimum: {0}, Maximum {1}',

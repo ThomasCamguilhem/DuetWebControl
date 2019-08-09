@@ -1,22 +1,22 @@
 <style scoped>
-  .toff {
-    padding: 0 10px;
-    text-align: center;
-    border-right: 1px solid darkgray;
-    display: inline-block;
-    min-width: 200px;
-  }
-  .toff input, .tool_offset {
-    width: 50px;
-    height: 20px;
-    text-align: center;
-    border: 1px solid black;
-    border-radius: 4px;
-  }
+.toff {
+  padding: 0 10px;
+  text-align: center;
+  border-right: 1px solid darkgray;
+  display: inline-block;
+  min-width: 200px;
+}
+.toff input, .tool_offset {
+  width: 50px;
+  height: 20px;
+  text-align: center;
+  border: 1px solid black;
+  border-radius: 4px;
+}
 
-  .layout.row {
-    margin: 0 auto;
-  }
+.layout.row {
+  margin: 0 auto;
+}
 </style>
 
 <template class="panel panel-default">
@@ -31,63 +31,65 @@
         </v-select>
       </v-flex>
       <br/>
-      <v-layout row wrap style="width: max-content">
-        <v-layout column shrink v-for="(tool, index) in toolHeads" style="border-right: 1px solid black; margin: 5px; text-align: center; background: #505050;" v-if="!tool.hide">
-          <v-layout row>
-            Offset:&nbsp;<strong> T{{tool.t}}</strong>
-            <span style="color: darkgray;" v-for="sec in tool.sec">
-                , T{{toolHeads[sec].t}}
-            </span>
-          </v-layout>
-          <v-layout column>
+      <v-layout row wrap>
+        <v-flex shrink v-for="(tool, index) in toolHeads" :key="tool">
+          <v-layout column style="border-right: 1px solid black; margin: 5px; text-align: center; background: #505050;" v-if="!tool.hide">
             <v-layout row>
-              Offset X&nbsp; <input class="tool_offset" autocomplete="off" type="number" :value="(relative?(tool.x-toolHeads[0].x):tool.x)" step="0.01" off="x" :tnum="index" v-bind:class="{disabled: (index == 0)}"/>&nbsp;mm
+              Offset:&nbsp;<strong @click="targetTool" :id="tool.t"> T{{tool.t}}</strong>
+              <span style="color: darkgray;" v-for="sec in tool.sec">
+                , T{{toolHeads[sec].t}}
+              </span>
             </v-layout>
-            <v-flex row>
-              <v-tooltip bottom>
-                <template v-slot:activator="{ on }">
-                  <v-btn class="btn_tilt" off="x" :tnum="index" dir="d" v-on="on" @click="handleBtnOffsetEvent" v-bind:class="{'v-btn--disabled': (index == 0 && relative)}">
-                    <span class="content">-0.01mm</span>
-                    <v-icon> arrow_left </v-icon>
-                  </v-btn>
-                </template>
-                <span> Offsets the tool head by a tiny amount in the X direction (G10 Px Xyy) </span>
-              </v-tooltip>
-              <v-tooltip bottom>
-                <template v-slot:activator="{ on }">
-                  <v-btn class="btn_tilt" off="x" :tnum="index" dir="u" v-on="on" @click="handleBtnOffsetEvent" v-bind:class="{'v-btn--disabled': (index == 0 && relative)}">
-                    <span class="content">+0.01mm</span>
-                    <v-icon> arrow_right </v-icon>
-                  </v-btn>
-                </template>
-                <span> Offsets the tool head by a tiny amount in the X direction (G10 Px Xyy) </span>
-              </v-tooltip><br/>
-            </v-flex>
-            <v-flex column>
-              Offset Y <input class="tool_offset" autocomplete="off" type="number" :value="(relative?(tool.y-toolHeads[0].y):tool.y)" step="0.01" off="y" :tnum="index" tsec="{2}"/>&nbsp;mm
+            <v-layout column>
+              <v-layout row>
+                Offset X&nbsp; <input class="tool_offset" autocomplete="off" type="number" :value="(relative?(tool.x-toolHeads[0].x):tool.x)" step="0.01" off="x" :tnum="index" v-bind:class="{disabled: (index == 0)}"/>&nbsp;mm
+              </v-layout>
               <v-flex row>
                 <v-tooltip bottom>
                   <template v-slot:activator="{ on }">
-                    <v-btn class="btn_tilt" off="y" :tnum="index" dir="d" v-on="on" @click="handleBtnOffsetEvent"v-bind:class="{'v-btn--disabled': (index == 0 && relative)}">
+                    <v-btn class="btn_tilt" off="x" :tnum="index" dir="d" v-on="on" @click="handleBtnOffsetEvent" v-bind:class="{'v-btn--disabled': (index == 0 && relative)}">
                       <span class="content">-0.01mm</span>
                       <v-icon> arrow_left </v-icon>
                     </v-btn>
                   </template>
-                  <span> Offsets the tool head by a tiny amount in the Y direction (G10 Px Yyy) </span>
+                  <span> Offsets the tool head by a tiny amount in the X direction (G10 Px Xyy) </span>
                 </v-tooltip>
                 <v-tooltip bottom>
                   <template v-slot:activator="{ on }">
-                    <v-btn class="btn_tilt" off="y" :tnum="index" dir="u" v-on="on" @click="handleBtnOffsetEvent" v-bind:class="{'v-btn--disabled': (index == 0 && relative)}">
+                    <v-btn class="btn_tilt" off="x" :tnum="index" dir="u" v-on="on" @click="handleBtnOffsetEvent" v-bind:class="{'v-btn--disabled': (index == 0 && relative)}">
                       <span class="content">+0.01mm</span>
                       <v-icon> arrow_right </v-icon>
                     </v-btn>
                   </template>
-                  <span> Offsets the tool head by a tiny amount in the Y direction (G10 Px Xyy) </span>
-                </v-tooltip>
+                  <span> Offsets the tool head by a tiny amount in the X direction (G10 Px Xyy) </span>
+                </v-tooltip><br/>
               </v-flex>
-            </v-flex>
+              <v-flex column>
+                Offset Y <input class="tool_offset" autocomplete="off" type="number" :value="(relative?(tool.y-toolHeads[0].y):tool.y)" step="0.01" off="y" :tnum="index" tsec="{2}"/>&nbsp;mm
+                <v-flex row>
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                      <v-btn class="btn_tilt" off="y" :tnum="index" dir="d" v-on="on" @click="handleBtnOffsetEvent"v-bind:class="{'v-btn--disabled': (index == 0 && relative)}">
+                        <span class="content">-0.01mm</span>
+                        <v-icon> arrow_left </v-icon>
+                      </v-btn>
+                    </template>
+                    <span> Offsets the tool head by a tiny amount in the Y direction (G10 Px Yyy) </span>
+                  </v-tooltip>
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                      <v-btn class="btn_tilt" off="y" :tnum="index" dir="u" v-on="on" @click="handleBtnOffsetEvent" v-bind:class="{'v-btn--disabled': (index == 0 && relative)}">
+                        <span class="content">+0.01mm</span>
+                        <v-icon> arrow_right </v-icon>
+                      </v-btn>
+                    </template>
+                    <span> Offsets the tool head by a tiny amount in the Y direction (G10 Px Xyy) </span>
+                  </v-tooltip>
+                </v-flex>
+              </v-flex>
+            </v-layout>
           </v-layout>
-        </v-layout>
+        </v-flex>
       </v-layout>
       <div style=" display: flex; width: max-content; margin: 0 auto;" v-if="toolHeads.length>0">
         <span style="margin-top: 20px"><b> Absolute </b> tools offsets</span>
@@ -111,12 +113,27 @@ export default {
       toolHeads: [],
       toolPath: {},
       xyToolOffset: undefined,
+      currTool: undefined,
     }
   },
   methods: {
     ...mapActions('machine', ['getFileList', 'sendCode', 'download', 'upload']),
+    targetTool:async function(e) {
+      let that = e.target;
+      if (that.id != this.curTool) {
+        await this.sendCode("G10 P" + that.id + " X" + this.toolHeads[that.id].x + " Y" + this.toolHeads[that.id].y);
+        await this.sendCode("G1 X0 Y0 Z150 F600");
+        await this.sendCode("T" + that.id);
+        await this.sendCode("G1 X0 Y0 Z130 F600");
+        this.curTool = that.id;
+      } else {
+        await this.sendCode("G1 X0 Y0 Z150 F600");
+        await this.sendCode("T-1")
+        await this.sendCode("G1 X0 Y0 Z150 F600");
+        this.curTool = -1;
+      }
+    },
     preloadToolMatrices: async function() {
-      console.log('load the cfg file');
       try {
         this.tools = [];
         // Load file list and create missing props
@@ -287,141 +304,148 @@ export default {
         }
       }
     }
-      }
-      this.makeTools(toolHeads);
-      //console.log("done")
-      //console.log(toolHeads);
-    },
-    handleBtnOffsetEvent: function(e) {
-      let that = e.target;
-      while (that.nodeName.toLowerCase() !== "button") {
-        that = that.parentElement;
-      }
-      e.preventDefault();
-      if(!that.classList.contains("disabled") && this.tools.length > 0)
-      {
-        let attr = that.attributes;
-        var first = 0;
-        while (this.tools[first] === undefined && this.tools.length > 0)
-        {
-          first++;
-        }
-        var offset = (parseFloat(that.innerText) + this.toolHeads[attr.tnum.value][attr.off.value])
-        clearTimeout(this.xyToolOffset);
-        console.log(offset);
-        this.toolHeads[attr.tnum.value][attr.off.value] = offset;
-        /*for (var i = 0; i < this.toolHeads.length; i++)
-        {
-          this.sendCode("G10 P" + i + " X" + that.toolHeads[i].x + " Y" + that.toolHeads[i].y);
-        }*/
-        this.xyToolOffset = setTimeout(this.sendToolMatrix, 1000, attr.tnum.value)
-      }
-    },
-    handleToolOffsetBlurEvent: function(e) {
-      e.preventDefault();
-      if (tools.length > 0 && this.style.border !== "none") {
-        var absolute = $("#relative").prop("checked");
-        var off = $(this).attr('off');
-        var tnum = $(this).attr('tnum');
-        var tsec = [];
-        var first = 0;
-        while(tools[first] === undefined)
-        {
-          first++;
-        }
-        $(this).attr('tsec').split(",").forEach(tool => tsec.push(parseInt(tool.substring(tool.indexOf("T")+1))));
-        var offset = parseFloat($(this).prop("value"))
-        var toolOffset = offset + (absolute?tools[first][(off.includes("X")?"x":"y")]:0)
-        console.log(toolOffset);
-        clearTimeout(xyToolOffset);
-        tools[parseFloat(tnum.substring(1))][off.includes("X")?"x":"y"] = toolOffset;
-        tsec.forEach(tool => tools[tool][off.includes("X")?"x":"y"] = toolOffset )
-        $(this).prop("value", offset.toFixed(2))
-        tools.forEach((tool, i) => sendGCode("G10 P" + i + " X" + tool.x.toFixed(2) + " Y" + tool.y.toFixed(2)));
-        xyToolOffset = setTimeout(sendToolMatrix, 1000, $("#hname").data("tool"));
-      }
-    },
-    makeTools: function(tools) {
-      console.log('here');
-      var isSec = [];
-    	var first = 0;
-    	while (tools[first] === undefined && tools.length > 0)
-    	{
-    		first++;
-    	}
-    	for(var i = 0; i < tools.length; i++) {
-    		if (tools[i] !== undefined && isSec[i] === undefined) {
-    			var heaters = tools[i].h;
-    			var drives = tools[i].d;
-    			var tsec = [];
-    			for (var j = i+1; j < tools.length; j++) {
-    				if (tools[j] === undefined)
-    					break;
-    				var wasSec = false;
-    				if (tools[j].h !== undefined) {
-    					for( var a = 0; a < tools[j].h.length; a++) {
-    							if (heaters.includes(tools[j].h[a])) {
-    									tsec.push(j);
-    									isSec[j] = true;
-    									wasSec = true;
-    							}
-    					}
-    				}
-    				if (wasSec)
-    					break;
-    				if (tools[j].d !== undefined) {
-    					for( a = 0; a < tools[j].d.length; a++) {
-    							if (drives.includes(tools[j].d[a])) {
-    									tsec.push(j);
-    									isSec[j] = true;
-    							}
-    					}
-    				}
-    			}
-    			if(tsec.length)
-    				tools[i].sec = tsec;
-    		}
-    	}
-      tools.forEach((tool, index) => tool.hide = isSec[index])
-      console.log(tools);
-      this.toolHeads = tools;
-    },
-    sendToolMatrix: function(targetMatrix) {
-  		var out = "";
-      console.trace();
-  		for (var i = 0; i < this.toolHeads.length; i++)
-  		{
-  			out += (this.b4[i] == undefined?"":this.b4[i]);
-  			out += "M563 P"+ i + " S\"" + this.toolHeads[i].e + "\" D" + this.toolHeads[i].d + " H" + this.toolHeads[i].h + "\t\t\t; Define tool " + i + "\n";
-  			out += "G10 P" + i + " X" + this.toolHeads[i].x.toFixed(2) + " Y" + this.toolHeads[i].y.toFixed(2) + " Z" + this.toolHeads[i].z.toFixed(2) + "\t\t; Set tool " + i + " axis offsets\n"
-  			out += "G10 P" + i + " R" + this.toolHeads[i].r + " S" + this.toolHeads[i].s + "\t\t\t\t; Set initial tool " + i + " active and standby temperatures to " + this.toolHeads[i].s + "/" + this.toolHeads[i].r + "°C\n";
-  		}
-  		out += (this.b4[this.toolHeads.length] == undefined? "" : this.b4[this.toolHeads.length] );
-      console.log(this.tools);
-      let filename = "0:/macros/_Tools/" + this.toolPath[this.select].matrix;
-      let data =  out;
-      const content = new Blob([data]);
-      try {
-        this.upload({ filename: filename, content });
-        console.log("file saved");
-      } catch (e) {
-        console.log("Error: " + (result.err == 1 ? "no such file" : "not mounted"));
-        console.error(e);// TODO Optionally ask user to save file somewhere else
-      }
+  }
+  this.makeTools(toolHeads);
+  //console.log("done")
+  //console.log(toolHeads);
+},
+handleBtnOffsetEvent: async function(e) {
+  let that = e.target;
+  console.log("btnOffset clicked")
+  while (that.nodeName.toLowerCase() !== "button") {
+    that = that.parentElement;
+  }
+  e.preventDefault();
+  if(!that.classList.contains("v-btn--disabled") && this.tools.length > 0)
+  {
+    that.classList.add("v-btn--disabled")
+    let attr = that.attributes;
+    var first = 0;
+    while (this.tools[first] === undefined && this.tools.length > 0)
+    {
+      first++;
     }
-  },
-  mounted() {
-    console.log('load the cfg file');
-    setTimeout(this.preloadToolMatrices, 1000*Math.random());
-  },
-  watch: {
-    toolHeads: {
-      deep: true,
-      handler: function(newVal){
-        //console.trace();
-        console.log(newVal);
+    var offset = (parseFloat(that.innerText) + this.toolHeads[attr.tnum.value][attr.off.value])
+    clearTimeout(this.xyToolOffset);
+    console.log(offset);
+    this.toolHeads[attr.tnum.value][attr.off.value] = offset;
+    await this.sendCode("G10 P" + attr.tnum.value + " X" + this.toolHeads[attr.tnum.value].x + " Y" + this.toolHeads[attr.tnum.value].y +" S0 R0");
+    //await this.sendCode("G1 X0 Y0 Z150 F18000");
+    if (this.curTool !== attr.tnum.value){
+      await this.sendCode("T" + attr.tnum.value);
+      this.curTool = attr.tnum.value;
+    }
+    await this.sendCode("G1 X0 Y0 Z130 F100");
+    this.xyToolOffset = setTimeout(this.sendToolMatrix, 1000, attr.tnum.value)
+    that.classList.remove("v-btn--disabled")
+  }
+},
+handleToolOffsetBlurEvent: function(e) {
+  e.preventDefault();
+  //that.classList.add("v-btn--disabled")
+  if (tools.length > 0 && this.style.border !== "none") {
+    var absolute = $("#relative").prop("checked");
+    var off = $(this).attr('off');
+    var tnum = $(this).attr('tnum');
+    var tsec = [];
+    var first = 0;
+    while(tools[first] === undefined)
+    {
+      first++;
+    }
+    $(this).attr('tsec').split(",").forEach(tool => tsec.push(parseInt(tool.substring(tool.indexOf("T")+1))));
+    var offset = parseFloat($(this).prop("value"))
+    var toolOffset = offset + (absolute?tools[first][(off.includes("X")?"x":"y")]:0)
+    console.log(toolOffset);
+    clearTimeout(xyToolOffset);
+    tools[parseFloat(tnum.substring(1))][off.includes("X")?"x":"y"] = toolOffset;
+    tsec.forEach(tool => tools[tool][off.includes("X")?"x":"y"] = toolOffset )
+    $(this).prop("value", offset.toFixed(2))
+    tools.forEach((tool, i) => sendGCode("G10 P" + i + " X" + tool.x.toFixed(2) + " Y" + tool.y.toFixed(2)));
+    xyToolOffset = setTimeout(sendToolMatrix, 1000, $("#hname").data("tool"));
+  }
+},
+makeTools: function(tools) {
+  console.log('here');
+  var isSec = [];
+  var first = 0;
+  while (tools[first] === undefined && tools.length > 0)
+  {
+    first++;
+  }
+  for(var i = 0; i < tools.length; i++) {
+    if (tools[i] !== undefined && isSec[i] === undefined) {
+      var heaters = tools[i].h;
+      var drives = tools[i].d;
+      var tsec = [];
+      for (var j = i+1; j < tools.length; j++) {
+        if (tools[j] === undefined)
+        break;
+        var wasSec = false;
+        if (tools[j].h !== undefined) {
+          for( var a = 0; a < tools[j].h.length; a++) {
+            if (heaters.includes(tools[j].h[a])) {
+              tsec.push(j);
+              isSec[j] = true;
+              wasSec = true;
+            }
+          }
+        }
+        if (wasSec)
+        break;
+        if (tools[j].d !== undefined) {
+          for( a = 0; a < tools[j].d.length; a++) {
+            if (drives.includes(tools[j].d[a])) {
+              tsec.push(j);
+              isSec[j] = true;
+            }
+          }
+        }
       }
+      if(tsec.length)
+      tools[i].sec = tsec;
     }
   }
+  tools.forEach((tool, index) => tool.hide = isSec[index])
+  console.log(tools);
+  this.toolHeads = tools;
+},
+sendToolMatrix: function(targetMatrix) {
+  var out = "";
+  console.trace();
+  for (var i = 0; i < this.toolHeads.length; i++)
+  {
+    out += (this.b4[i] == undefined?"":this.b4[i]);
+    out += "M563 P"+ i + " S\"" + this.toolHeads[i].e + "\" D" + this.toolHeads[i].d + " H" + this.toolHeads[i].h + "\t\t\t; Define tool " + i + "\n";
+    out += "G10 P" + i + " X" + this.toolHeads[i].x.toFixed(2) + " Y" + this.toolHeads[i].y.toFixed(2) + " Z" + this.toolHeads[i].z.toFixed(2) + "\t\t; Set tool " + i + " axis offsets\n"
+    out += "G10 P" + i + " R" + this.toolHeads[i].r + " S" + this.toolHeads[i].s + "\t\t\t\t; Set initial tool " + i + " active and standby temperatures to " + this.toolHeads[i].s + "/" + this.toolHeads[i].r + "°C\n";
+  }
+  out += (this.b4[this.toolHeads.length] == undefined? "" : this.b4[this.toolHeads.length] );
+  console.log(this.tools);
+  let filename = "0:/macros/_Tools/" + this.toolPath[this.select].matrix;
+  let data =  out;
+  const content = new Blob([data]);
+  try {
+    this.upload({ filename: filename, content });
+    console.log("file saved");
+  } catch (e) {
+    console.log("Error: " + (result.err == 1 ? "no such file" : "not mounted"));
+    console.error(e);// TODO Optionally ask user to save file somewhere else
+  }
+}
+},
+mounted() {
+  console.log('load the cfg file');
+  setTimeout(this.preloadToolMatrices, 1000*Math.random());
+},
+watch: {
+  toolHeads: {
+    deep: true,
+    handler: function(newVal){
+      //console.trace();
+      console.log(newVal);
+    }
+  }
+}
 }
 </script>

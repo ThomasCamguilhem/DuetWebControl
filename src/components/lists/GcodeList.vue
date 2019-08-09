@@ -1,6 +1,6 @@
 <style scoped>
 .sm4 {
-	width: 30%;
+	width: 23%;
 	height: 100%;
 	border-radius: 10%;
 	margin: 1%;
@@ -123,7 +123,7 @@
 				<v-list-tile v-for="item in filelist" :key="item.name" @click="onItemClick(item)" v-tab-control>
 					<v-list-tile-avatar v-bind:class="{'icon': item.ico}">
 						<object :data="item.ico" v-if="true" class="list-icon" :class="item.isDirectory ? 'grey darken-1 white--text' : 'grey darken-2 white--text'" style="border-radius: 50%; padding: 10%">
-							<img :src="item.isDirectory ? '/img/ressources/folder.svg' : '/img/ressources/file.png'" style="width: 100%; height: 100%; margin-top: 0%"/>
+							<img :src="item.isDirectory ? '/img/ressources/folder.svg' : '/img/ressources/file.png'" style="width: 80%; height: 80%; margin-top: 9%;margin-bottom: 8%;"/>
 						</object>
 						<!--v-icon class="list-icon" :class="item.isDirectory ? 'grey lighten-1 white--text' : 'blue white--text'">
 							{{ item.isDirectory ? 'folder' : 'assignment' }}
@@ -155,11 +155,11 @@
 						</v-list-tile-title>
 					</v-flex>
 				</v-layout>
-				<v-layout sm4 shrink v-for="(item, index) in filelist" v-if="(index < 6 && !item.isDirectory) || !isLocal" :key="item.name" @click="onItemClick(item)" @fileClicked="fileClicked" v-bind:class="{'icon': item.ico}" :class="(item.isDirectory ? 'grey darken-2 white--text' : 'grey darken-2 white--text')"
+				<v-layout sm4 shrink v-for="(item, index) in filelist" v-if="(index < 8 && !item.isDirectory) || !isLocal" :key="item.name" @click="onItemClick(item)" @fileClicked="fileClicked" v-bind:class="{'icon': item.ico}" :class="(item.isDirectory ? 'grey darken-2 white--text' : 'grey darken-2 white--text')"
 				style="cursor: pointer;">
 					<v-flex class="content">
 						<object :data="item.ico" v-if="item.ico || true" class="list-icon">
-							<img :src="item.isDirectory ? '/img/ressources/folder.svg' : '/img/ressources/file.png'" style="width: 90%; height: 90%; margin-top: 0%"/>
+							<img :src="item.isDirectory ? '/img/ressources/folder.svg' : '/img/ressources/file.png'" style="width: 80%; height: 80%; margin-top: 11%;margin-bottom: 6%;"/>
 						</object>
 						<v-list-tile-title v-bind:class="{local: isLocal}" style="width:90%; margin: -5px 0 5px 5%;">
 							{{ item.displayName }}
@@ -379,6 +379,7 @@ export default {
 		},
 
 		onItemClick(item) {
+			console.log(item);
 			if (item.isDirectory) {
 				this.loadDirectory(Path.combine(this.directory, item.name));
 				//this.computeRowsCols();
@@ -396,7 +397,7 @@ export default {
 		},
 		start(item) {
 			console.log(item);
-			this.sendCode(`M32 "${Path.combine(this.directory, (item && item.name) ? item.name : this.selection[0].name)}"`);
+			this.sendCode(`M32 "${Path.combine(item && item.directory ?  item.directory : this.directory, (item && item.name) ? item.name : this.selection[0].name)}"`);
 		},
 	},
 	mounted() {

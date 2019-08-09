@@ -59,6 +59,9 @@ export default {
 		}
 	},
 	methods: {
+		logN: function(base, value) {
+    	return Math.log(value) / Math.log(base);
+		},
 		updateChart() {
 			layers = this.job.layers;
 			this.chart.data.labels = layers.map((dummy, index) => index + 1);
@@ -87,14 +90,14 @@ export default {
 				this.chart.config.options.scales.xAxes[0].ticks.min = 1;
 				this.chart.config.options.scales.xAxes[0].ticks.max = layers.length;
 				this.chart.config.options.scales.xAxes[0].ticks.stepSize = 5;
-				this.chart.config.options.scales.yAxes[0].ticks.max = (maxLayerTime > 30? (Math.ceil(maxLayerTime/60)*60) : 30);
-				this.chart.config.options.scales.yAxes[0].ticks.stepSize = (maxLayerTime <= 60? 10 : (maxLayerTime <= 600? 60 : (maxLayerTime <= 1200 ? 120 : 300)));
+				this.chart.config.options.scales.yAxes[0].ticks.max = (60*Math.ceil(maxLayerTime / Math.pow(60,Math.floor(this.logN(60, maxLayerTime)))));
+				this.chart.config.options.scales.yAxes[0].ticks.stepSize = (10*Math.ceil(maxLastLayerTime / Math.pow(60,Math.floor(this.logN(60, maxLastLayerTime)))));
 			} else {
 				this.chart.config.options.scales.xAxes[0].ticks.min = Math.max((layers.length > 2) ? 2 : 1, layers.length - 30);
 				this.chart.config.options.scales.xAxes[0].ticks.max = Math.max(30, layers.length);
 				this.chart.config.options.scales.xAxes[0].ticks.stepSize = 1;
-				this.chart.config.options.scales.yAxes[0].ticks.max = (maxLastLayerTime > 30? (Math.ceil(maxLastLayerTime/60)*60) : 30);
-				this.chart.config.options.scales.yAxes[0].ticks.stepSize = (maxLastLayerTime <= 60 ? 10 : (maxLastLayerTime <= 600? 60 : (maxLastLayerTime <= 1200 ? 120 : 300)));
+				this.chart.config.options.scales.yAxes[0].ticks.max = (60*Math.ceil(maxLastLayerTime / Math.pow(60,Math.floor(this.logN(60, maxLastLayerTime)))));
+				this.chart.config.options.scales.yAxes[0].ticks.stepSize = (10*Math.ceil(maxLastLayerTime / Math.pow(60,Math.floor(this.logN(60, maxLastLayerTime)))));
 			}
 			this.chart.update();
 		},

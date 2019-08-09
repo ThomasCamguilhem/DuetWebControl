@@ -13,11 +13,11 @@
 			<v-card-actions>
 				<v-spacer></v-spacer>
 
-				<v-btn color="blue darken-1" flat="flat" :disabled="!!counter" @click="resetFault">
+				<v-btn color="primary darken-1" flat="flat" :disabled="!!counter" @click="resetFault">
 					{{ $t('dialog.resetHeaterFault.resetFault') + (counter ? ` (${counter})` : '') }}
 				</v-btn>
 
-				<v-btn color="blue darken-1" flat="flat" @click="hide">
+				<v-btn color="primary darken-1" flat="flat" @click="hide">
 					{{ $t('generic.cancel') }}
 				</v-btn>
 			</v-card-actions>

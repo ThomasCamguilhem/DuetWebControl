@@ -1,3 +1,8 @@
+<style>
+.v-breadcrumbs__item {
+	color: hsl(43, 98%, 50%);
+}
+</style>
 <template>
 	<v-breadcrumbs :items="pathItems" divider=">">
 		<template slot="item" slot-scope="props">

@@ -54,7 +54,7 @@ tr:hover:not(.v-datatable__expand-row).isLocal  {
 
 .md3 {
 	display: inline-flex;
-	margin: 5px;
+	margin: 0px;
 }
 </style>
 <style scoped v-if="isLocal">
@@ -125,7 +125,7 @@ table.v-table tbody th {
 									</video>
 								</div>
 								<v-icon class="mr-1" v-else>{{ props.item.isDirectory ? 'folder' : 'assignment' }}</v-icon>
-								<span>{{ props.item.name.lastIndexOf('.') > 0 ? props.item.name.substring(0, props.item.name.lastIndexOf('.')): props.item.name }}</span>
+								<span>{{ props.item.name.lastIndexOf('.') > 0 && props.item.name.substring(props.item.name.lastIndexOf('.')).includes('.g') ? props.item.name.substring(0, props.item.name.lastIndexOf('.')): props.item.name }}</span>
 							</v-layout>
 						</td>
 						<td v-else-if="header.unit === 'bytes' && ($vuetify.breakpoint.mdAndUp || !isLocal)" :key="header.value">
@@ -153,11 +153,10 @@ table.v-table tbody th {
 						</td>
 					</template>
 				</tr>
-				<!--v-layout row wrap md12 v-if="displayMode.asMini"-->
-					<v-flex shrink md3 v-if="displayMode.asMini" v-for="row in rows" v-bind:key="row" class="isLocal">
+					<v-flex shrink md3 v-if="displayMode.asMini" v-for="row in rows" class="isLocal" v-bind:key="row+Math.random()*1000">
 						<div v-for="col in cols"
-							v-bind:key="col"
-							v-if="((innerFilelist[col+row*cols.length] !== undefined) && (props.index == col+row*cols.length))"
+							v-bind:key="col+row*cols.length"
+							v-if="((innerFilelist[col+row*cols.length] !== undefined) && (props.index == col+row*cols.length)) && !innerLoading && !loading"
 							v-tab-control.contextmenu.dblclick
 							:active="innerFilelist[col+row*cols.length].selected"
 							:data-filename="(innerFilelist[col+row*cols.length].isDirectory ? '*' : '') + innerFilelist[col+row*cols.length].name" draggable="true"
@@ -167,25 +166,25 @@ table.v-table tbody th {
 							@dragstart="dragStart(innerFilelist[col+row*cols.length], $event)"
 							@dragover="dragOver(innerFilelist[col+row*cols.length], $event)"
 							@drop.prevent="dragDrop(innerFilelist[col+row*cols.length], $event)"
-							@keydown.space="innerFilelist[col+row*cols.length].selected = !innerFilelist[col+row*cols.length].selected" >
-							<v-layout sm4 shrink :class="(innerFilelist[col+row*cols.length].isDirectory ? 'grey darken-2 white--text' : 'grey darken-2 white--text')">
-								<v-tooltip bottom class="pr-0" v-if="innerFilelist[col+row*cols.length]">
-									<a slot="activator" href="#" @click.prevent.stop="onItemClick({item:innerFilelist[col+row*cols.length], index:col*rows.length+row})" tabindex="-1">
-										<v-layout column align-center>
+							@keydown.space="innerFilelist[col+row*cols.length].selected = !innerFilelist[col+row*cols.length].selected" style="margin: 5px">
+							<v-layout sm4 shrink :class="(innerFilelist[col+row*cols.length].isDirectory ? 'grey darken-2 white--text' : 'grey darken-2 white--text')" @click="onItemClick({item:innerFilelist[col+row*cols.length], index:col*rows.length+row})">
+								<v-tooltip bottom class="pr-0" v-if="innerFilelist[col+row*cols.length]" @click="onItemClick({item:innerFilelist[col+row*cols.length], index:col*rows.length+row})">
+									<a slot="activator" href="#" tabindex="-1" @click="onItemClick({item:innerFilelist[col+row*cols.length], index:col*rows.length+row})">
+										<v-layout column align-center @click="onItemClick({item:innerFilelist[col+row*cols.length], index:col*rows.length+row})">
 											<div style="height: 150px; margin-bottom: 10px;">
-												<object :data="innerFilelist[col+row*cols.length].ico" v-if="!innerFilelist[col+row*cols.length].isDirectory" class="img_gcode_miniature" style="margin: 10px 0px;border-radius: 10px;width: 150px;">
-													<img src="/img/ressources/file.png" width="150px"/>
+												<object :data="innerFilelist[col+row*cols.length].isDirectory ? '/img/ressources/folder.png' : innerFilelist[col+row*cols.length].ico" class="img_gcode_miniature" style="margin: 10px 0px;border-radius: 10px;width: 150px;">
+													<img v-if="!innerFilelist[col+row*cols.length].isDirectory" src=" /img/ressources/file.png " style="height: 80%; margin-top: 22%; margin-bottom: 20%; margin-left: 0%;"/>
+													<img v-if=" innerFilelist[col+row*cols.length].isDirectory" src="/img/ressources/folder.png" style="width: 80%; height: 80%; margin-top: 9%; margin-bottom: 8%;"/>
 												</object>
-												<img src="/img/ressources/folder.svg" v-if="innerFilelist[col+row*cols.length].isDirectory" class="a-gcode-miniature" width="150px"/>
 												<!--img :src="'/img/ressources/Medium_universe_' + (innerFilelist[col+row*cols.length].dir ? (innerFilelist[col+row*cols.length].dir.toLowerCase().includes('/_filament') ? 'FIL' : (innerFilelist[col+row*cols.length].dir.toLowerCase().includes('/_liquid') ? 'LIQ' : (innerFilelist[col+row*cols.length].dir.toLowerCase().includes('/_paste') ? 'PAS' : ''))) : '') + '.svg'" v-if = "innerFilelist[col+row*cols.length].isDirectory" class="a-gcode-miniature" style="position: absolute;margin: 62px 0 0 -80px; transform: skew(-16deg); filter: invert(30%);" width="60px"-->
 												<v-icon class="mr-1" v-if="false && !innerFilelist[col+row*cols.length].ico && !innerFilelist[col+row*cols.length].isDirectory"> {{ (innerFilelist[col+row*cols.length].isDirectory ? 'folder' : 'assignment') }} </v-icon>
 											</div>
-											<div style=" width: 200px;text-align: center;">
-												{{ /*(col*rows.length+row) + ': ' +*/ innerFilelist[col+row*cols.length].name.lastIndexOf('.') > 0 ? innerFilelist[col+row*cols.length].name.substring(0, innerFilelist[col+row*cols.length].name.lastIndexOf('.')): innerFilelist[col+row*cols.length].name }}
+											<div style="width: 94%; text-align: center; overflow-x: hidden; margin: 0 3%; ">
+												{{ /*(col*rows.length+row) + ': ' +*/ (innerFilelist[col+row*cols.length].name.lastIndexOf('.') > 0  && innerFilelist[col+row*cols.length].name.substring(innerFilelist[col+row*cols.length].name.lastIndexOf('.')).includes('.g'))? innerFilelist[col+row*cols.length].name.substring(0, innerFilelist[col+row*cols.length].name.lastIndexOf('.')): innerFilelist[col+row*cols.length].name }}
 											</div>
 										</v-layout>
 									</a>
-									<span v-if="!innerFilelist[col+row*cols.length].isDirectory">
+									<span v-if="!innerFilelist[col+row*cols.length].isDirectory || true">
 										<template v-for="header in headers">
 											<p v-if="header.unit === 'bytes' && (innerFilelist[col+row*cols.length][header.value] != undefined)" :key="header.value" style="margin: 0px; padding: 0px">
 												{{getHeaderText(header)}}: {{ (innerFilelist[col+row*cols.length][header.value] != undefined) ? $displaySize(innerFilelist[col+row*cols.length][header.value]) : '' }}
@@ -213,7 +212,6 @@ table.v-table tbody th {
 							</v-layout>
 						</div>
 					</v-flex>
-				<!--/v-layout-->
 			</template>
 		</v-data-table>
 		<v-menu v-model="contextMenu.shown" :position-x="contextMenu.x" :position-y="contextMenu.y" absolute offset-y v-tab-control.contextmenu>
@@ -470,9 +468,9 @@ export default {
 			this.innerLoading = false;
 		},
 		displayLoadingValue(item, prop, precision, unit = '') {
-			if (item.isDirectory) {
+			/*if (item.isDirectory) {
 				return '';
-			}
+			}*/
 			if (!item[prop]) {
 				return this.$t((item[prop] === undefined) ? 'generic.loading' : 'generic.noValue');
 			}
@@ -493,9 +491,9 @@ export default {
 			return `${displayValue} ${unit}`;
 		},
 		displayTimeValue(item, prop) {
-			if (item.isDirectory) {
+			/*if (item.isDirectory) {
 				return '';
-			}
+			}*/
 			return (item[prop] !== null) ? this.$displayTime(item[prop]) : this.$t('generic.noValue');
 		},
 		onItemTouchStart(props, e) {
@@ -781,17 +779,7 @@ export default {
 					{
 						this.cols.push(i);
 					}
-					items.sort(function(a, b){
-						if (a.isDirectory && !b.isDirectory)
-							return -1;
-						if (!a.isDirectory && b.isDirectory)
-							return 1;
-						if(a.name < b.name)
-							return -1;
-						if(a.name > b.name)
-							return 1;
-						return 0;
-					})
+					this.innerFilelist = this.sort(items, this.innerPagination.sortBy, this.innerPagination.descending)
 					//console.log(items)
 				}
 			}

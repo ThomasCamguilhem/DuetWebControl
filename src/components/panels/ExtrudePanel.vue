@@ -21,14 +21,14 @@
 			<v-flex>
 				<v-layout row wrap align-center>
 					<v-flex v-if="currentTool && currentTool.extruders.length > 1" class="ma-1">
-						<p class="mb-1">
+						<p class="mb-1" v-bind:class="{local: isLocal}">
 							{{ $t('panel.extrude.mixRatio') }}
 						</p>
 						<v-btn-toggle v-model="mix" mandatory multiple>
-							<v-btn flat value="mix" :disabled="uiFrozen" color="primary">
+							<v-btn flat value="mix" :disabled="uiFrozen" color="primary" v-bind:class="{local: isLocal}">
 								{{ $t('panel.extrude.mix') }}
 							</v-btn>
-							<v-btn flat v-for="extruder in currentTool.extruders" :key="extruder" :value="extruder" :disabled="uiFrozen" color="primary">
+							<v-btn flat v-for="extruder in currentTool.extruders" :key="extruder" :value="extruder" :disabled="uiFrozen" color="primary" v-bind:class="{local: isLocal}">
 								{{ `E${extruder}` }}
 							</v-btn>
 						</v-btn-toggle>
@@ -38,7 +38,8 @@
 							{{ $t('panel.extrude.amount', ['mm']) }}
 						</p>
 						<v-btn-toggle v-model="amount" mandatory>
-							<v-btn flat v-for="(amount, index) in extruderAmounts" :key="index" :value="amount" :disabled="uiFrozen" color="primary" @contextmenu.prevent="editAmount(index)"  v-bind:class="{local: isLocal}">
+							<!-- color="primary"-->
+							<v-btn v-for="(amount, index) in extruderAmounts" :key="index" :value="amount" :disabled="uiFrozen" @contextmenu.prevent="editAmount(index)"  v-bind:class="{local: isLocal}">
 								{{ amount }}
 							</v-btn>
 						</v-btn-toggle>
@@ -48,7 +49,7 @@
 							{{ $t('panel.extrude.feedrate', ['mm/s']) }}
 						</p>
 						<v-btn-toggle v-model="feedrate" mandatory>
-							<v-btn flat v-for="(feedrate, index) in extruderFeedrates" :key="index" :value="feedrate" :disabled="uiFrozen" color="primary" @contextmenu.prevent="editFeedrate(index)"  v-bind:class="{local: isLocal}">
+							<v-btn v-for="(feedrate, index) in extruderFeedrates" :key="index" :value="feedrate" :disabled="uiFrozen" @contextmenu.prevent="editFeedrate(index)"  v-bind:class="{local: isLocal}">
 								{{ feedrate }}
 							</v-btn>
 						</v-btn-toggle>
@@ -91,7 +92,7 @@ export default {
 				const heaters = this.heat.heaters, minTemp = this.heat.coldExtrudeTemperature;
 				return !selectedHeaters.some(heater => heaters[heater].current < minTemp);
 			}
-			return false;
+			return this.heat.coldExtrudeTemperature == 0;
 		},
 		canRetract() {
 			if (this.currentTool && this.currentTool.heaters.length) {
@@ -99,7 +100,7 @@ export default {
 				const heaters = this.heat.heaters, minTemp = this.heat.coldRetractTemperature;
 				return !selectedHeaters.some(heater => heaters[heater].current < minTemp);
 			}
-			return false;
+			return this.heat.coldRetractTemperature == 0;
 		},
 		mix: {
 			get() {
@@ -147,6 +148,7 @@ export default {
 		...mapActions('machine', ['sendCode']),
 		...mapMutations('machine/settings', ['setExtrusionAmount', 'setExtrusionFeedrate']),
 		async buttonClicked(extrude) {
+			console.log(this.currentTool);
 			if (!this.currentTool.extruders.length) {
 				return;
 			}

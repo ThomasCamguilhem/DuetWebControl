@@ -1,33 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="scrollbar-width: none;" onloadend="onBodyLoad('Head')">
 	<head>
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width,initial-scale=1.0">
 		<link rel="icon" href="<%= BASE_URL %>img/ressources/favicon.png">
-		<link rel="stylesheet" type="text/css" href="css/GTAmericaExpandedLight.css">
-		<link rel="stylesheet" type="text/css" href="css/GTAmericaExpandedRegular.css">
-		<link rel="stylesheet" type="text/css" href="css/GTAmericaExpandedThin.css">
-		<link rel="stylesheet" type="text/css" href="css/KnockoutHTF66FullFlyweight.css">
-		<link rel="stylesheet" type="text/css" href="css/Dosis.css">
+		<link rel="stylesheet" type="text/css" href="/css/GTAmericaExpandedLight.css">
+		<link rel="stylesheet" type="text/css" href="/css/GTAmericaExpandedRegular.css">
+		<link rel="stylesheet" type="text/css" href="/css/GTAmericaExpandedThin.css">
+		<link rel="stylesheet" type="text/css" href="/css/KnockoutHTF66FullFlyweight.css">
+		<link rel="stylesheet" type="text/css" href="/css/Dosis.css">
 		<title>Duet Web Control 2</title>
+		<script>
+			function onBodyLoad (){
+				console.log(this);
+			}
+		</script>
 	</head>
-	<body style="background: #403E3D">
+	<body style="background: #403E3D" onload="onBodyLoad()">
+	<link rel="stylesheet" type="text/css" href="/css/main.css">
 		<style>
 			.v-card__title, .v-toolbar__title {
 					font-family: GTAmericaExpandedRegular, sans-serif;
 					text-transform: uppercase;
     			letter-spacing: 0.1rem;
 			}
+			::-webkit-scrollbar {
+			    width: 0px;  /* Remove scrollbar space */
+			    background: transparent;  /* Optional: just make scrollbar invisible */
+			}
+			/* Optional: show position indicator in red */
+			::-webkit-scrollbar-thumb {
+			    background: #403E3D;
+			}
+
 			/*button {
 					font-family: DosisRegular, sans-serif !important;
 					text-transform: uppercase !important;
     			letter-spacing: 0.25rem;
 			}*/
 			.v-navigation-drawer {
-				font-family: DosisRegular, sans-serif !important;
+				/*font-family: DosisRegular, sans-serif !important;*/
 				text-transform: uppercase !important;
-				letter-spacing: 0.25rem;
+				letter-spacing: 0.1rem;
 			}
 		</style>
 		<img src="<%= BASE_URL %>img/ressources/folder.svg" style="display: none">

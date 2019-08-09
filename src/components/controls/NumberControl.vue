@@ -142,7 +142,6 @@ export default {
         },
         title: {
             type: String,
-            default: "Select bed/chamber temperature",
             required: true,
         },
         prompt: {
@@ -177,7 +176,7 @@ export default {
                 return
             }
 
-            let newVal = this.currentValue + 1 * this.step
+            let newVal = this.currentValue + this.step
             this.decrementDisabled = false
 
             this._updateValue(newVal)
@@ -187,7 +186,7 @@ export default {
                 return
             }
 
-            let newVal = this.currentValue + -1 * this.step
+            let newVal = this.currentValue - this.step
             this.incrementDisabled = false
 
             this._updateValue(newVal)
@@ -213,9 +212,9 @@ export default {
             this.currentValue = -1;
             console.log(event)
             if (event.target)
-              this._updateValue(parseInt(event.target.value))
+              this._updateValue(parseFloat(event.target.value))
             else
-              this._updateValue(parseInt(event));
+              this._updateValue(parseFloat(event));
 
 
             console.log("update " +this.currentValue);

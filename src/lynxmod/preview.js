@@ -58,7 +58,8 @@ export default {
 				return;
 			}
 			this.previewScene = new THREE.Scene();
-			this.previewCamera = new THREE.PerspectiveCamera(75, 600 / 600, 0.1, 10000);
+			this.previewScene.background = new THREE.Color(/*0xffffff*/0x403e3d);
+			this.previewCamera = new THREE.PerspectiveCamera(45, 600 / 600, 0.1, 10000);
 			var previewSpace = ($("#threeDisplay")[0] ? $("#threeDisplay")[0] : $("#threeDisplay"));
 			previewSpace.innerHTML = "";
 			this.previewRenderer = new THREE.WebGLRenderer({
@@ -91,7 +92,7 @@ export default {
 			}));
 			buildPlate.receiveShadow = true;
 			buildPlate.rotation.x = -Math.PI / 2;
-			buildPlate.position.y = -0.1;
+			buildPlate.position.y = -1;
 			var buildSurface = new THREE.Mesh(geometry, material);
 			buildSurface.receiveShadow = true;
 			buildSurface.rotation.x = -Math.PI / 2;
@@ -106,7 +107,7 @@ export default {
 			//this.previewScene.add( topCircle );
 			this.previewScene.add(buildSurface);
 			this.previewScene.add(buildPlate);
-			geometry = new THREE.CylinderGeometry(200, 200, 600, 32, 1, true, 0, Math.PI);
+			geometry = new THREE.CylinderGeometry(200, 200, 602, 32, 1, true, 0, 2*Math.PI);
 			material = new THREE.MeshBasicMaterial({
 				color: 0xe0e0e0,
 				side: THREE.BackSide
@@ -114,7 +115,7 @@ export default {
 			var buildVolume = new THREE.Mesh(geometry, material);
 
 			buildVolume.position.y = 300;
-			this.previewScene.add(buildVolume);
+			//this.previewScene.add(buildVolume);
 
 			this.previewControls = new THREE.OrbitControls(this.previewCamera, $("#threeDisplay")[0]);
 
@@ -249,8 +250,8 @@ export default {
 				}, 1000);
 				var imgData;
 				try {
-					this.previewCamera.position.set(-400, 575, 0);
-					this.previewControls.target.set(0, 300, 0);
+					this.previewCamera.position.set(-800, 550, 0);
+					this.previewControls.target.set(0, 250, 0);
 					this.previewControls.update();
 					this.previewRenderer.render(this.previewScene, this.previewCamera);
 					var strMime = "image/jpeg";
@@ -263,7 +264,7 @@ export default {
 					var width = gcodeReader.boundingBox.max.x - gcodeReader.boundingBox.min.x;
 					var length = gcodeReader.boundingBox.max.y - gcodeReader.boundingBox.min.y;
 					var height = gcodeReader.boundingBox.max.z - gcodeReader.boundingBox.min.z;
-					let dFromC = 3 / 5 * Math.sqrt(width * width + length * length);
+					let dFromC = 1.24 * Math.sqrt(width * width + length * length);
 					this.previewControls.object.position.set(centerY - dFromC * Math.cos(Math.PI / 4), 4 / 5 * (centerZ + Math.max(width, length, height)), centerX - dFromC * Math.sin(Math.PI / 4));
 					this.previewControls.target.set(centerY, centerZ, centerX);
 					this.previewControls.update();

@@ -26,7 +26,7 @@ p {
 
 </style>
 <template>
-  <v-card class="card z_probe_offset">
+  <v-card class="card z_probe_offset" style="height:95%">
     <v-card-title>
       <span>Z Probe Offset</span>
     </v-card-title>

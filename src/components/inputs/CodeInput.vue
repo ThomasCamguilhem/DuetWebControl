@@ -19,7 +19,7 @@
 		</v-flex>
 
 		<v-flex shrink>
-			<v-btn color="info" :disabled="uiFrozen" :loading="sendingCode" @click="doSend">
+			<v-btn color="primary darken-1" :disabled="uiFrozen" :loading="sendingCode" @click="doSend">
 				<v-icon class="mr-2">send</v-icon> {{ $t('input.code.send') }}
 			</v-btn>
 		</v-flex>

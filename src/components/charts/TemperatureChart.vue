@@ -3,7 +3,7 @@
 	display: flex;
 	flex-direction: column;
 	width: 97%;
-	min-height: 200px;
+	min-height: 250px;
 }
 
 .content {
@@ -99,7 +99,7 @@ var tempSamples = {
 	}
 }
 
-function pushSeriesData(machine, heaterIndex, heater, extra) {
+function pushSeriesData(machine, heaterIndex, heater, extra, tools) {
 	// Get series from dataset
 	const machineData = tempSamples[machine];
 	let dataset = machineData.temps.find(function(item) {
@@ -109,7 +109,12 @@ function pushSeriesData(machine, heaterIndex, heater, extra) {
 	});
 
 	if (!dataset || dataset.locale !== i18n.locale) {
-		const label = heater.name ? heater.name : i18n.t('chart.temperature.heater', [heaterIndex]);
+		const tool = (tools.filter((tool) => tool.heaters.includes(heaterIndex)))[0]
+		let label
+			if (tool)
+				label = (tool.name ? tool.name : (heater.name ? heater.name : (tool.number ? tool.number : i18n.t('chart.temperature.heater', [heaterIndex]))))
+			else 
+				label = heaterIndex == 0 ? "Bed" : heaterIndex == 4 ? "Chamber" : (heater.name ? heater.name : i18n.t('chart.temperature.heater', [heaterIndex]));
 		if (dataset) {
 			dataset.label = label;
 			dataset.locale = i18n.locale;
@@ -141,6 +146,7 @@ export default {
 		...mapState('machine/model', ['heat', 'tools']),
 		...mapState('machine/settings', ['displayedExtraTemperatures']),
 		...mapState('settings', ['darkTheme']),
+		...mapState({isLocal: state => state.isLocal,}),
 		hasData() { return this.heat.heaters.length || this.displayedExtraTemperatures.length; }
 	},
 	data() {
@@ -213,8 +219,29 @@ export default {
 				}
 			},
 			legend: {
+				position: (this.isLocal ? 'right' : 'top'),
 				labels: {
 					filter: (legendItem, data) => data.datasets[legendItem.datasetIndex].showLine,
+					generateLabels: (chart) => {
+						var data = chart.data;
+						return data.datasets.map(function(dataset, i) {
+							return {
+								text: dataset.label + (this.isLocal ? ": " +dataset.data[dataset.data.length -1].toFixed(1) + "°C" : ""),
+								fillStyle: dataset.backgroundColor,
+								hidden: !chart.isDatasetVisible(i) || dataset.data[dataset.data.length -1] > 1000,
+								lineCap: dataset.borderCapStyle,
+								lineDash: dataset.borderDash,
+								lineDashOffset: dataset.borderDashOffset,
+								lineJoin: dataset.borderJoinStyle,
+								lineWidth: dataset.borderWidth,
+								strokeStyle: dataset.borderColor,
+								pointStyle: dataset.pointStyle,
+								// Below is extra data used for toggling the datasets
+								datasetIndex: i
+							};
+						}, this);
+					},
+
 					fontFamily: 'Roboto,sans-serif'
 				}
 			},
@@ -320,7 +347,7 @@ export default {
 									maxTemperature += (maxTemperature < 50 ? 10 : (maxTemperature < 150 ? 25 : (maxTemperature < 300 ? 50 : 100)));
 									console.log(heater.current);
 								}
-								pushSeriesData(machine, heaterIndex, heater, false);
+								pushSeriesData(machine, heaterIndex, heater, false, that.tools);
 								if (isHeaterConfigured(state, machine, heaterIndex)) {
 									// Display it only if is mapped to at least one tool, bed or chamber
 									usedHeaters.push({ heaterIndex, extra: false });
@@ -329,7 +356,7 @@ export default {
 						});
 
 						state.machines[machine].model.heat.extra.forEach(function(heater, heaterIndex) {
-							pushSeriesData(machine, heaterIndex, heater, true);
+							pushSeriesData(machine, heaterIndex, heater, true, that.tools);
 							if (state.machines[state.selectedMachine].settings.displayedExtraTemperatures.indexOf(heaterIndex) !== -1) {
 								if (Math.floor(heater.current) > maxTemperature && heater.current < 1000) {
 									maxTemperature += 25;

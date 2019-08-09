@@ -1,7 +1,7 @@
 <template>
 	<div class="component">
 		<v-toolbar>
-			<sd-card-btn class="hidden-sm-and-down" :directory="directory" @storageSelected="selectStorage" v-if="!isLocal"></sd-card-btn>
+			<sd-card-btn class="hidden-sm-and-down" :directory="directory" @storageSelected="selectStorage" v-if="!isLocal && false"></sd-card-btn>
 			<directory-breadcrumbs v-model="directory"></directory-breadcrumbs>
 
 			<v-spacer></v-spacer>
@@ -9,13 +9,13 @@
 			<v-btn class="hidden-sm-and-down" :disabled="uiFrozen" @click="showNewDirectory = true">
 				<v-icon class="mr-1">create_new_folder</v-icon> {{ $t('button.newDirectory.caption') }}
 			</v-btn>
-			<v-btn class="hidden-sm-and-down" color="info" :loading="loading" :disabled="uiFrozen" @click="refresh">
+			<v-btn class="hidden-sm-and-down" color="grey darken-3" :loading="loading" :disabled="uiFrozen" @click="refresh">
 				<v-icon class="mr-1">refresh</v-icon> {{ $t('button.refresh.caption') }}
 			</v-btn>
-			<v-btn v-if="isLocal" color="grey darken-3" :loading="loading" :disabled="uiFrozen" @click="refresh">
+			<v-btn class="hidden-md-and-up" v-if="isLocal" color="grey darken-3" :loading="loading" :disabled="uiFrozen" @click="refresh">
 				<v-icon class="mr-1">refresh</v-icon>
 			</v-btn>
-			<upload-btn class="hidden-sm-and-down" :directory="directory" target="gcodes" color="primary"></upload-btn>
+			<upload-btn class="hidden-sm-and-down" :directory="directory" target="gcodes" color="primary darken-1"></upload-btn>
 		</v-toolbar>
 
 		<base-file-list ref="filelist" v-model="selection" :headers="headers" :directory.sync="directory" :filelist.sync="filelist" :loading.sync="loading" sort-table="jobs" @directoryLoaded="directoryLoaded" @fileClicked="fileClicked">
@@ -45,7 +45,7 @@
 			<v-btn color="info" :loading="loading" :disabled="uiFrozen" @click="refresh" v-if="!isLocal">
 				<v-icon class="mr-1">refresh</v-icon> {{ $t('button.refresh.caption') }}
 			</v-btn>
-			<upload-btn :directory="directory" target="gcodes" color="primary" v-if="!isLocal"></upload-btn>
+			<upload-btn :directory="directory" target="gcodes" color="primary darken-1" v-if="!isLocal"></upload-btn>
 		</v-layout>
 
 		<new-directory-dialog :shown.sync="showNewDirectory" :directory="directory"></new-directory-dialog>

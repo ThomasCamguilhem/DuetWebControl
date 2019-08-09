@@ -78,18 +78,17 @@ a:hover {
 					</v-list-group>
 				</v-list>
 
-				<div class="pa-2 hidden-md-and-up">
+				<div class=" hidden-md-and-up">
 					<connect-btn v-if="isLocal" class="mb-3" block></connect-btn>
 					<login-btn v-if="!isLocal || isLocal" class="mb-3" block></login-btn>
-					<emergency-btn v-if="!isLocal" block></emergency-btn>
-					<v-spacer></v-spacer>
-					<v-btn block v-if="isLocal" color="" @click="confirmShutdownDialog.shown = !confirmShutdownDialog.shown">
-						<v-icon mr-1 >
-							power_settings_new
-						</v-icon>
-						Shutdown printer
-					</v-btn>
+					<emergency-btn class="hidden-sm-and-up" block></emergency-btn>
 				</div>
+				<v-btn style="position: absolute;bottom: 10px;margin: 3%;width: 94%;" block v-if="isLocal" color="" @click="confirmShutdownDialog.shown = !confirmShutdownDialog.shown">
+					<v-icon mr-1 >
+						power_settings_new
+					</v-icon>
+					Shutdown printer
+				</v-btn>
 			</v-navigation-drawer>
 
 			<v-toolbar ref="appToolbar" app clipped-left>
@@ -99,8 +98,9 @@ a:hover {
 					<!-- TODO: Optional OEM branding -->
 					<a id="title" v-tab-control @click="$router.push('/');" style="font-size: large;">{{ (isLocal?name.substring(8):name) }}</a>
 					<!--img src="/img/ressources/logoLynxter-dark.png" style="width:35px;"-->
-					<a id="user" v-tab-control style="color: inherit" v-if="!isLocal">{{ username }} ({{ type }})</a>
+					<a id="user" v-tab-control style="color: inherit" v-if="!isLocal || isLocal">{{ username != undefined && type != undefined ? username+'('+type+')':'' }}</a>
 				</v-toolbar-title>
+				<status-label v-if="state.status && isLocal" style="font-size: large; letter-spacing: 0.1rem;"></status-label>
 				<connect-btn v-if="isLocal" class="hidden-sm-and-down"></connect-btn>
 				<login-btn v-if="!isLocal || isLocal" class="hidden-sm-and-down"></login-btn>
 
@@ -112,6 +112,7 @@ a:hover {
 
 				<upload-btn target="start" class="hidden-sm-and-down" v-if="!isLocal"></upload-btn>
 				<emergency-btn class="hidden-xs-only"></emergency-btn>
+
 
 				<v-btn v-if="!isLocal" icon class="hidden-md-and-up" :class="toggleGlobalContainerColor" @click="hideGlobalContainer = !hideGlobalContainer">
 					<v-icon>aspect_ratio</v-icon>
@@ -191,6 +192,7 @@ export default {
 			webcam: state => state.settings.webcam
 		}),
 		...mapGetters('machine/model', ['board', 'jobProgress']),
+		...mapState('machine/model', [ 'state']),
 		toggleGlobalContainerColor() {
 			if (this.hideGlobalContainer) {
 				return this.darkTheme ? 'red darken-5' : 'red lighten-4';
@@ -252,11 +254,11 @@ export default {
 		window.addEventListener('unload', this.disconnectAll);
 
 		// Connect if running on a board
-		if (!this.isLocal || ((location.port === "80") || (location.port === ""))) {
+		if (!this.isLocal || (location.port === "80") || (location.port === "")) {
 			this.connect();
 		}
 		if(this.isLocal && ((location.port === "8080") || (location.port === "8081"))){
-			this.connect({hostname: "192.168.1.243"});
+			this.connect({hostname: "192.168.1.76"});
 		}
 
 		// Attempt to load the settings

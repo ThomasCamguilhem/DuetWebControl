@@ -45,6 +45,11 @@ export default function(connector) {
 					min: null,
 					max: null
 				},
+				cpuTemp: {
+					current: null,
+					min: null,
+					max: null
+				},
 				expansionBoards: []
 			},
 			fans: [],
@@ -193,7 +198,7 @@ export default function(connector) {
 			board: state => getBoardDefinition(state.electronics.type),
 			currentTool(state) {
 				if (state.state.currentTool >= 0) {
-					return state.tools[state.state.currentTool];
+					return state.tools.filter(tool => tool.number == state.state.currentTool)[0];
 				}
 				return null;
 			},

@@ -27,7 +27,7 @@
 						{{ $t('panel.fan.toolFan') }}
 					</v-btn>
 					<template v-for="(fan, index) in fans">
-						<v-btn flat v-if="!fan.thermostatic.control" :key="index" :value="index" :disabled="uiFrozen" color="primary" v-bind:class="{local: isLocal}">
+						<v-btn flat v-if="!fan.thermostatic.control && index != 0" :key="index" :value="index" :disabled="uiFrozen" v-bind:class="{local: isLocal}">
 							{{ fan.name ? fan.name : $t('panel.fan.fan', [index]) }}
 						</v-btn>
 					</template>

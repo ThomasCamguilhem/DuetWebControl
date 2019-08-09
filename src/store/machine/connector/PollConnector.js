@@ -335,6 +335,11 @@ export default class PollConnector extends BaseConnector {
 						current: response.data.mcutemp.cur,
 						max: response.data.mcutemp.max
 					} : {},
+					cpuTemp: response.data.cputemp ? {
+						min: response.data.cputemp.min,
+						current: response.data.cputemp.cur,
+						max: response.data.cputemp.max
+					} : {},
 					vIn: response.data.vin ? {
 						min: response.data.vin.min,
 						current: response.data.vin.cur,

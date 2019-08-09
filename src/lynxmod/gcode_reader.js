@@ -356,7 +356,9 @@ export default {
                         this.startLayer = this.instructionPos;
                         if (this.preview) {
                             /* ====== SHOW BOUNDING BOX ====== */
-                            if (this.gcodeLayers[this.curLay - 1] || this.gcodeLayers[this.curLay] || ((this.slicer == undefined || this.slicer == this.Slicer.SLIC) && this.nbLayers > 0)) {
+                            if (this.gcodeLayers[this.curLay - 1] || this.gcodeLayers[this.curLay] || ((this.slicer == undefined || this.slicer == this.Slicer.SLIC) && this.nbLayers > 0) || this.gcodeLayers.length > 1) {
+
+                              //console.log(this.boundingBox.toSource());
                               if ((this.boundingBox.max.x > this.boundingBox.min.x) || (this.boundingBox.max.y > this.boundingBox.min.y) || (this.boundingBox.max.z > this.boundingBox.min.y)) {
                                 if (!this.scene.preview.previewScene.getObjectByName("bbox")) {
                                     this.centerX = (this.boundingBox.max.x + this.boundingBox.min.x) / 2;
@@ -369,7 +371,7 @@ export default {
                                       this.scene.preview.previewControls.object.position.y = (this.nbLayers * this.layHeight);
                                     }
                                 }
-                                this.scene.preview.previewScene.remove(this.scene.preview.previewScene.getObjectByName("bbox"));
+                                /*this.scene.preview.previewScene.remove(this.scene.preview.previewScene.getObjectByName("bbox"));
                                 let geo = new THREE.Geometry();
                                 // bottom bbox
                                 geo.vertices.push(new THREE.Vector3(this.boundingBox.min.y, this.boundingBox.min.z, this.boundingBox.min.x));
@@ -404,25 +406,25 @@ export default {
                                 this.bbox = new THREE.LineSegments(geo, new THREE.LineBasicMaterial());
                                 this.bbox.name = "bbox";
                                 this.scene.preview.previewScene.add(this.bbox);
-
+                                */
                                 this.centerX = (this.boundingBox.max.x + this.boundingBox.min.x) / 2;
                                 this.centerY = (this.boundingBox.max.y + this.boundingBox.min.y) / 2;
                                 this.scene.preview.previewCamera.position.set(this.centerY, 0, this.centerX);
                                 this.width  =  this.boundingBox.max.x - this.boundingBox.min.x;
                                 this.length = this.boundingBox.max.y - this.boundingBox.min.y;
-                                this.scene.preview.previewControls.target.x = this.centerY;
+                                this.scene.preview.previewControls.target.x = this.centerY + 0.1;
                                 this.scene.preview.previewControls.target.z = this.centerX;
                                 if (this.boundingBox.max.z < this.lastPos.z) {
                                   console.log(this.boundingBox.max.z + "<" + this.lastPos.z)
                                   if (this.curLay != undefined && this.layHeight) {
-                                    this.scene.preview.previewControls.object.position.y = 4 / 6 * Math.max(this.width, this.length) + (this.curLay * this.layHeight);
+                                    this.scene.preview.previewControls.object.position.y = 1.24 * Math.max(this.width, this.length) + (this.curLay * this.layHeight);
                                     this.scene.preview.previewControls.target.y = (this.boundingBox.max.z + this.boundingBox.min.z) / 2;
                                   } else {
-                                      this.scene.preview.previewControls.object.position.y = 4 / 6 * Math.max(this.width, this.length) + (this.lastPos.z);
+                                      this.scene.preview.previewControls.object.position.y = 1.24 * Math.max(this.width, this.length) + (this.lastPos.z);
                                       this.scene.preview.previewControls.target.y = (this.boundingBox.max.z + this.boundingBox.min.z) / 2;
                                   }
                                 } else {
-                                  this.scene.preview.previewControls.object.position.y = 4 / 6 * Math.max(this.width, this.length) + (this.boundingBox.max.z);
+                                  this.scene.preview.previewControls.object.position.y = 1.24 * Math.max(this.width, this.length) + (this.boundingBox.max.z);
                                   this.scene.preview.previewControls.target.y = (this.boundingBox.max.z + this.boundingBox.min.z) / 2;
                                 }
                                 this.scene.preview.previewControls.update();
@@ -508,15 +510,14 @@ export default {
                                 i++;
                             }
 
-                            //console.log("this.gcodeLayers.length = " + this.gcodeLayers.length);
                             if (this.gcodeLayers.length > 1) {
                                 try {
                                     this.scene.preview.previewControls.update();
                                     this.scene.preview.previewRenderer.render(this.scene.preview.previewScene, this.scene.preview.previewCamera);
                                     this.strMime = "image/jpeg";
                                     this.imgData = this.scene.preview.previewRenderer.domElement.toDataURL(this.strMime);
-                                    this.scene.preview.savePicture(this.imgData, this.fileInput.name.substring(0, this.fileInput.name.lastIndexOf(".")) + "_" +
-                                    ((this.curLay - 1) >= 1000 ? "": ((this.curLay - 1) >= 100 ? "0" : ((this.curLay - 1) >= 10 ? "00" : "000"))) + (this.curLay - 1) + ".jpg");
+                                    let num = (isNaN(this.curLay - 1)?(this.gcodeLayers.length-1):(this.curLay - 1))
+                                    this.scene.preview.savePicture(this.imgData, this.fileInput.name.substring(0, this.fileInput.name.lastIndexOf(".")) + "_" + ((num >= 1000) ? "": ((num >= 100) ? "0" : ((num >= 10) ? "00" : "000"))) + num + ".jpg");
                                 } catch (e) {
                                     console.error(e);
                                     return;

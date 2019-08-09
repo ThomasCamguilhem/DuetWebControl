@@ -11,13 +11,13 @@
 			<v-btn class="hidden-sm-and-down" :disabled="uiFrozen" @click="showNewDirectory = true">
 				<v-icon class="mr-1">create_new_folder</v-icon> {{ $t('button.newDirectory.caption') }}
 			</v-btn>
-			<v-btn class="hidden-sm-and-down" color="info" :loading="loading" :disabled="uiFrozen" @click="refresh">
+			<v-btn class="hidden-sm-and-down" color="grey darken-3" :loading="loading" :disabled="uiFrozen" @click="refresh">
 				<v-icon class="mr-1">refresh</v-icon> {{ $t('button.refresh.caption') }}
 			</v-btn>
 			<v-btn class="hidden-md-and-up" color="grey darken-3" :loading="loading" :disabled="uiFrozen" @click="refresh">
 				<v-icon class="mr-1">refresh</v-icon>
 			</v-btn>
-			<upload-btn class="hidden-sm-and-down" :directory="directory" target="macros" color="primary" v-if="!isLocal"></upload-btn>
+			<upload-btn class="hidden-sm-and-down" :directory="directory" target="macros" color="primary darken-1" v-if="!isLocal || true"></upload-btn>
 		</v-toolbar>
 
 		<base-file-list ref="filelist" v-model="selection" :directory.sync="directory" :loading.sync="loading" sort-table="macros" @fileClicked="fileClicked">
@@ -41,10 +41,10 @@
 			<v-btn :disabled="uiFrozen" @click="showNewDirectory = true" v-if="!isLocal">
 				<v-icon class="mr-1">create_new_folder</v-icon> {{ $t('button.newDirectory.caption') }}
 			</v-btn>
-			<v-btn class="hidden-sm-only" color="info" :loading="loading" :disabled="uiFrozen" @click="refresh">
+			<v-btn class="hidden-sm-only" color="grey darken-3" :loading="loading" :disabled="uiFrozen" @click="refresh">
 				<v-icon class="mr-1">refresh</v-icon> {{ $t('button.refresh.caption') }}
 			</v-btn>
-			<upload-btn :directory="directory" target="macros" color="primary" v-if="!isLocal"></upload-btn>
+			<upload-btn :directory="directory" target="macros" color="primary darken-1" v-if="!isLocal"></upload-btn>
 		</v-layout>
 
 		<new-directory-dialog :shown.sync="showNewDirectory" :directory="directory"></new-directory-dialog>
@@ -56,7 +56,7 @@
 <script>
 'use strict'
 
-import { mapGetters, mapActions } from 'vuex'
+import { mapState, mapGetters, mapActions } from 'vuex'
 
 import Path from '../../utils/path.js'
 
@@ -65,7 +65,8 @@ export default {
 		...mapGetters(['uiFrozen']),
 		isFile() {
 			return (this.selection.length === 1) && !this.selection[0].isDirectory;
-		}
+		},
+		...mapState({isLocal: state => state.isLocal,}),
 	},
 	data() {
 		return {
@@ -80,7 +81,6 @@ export default {
 			},
 			showNewDirectory: false,
 			showNewFile: false,
-			isLocal: state => state.isLocal,
 		}
 	},
 	methods: {
