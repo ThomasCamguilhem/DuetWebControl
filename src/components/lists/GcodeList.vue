@@ -94,7 +94,7 @@
 		<v-card-title v-if="!isLocal">
 			<v-icon small class="mr-1">play_arrow</v-icon> {{ $t('list.gcode.caption') }}
 			<v-spacer></v-spacer>
-			<span v-show="isConnected" style="font-family: GTAmericaExpandedThin, sans-serif; text-transform: none; font-size: small;">{{ directory.replace('0:/gcodes/_' + this.getTool.substring(0, this.getTool.indexOf("_")), $t('list.gcode.root')) }}</span>
+			<span v-show="isConnected" style="font-family: GTAmericaExpandedThin, sans-serif; text-transform: none; font-size: small;">{{ directory.replace('0:/gcodes' + (this.getTool.toUpperCase().includes('DEBUG') ? "" : "/" + this.getTool.substr(0,5)), $t('list.gcode.root')) }}</span>
 		</v-card-title>
 		<v-card-title v-else>
 			<v-icon small class="mr-1">play_arrow</v-icon> {{ $t('list.gcode.caption') }}
@@ -120,7 +120,7 @@
 					</v-list-tile-content>
 				</v-list-tile>
 
-				<v-list-tile v-for="item in filelist" :key="item.name" @click="onItemClick(item)" v-tab-control>
+				<v-list-tile v-for="(item, index) in filelist" :key="item.name" @click="onItemClick(item)" v-tab-control>
 					<v-list-tile-avatar v-bind:class="{'icon': item.ico}">
 						<object :data="item.ico" v-if="true" class="list-icon" :class="item.isDirectory ? 'grey darken-1 white--text' : 'grey darken-2 white--text'" style="border-radius: 50%; padding: 10%">
 							<img :src="item.isDirectory ? '/img/ressources/folder.svg' : '/img/ressources/file.png'" style="width: 80%; height: 80%; margin-top: 9%;margin-bottom: 8%;"/>
@@ -140,12 +140,11 @@
 				</v-list-tile>
 			</v-list>
 		</v-card-text>
-
 		<v-card-text class="pa-0" v-show="loading || filelist.length || !isRootDirectory" v-else>
 			<v-progress-linear v-show="loading" :indeterminate="true" class="my-0"></v-progress-linear>
 
 			<v-layout row wrap>
-				<v-layout class="grey darken-2 white--text" sm4 style=" padding-top: 12%; padding-bottom: 12%;" @click="goUp" v-if="!isRootDirectory" shrink>
+				<!--v-layout class="grey darken-2 white--text" sm4 style=" padding-top: 12%; padding-bottom: 12%;" @click="goUp" v-if="!isRootDirectory" shrink>
 					<v-flex class="content">
 						<v-icon>
 							keyboard_arrow_up
@@ -154,8 +153,8 @@
 							{{ $t('list.baseFileList.goUp') }}
 						</v-list-tile-title>
 					</v-flex>
-				</v-layout>
-				<v-layout sm4 shrink v-for="(item, index) in filelist" v-if="(index < 8 && !item.isDirectory) || !isLocal" :key="item.name" @click="onItemClick(item)" @fileClicked="fileClicked" v-bind:class="{'icon': item.ico}" :class="(item.isDirectory ? 'grey darken-2 white--text' : 'grey darken-2 white--text')"
+				</v-layout-->
+				<v-layout sm4 shrink v-for="(item, index) in filelist.filter((item, index) => ((index < 8 && !item.isDirectory) || !isLocal))" :key="index" @click="onItemClick(item)" @fileClicked="fileClicked" v-bind:class="{'icon': item.ico}" class="grey darken-2 white--text"
 				style="cursor: pointer;">
 					<v-flex class="content">
 						<object :data="item.ico" v-if="item.ico || true" class="list-icon">
@@ -183,7 +182,7 @@
 			</v-list-tile-->
 		</v-card-text>
 
-		<v-alert :value="!filelist.length" type="info">
+		<v-alert :value="!filelist.length" type="secondary">
 			{{ this.getTool ? $t('list.gcode.noGcodes') : $t('panel.tools.noTool')}}
 		</v-alert>
 	</v-card>
@@ -206,13 +205,19 @@ export default {
 		...mapState(['selectedMachine']),
 		...mapGetters(['isConnected', 'uiFrozen']),
 		...mapState('machine/model', ['state', 'storages']),
-		isRootDirectory() { return this.getTool ?  (this.directory === Path.gcodes + "/_" + this.getTool.substring(0, this.getTool.indexOf("_")) || this.directory === Path.gcodes) : this.directory === Path.gcodes; },
+		isRootDirectory() {
+			console.log(this.getTool.substr(0,5))
+			return this.directory === ( this.getTool ?
+					( this.getTool.substr(0,5) ?
+						 ( Path.gcodes + "/" + this.getTool.substr(0,5) ) :
+						 ( Path.gcodes + "/" + this.getTool.substr(0,3) ) ) :
+						 		Path.gcodes ) },
 		...mapState({selectedMachine: state => state.selectedMachine}),
 		...mapState({
 			isLocal: state => state.isLocal,
 		}),
 		...mapState({
-			getTool: state => {console.log(state.user.loadedTool); return state.user.loadedTool}
+			getTool: state => {/*console.log(state.user.loadedTool);*/ return state.user.loadedTool}
 		}),
 	},
 	data () {
@@ -242,8 +247,8 @@ export default {
 			this.loading = true;
 			try {
 				if (this.getTool !== undefined && this.getTool !== "") {
-					if (directory ===  Path.gcodes) {
-						directory += "/_" + this.getTool.substring(0, this.getTool.indexOf("_"))
+					if (directory ===  Path.gcodes && this.getTool.substr(0,3).toUpperCase() !== "DEB") {
+						directory += "/" + this.getTool.substr(0,5)
 					}
 					const files = await this.getFileList({dir: directory, recursive: this.isLocal});
 					if(this.isLocal) {
@@ -284,7 +289,7 @@ export default {
 				}
 			}
 			this.loading = false;
-			console.log(this.filelist);
+			//console.log(this.filelist);
 		},
 		async requestFileInfo(directory, fileIndex, fileCount) {
 			if (this.fileinfoDirectory === directory) {
@@ -332,7 +337,7 @@ export default {
 					file.generatedBy = generatedBy;
 					file.printTime = printTime;
 					file.simulatedTime = simulatedTime;
-					if ( file.name.substring(file.name.lastIndexOf("/")+1,file.name.lastIndexOf(".")).length > 0){
+					/*if ( file.name.substring(file.name.lastIndexOf("/")+1,file.name.lastIndexOf(".")).length > 0){
 						var dir = ""
 						if ( file.name.substring(0,file.name.lastIndexOf(".")).length > 0){
 							dir = file.name.substring(0,file.name.lastIndexOf("."));
@@ -341,7 +346,7 @@ export default {
 						}
 						dir = dir.replace(/ /g, "_");
 						//file.ico = "http://" + this.selectedMachine + "/img/GCodePreview/" + directory.substring(10).replace(/ /g, "_") + "/" + dir + "/" + dir + "_ico.jpg";//fileIco;
-					}
+					}*/
 
 					// Move on to the next item
 					await this.requestFileInfo(directory, fileIndex + 1, fileCount);
@@ -379,7 +384,7 @@ export default {
 		},
 
 		onItemClick(item) {
-			console.log(item);
+			//console.log(item);
 			if (item.isDirectory) {
 				this.loadDirectory(Path.combine(this.directory, item.name));
 				//this.computeRowsCols();
@@ -396,7 +401,7 @@ export default {
 			}
 		},
 		start(item) {
-			console.log(item);
+			//console.log(item);
 			this.sendCode(`M32 "${Path.combine(item && item.directory ?  item.directory : this.directory, (item && item.name) ? item.name : this.selection[0].name)}"`);
 		},
 	},

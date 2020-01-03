@@ -33,16 +33,12 @@
 		height: 100%;
 		backface-visibility: hidden;
 		background-color: #403E3D;
-		border-radius: 20px;
+		/*border-radius: 20px;*/
 		overflow: hidden;
 	}
 
 	/* Style the front side (fallback if image is missing) */
 	.flip-box-front {
-	}
-	/* Style the back side */
-	.flip-box-left {
-		transform: rotateY(-90deg);
 	}
 	/* Style the back side */
 	.flip-box-back {
@@ -57,21 +53,23 @@
 			</v-card-title>
 
 			<v-card-text v-if="!item">
-				{{ prompt }}
-				<video style="display:none"></video>
+				<p v-html="prompt"></p>
 			</v-card-text>
 			<template v-else>
 				<div class="flip-box" v-if="item.ico">
 					<div class="flip-box-inner">
 						<div class="flip-box-front">
-							<img :src="item.ico.substring(0,item.ico.length-7)+'bp.jpg'" style="width: 100%;">
+							<object :data="item.ico.substring(0,item.ico.length-7)+'bp.jpg'" class="img_gcode_miniature" style="width: 100%">
+								<img src="/img/ressources/file.png" style="width: 80%; margin-left: 0%;"/>
+							</object>
 							<v-btn color="blue darken-1" onclick="
 								document.getElementsByTagName('video')[0].load();
-								document.getElementsByClassName('flip-box-inner')[0].style.transform = 'rotateY(180deg)';" @click="attachListener" style=" margin-top: 44px">Show preview</v-btn>
+								document.getElementsByClassName('flip-box-inner')[0].style.transform = 'rotateY(180deg)';" @click="attachListener" style=" margin-top: 44px">{{ $t('generic.showPreview') }}</v-btn>
 						</div>
 						<div class="flip-box-back">
 							<video :poster="item.ico" style="width: 100%;" @timeupdate="videoUpdate" @ended="videoEnded" @progress="videoBuffer" preload>
 								<source :src="item.ico.substring(0,item.ico.length-8)+'.mp4'" type="video/mp4">
+								<img src="/img/ressources/file.png" type="image/png"/>
 							</video>
 							<div id="video-controls">
 								<v-btn icon id="play-pause" @click="playPause" style="margin: 0 5px 5px 0;"><v-icon>{{ playIcon }}</v-icon></v-btn>
@@ -82,29 +80,32 @@
 							</div>
 							<v-btn color="blue darken-1" onclick="document.getElementsByTagName('video')[0].pause();
 								document.getElementsByClassName('flip-box-inner')[0].style.transform = 'rotateY(0deg)';" id="back" class="sm6" style="margin-top:-5px">
-									Show buildplate
+									{{ $t('generic.showBuildplate') }}
 							</v-btn>
 						</div>
 					</div>
 				</div>
 				<v-card-text> <!-- Print data -->
-					Slicer : {{ item.generatedBy }} <br>
-					Layer Height: {{ item.layerHeight }} mm <br>
-					Object Height: {{ item.height }} mm <br>
-					Print time: {{ $displayTime(item.printTime) }}<br>
-					Filament Needed: {{ item.filament.length == 1 ? item.filament[0]+" mm" : "table" }} <br>
+					{{$t('list.jobs.generatedBy')}} : {{ item.generatedBy }} <br>
+					{{$t('list.jobs.layerHeight')}}: {{ item.layerHeight }} mm <br>
+					{{$t('list.jobs.height')}}: {{ item.height }} mm <br>
+					<template v-if="item.simulatedTime != null">
+						{{$t('list.jobs.simulatedTime')}}: {{ $displayTime(item.simulatedTime) }}<br>
+					</template>
+					{{$t('list.jobs.printTime')}}: {{ $displayTime(item.printTime) }}<br>
+					{{$t('list.jobs.filament')}}: {{ item.filament.length == 1 ? item.filament[0]+" mm" : "table" }} <br>
 				</v-card-text>
 				<v-card-text> <!-- File data -->
-					Filename: {{ item.name }} <br>
-					Size: {{ $displaySize(item.size) }}<br>
-					Last modified : {{ item.lastModified.toLocaleString() }} <br>
+					{{$t('list.baseFileList.fileName')}}: {{ item.name }} <br>
+					{{$t('list.baseFileList.size')}}: {{ $displaySize(item.size) }}<br>
+					{{$t('list.baseFileList.lastModified')}}: {{ item.lastModified.toLocaleString() }} <br>
 				</v-card-text>
 			</template>
 
 			<v-card-actions>
 				<v-spacer></v-spacer>
-				<v-btn v-bind:color="(item?'red':'primary') +' darken-1'" flat @click="dismissed">{{ item?'Cancel':$t('generic.no') }}</v-btn>
-				<v-btn :class="item?'success':'v-btn--flat primary--text text--darken-1'" @click="confirmed">{{ item?'Print':$t('generic.yes') }}</v-btn>
+				<v-btn v-bind:color="(item?'red':'primary') +' darken-1'" flat @click="dismissed">{{ item?$t('generic.cancel'):$t('generic.no') }}</v-btn>
+				<v-btn :class="item?'success':'v-btn--flat primary--text text--darken-1'" @click="confirmed">{{ item?$t('generic.print'):$t('generic.yes') }}</v-btn>
 			</v-card-actions>
 		</v-card>
 	</v-dialog>
@@ -157,7 +158,7 @@ export default {
 			document.getElementsByTagName("video")[0].pause()
 			//$('video', this).get(0).pause();
 		},
-		back(e) {
+		back() {
 			if (document.getElementsByClassName('flip-box-inner')[0].style.transform == "")
 				document.getElementsByClassName('flip-box-inner')[0].style.transform = 'rotateY(90deg)';
 			else {
@@ -168,7 +169,7 @@ export default {
 
 			//document.getElementsByClassName('flip-box')[0].onclick = this.front;
 		},
-		front(e) {
+		front() {
 			document.getElementsByClassName('flip-box-inner')[0].style.transform = '';
 			document.getElementsByClassName('flip-box')[0].onclick = this.back;
 		},
@@ -184,12 +185,12 @@ export default {
 		playPause() {
 			if (!document.getElementsByTagName('video')[0].paused) {
 				console.log("Pause");
-				document.getElementsByTagName('video')[0].pause();
+				Array.from(document.getElementsByTagName('video')).filter(item => item.poster !== "").forEach(video => video.pause())
 				this.playIcon = 'play_arrow';
 				this.playing = false;
 			} else {
 				console.log("Play");
-				document.getElementsByTagName('video')[0].play();
+				Array.from(document.getElementsByTagName('video')).filter(item => item.poster !== "").forEach(video => video.play())
 				this.playIcon = 'pause';
 				this.playing = true;
 			}
@@ -217,14 +218,14 @@ export default {
 		videoBuffer() {
 			var video = document.getElementsByTagName('video')[0];
 			var duration = video.duration;
-	    if (duration > 0) {
-	      for (var i = 0; i < video.buffered.length; i++) {
+			if (duration > 0) {
+				for (var i = 0; i < video.buffered.length; i++) {
 					if (video.buffered.start(video.buffered.length - 1 - i) <= video.currentTime) {
-	          this.bufferValue = (video.buffered.end(video.buffered.length - 1 - i) / duration) * 100;
-	        	break;
-	        }
-	      }
-	    }
+						this.bufferValue = (video.buffered.end(video.buffered.length - 1 - i) / duration) * 100;
+						break;
+					}
+				}
+			}
 		},
 		videoUpdate() {
 			var video = document.getElementsByTagName('video')[0];

@@ -22,7 +22,7 @@
 
 				<v-flex>
 					<v-layout row>
-						<v-flex v-if="!isLocal" sm12 md9 lg9 xl10>
+						<v-flex v-if="!isLocal" sm12 md9 lg9 xl12>
 							<extrude-panel></extrude-panel>
 						</v-flex>
 
@@ -65,6 +65,7 @@ import { mapState } from 'vuex'
 
 export default {
 	computed: {
+		...mapState('machine/model', ['state']),
 		...mapState({
 			isLocal: state => state.isLocal,
 			}),

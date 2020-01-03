@@ -2,6 +2,9 @@
 node_modules
 /dist
 /html
+/public/pc
+/public/rr
+/public/.*
 
 # local env files
 .env.local

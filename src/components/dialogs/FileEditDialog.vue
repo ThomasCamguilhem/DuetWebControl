@@ -34,7 +34,7 @@
 
 <template>
 	<v-dialog v-model="shown" fullscreen hide-overlay transition="dialog-bottom-transition">
-		<v-card tile class="card">
+		<v-card tile class="card" id="fileEditDialog">
 			<v-toolbar card dark color="primary">
 				<v-btn icon dark @click="close">
 					<v-icon>close</v-icon>
@@ -48,7 +48,7 @@
 						<v-icon class="mr-1">help</v-icon> {{ $t('dialog.fileEdit.gcodeReference') }}
 					</v-btn>
 					<v-btn v-if="showDisplayHelp" dark flat href="https://duet3d.dozuki.com/Wiki/Duet_2_Maestro_12864_display_menu_system" target="_blank">
-						<v-icon class="mr-1">help</v-icon> {{ $t('dialog.fileEdit.menuReference') }} 
+						<v-icon class="mr-1">help</v-icon> {{ $t('dialog.fileEdit.menuReference') }}
 					</v-btn>
 					<v-btn dark flat @click="save">
 						<v-icon class="mr-1">save</v-icon> {{ $t('dialog.fileEdit.save') }}

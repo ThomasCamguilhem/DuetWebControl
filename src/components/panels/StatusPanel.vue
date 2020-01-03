@@ -1,4 +1,9 @@
 <style scoped>
+strong {
+	align-self: center;
+	text-align: center;
+}
+
 .local {
 	font-size: large;
 }
@@ -10,6 +15,7 @@
 .category-header {
 	flex: 0 0 100px;
 }
+
 a:not(:hover) {
 	color: inherit;
 }
@@ -69,7 +75,7 @@ a:not(:hover) {
 					</v-layout>
 				</v-flex>
 
-				<v-divider class="my-2" v-show="move.axes.length + move.extruders.length" v-bind:class="{'v-divider--vertical': isLocal}" ></v-divider>
+				<v-divider class="my-2" v-show="move.axes.length" v-bind:class="{'v-divider--vertical': isLocal}" ></v-divider>
 
 				<v-flex v-show="move.extruders.length">
 					<v-layout row align-center>
@@ -94,7 +100,7 @@ a:not(:hover) {
 					</v-layout>
 				</v-flex>
 
-				<v-divider class="my-2" v-show="move.axes.length + move.extruders.length" v-if="!isLocal"></v-divider>
+				<v-divider class="my-2" v-show="move.extruders.length" v-if="!isLocal"></v-divider>
 
 				<v-flex v-show="move.axes.length" v-if="!isLocal">
 					<v-layout row align-center>
@@ -179,6 +185,7 @@ a:not(:hover) {
 										</v-tooltip>
 									</v-layout>
 								</v-flex>
+
 								<v-flex v-if="electronics.cpuTemp.current !== null">
 									<v-layout column>
 										<v-flex tag="strong">
@@ -235,14 +242,16 @@ import { mapState, mapGetters } from 'vuex'
 export default {
 	computed: {
 		...mapState('settings', ['darkTheme']),
+		...mapState('machine/model', ['electronics', 'fans', 'move', 'sensors', 'state']),
 		...mapGetters(['isConnected']),
-		...mapState('machine/model', ['electronics', 'move', 'sensors', 'state']),
-		sensorsPresent() {
-			return (this.electronics.vIn.current !== null) || (this.electronics.mcuTemp.current !== null) || (this.electronics.cpuTemp.current !== null) || (this.sensors.probes.length);
-		},
+		...mapGetters('machine/model', ['isPrinting']),
 		...mapState({
 			isLocal: state => state.isLocal,
 		}),
+		fanRPM() { return this.fans.map(fan => fan.rpm).filter(rpm => rpm !== null); },
+		sensorsPresent() {
+			return (this.electronics.vIn.current !== null) || (this.electronics.mcuTemp.current !== null) || this.fanRPM.length || (this.sensors.probes.length);
+		},
 	},
 	data() {
 		return {

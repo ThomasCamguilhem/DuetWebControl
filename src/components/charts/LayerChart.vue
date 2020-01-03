@@ -44,8 +44,8 @@ import { mapState } from 'vuex'
 import { display, displayZ, displayTime } from '../../plugins/display.js'
 
 let layers;
-var maxLayerTime = 30;
-var maxLastLayerTime = 30;
+var maxLayerTime = 3;
+var maxLastLayerTime = 3;
 
 export default {
 	computed: {
@@ -84,8 +84,8 @@ export default {
 						maxLayerTime = layer.duration;
 				});
 			}
-			console.log(maxLayerTime + "s");
-			console.log(maxLastLayerTime + "s");
+			//console.log(maxLayerTime + "s");
+			//console.log(maxLastLayerTime + "s");
 			if (this.showAllLayers) {
 				this.chart.config.options.scales.xAxes[0].ticks.min = 1;
 				this.chart.config.options.scales.xAxes[0].ticks.max = layers.length;

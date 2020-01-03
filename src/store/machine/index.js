@@ -43,6 +43,10 @@ export default function(hostname, connector) {
 			events: [],								// provides machine events in the form of { date, type, title, message }
 			isReconnecting: false
 		},
+		getters: {
+			hasTemperaturesToDisplay: state => state.model.heat.heaters.length || state.settings.displayedExtraTemperatures.length,
+			connector: () => connector ? connector.type : null
+		},
 		actions: {
 			...mapConnectorActions(connector, ['reconnect', 'sendCode', 'upload', 'download', 'getFileInfo']),
 
@@ -67,6 +71,7 @@ export default function(hostname, connector) {
 				} catch (e) {
 					if (!(e instanceof DisconnectedError) && doLog) {
 						const type = (e instanceof CodeBufferError) ? 'warning' : 'error';
+						console.log(type, code, e.message, hostname);
 						log(type, code, e.message, hostname);
 					}
 					throw e;
@@ -76,7 +81,7 @@ export default function(hostname, connector) {
 			// Upload a file and show progress
 			async upload(context, { filename, content, showProgress = true, showSuccess = true, showError = true, num, count }) {
 				const cancelSource = BaseConnector.getCancelSource();
-				const notification = showProgress && makeFileTransferNotification('upload', filename, cancelSource, num, count);
+				const notification = showProgress && ((count > 1 || content.size > 4*1024*1024) ? makeFileTransferNotification('upload', filename, cancelSource, num, count) : null);
 				try {
 					// Check if config.g needs to be backed up
 					if (filename === Path.configFile) {
@@ -94,7 +99,7 @@ export default function(hostname, connector) {
 					const response = await connector.upload({ filename, content, cancelSource, onProgress: notification && notification.onProgress });
 
 					// Show success message
-					if (showSuccess && num === count) {
+					if (showSuccess && num === count && (count > 1 || content.size > 4*1024*1024)) {
 						if (count) {
 							log('success', i18n.t('notification.upload.successMulti', [count]), undefined, hostname);
 						} else {
@@ -180,9 +185,23 @@ export default function(hostname, connector) {
 			// Update machine mode. Reserved for the machine connector!
 			async update({ state, commit, dispatch }, payload) {
 				const wasPrinting = state.model.state.isPrinting, lastJobFile = state.model.job.file.fileName;
+				const beepFrequency = state.model.state.beep.frequency, beepDuration = state.model.state.beep.duration;
+				const displayMessage = state.model.state.displayMessage;
 
 				// Merge updates into the object model
 				commit('model/update', payload);
+
+				// Is a beep requested?
+				if (state.model.state.beep.frequency != 0 && state.model.state.beep.duration != 0 &&
+					(state.model.state.beep.frequency != beepFrequency || state.model.state.beep.duration != beepDuration))
+				{
+					beep(state.model.state.beep.frequency, state.model.state.beep.duration);
+				}
+
+				// Is a message supposed to be shown?
+				if (state.model.state.displayMessage != "" && state.model.state.displayMessage != displayMessage) {
+					showMessage(state.model.state.displayMessage);
+				}
 
 				// Is an update or emergency reset in progress?
 				const reconnect = (state.model.state.status === 'updating') || (state.model.state.status === 'halted');
@@ -200,7 +219,7 @@ export default function(hostname, connector) {
 						log('success', i18n.t('events.reconnected'));
 						commit('setReconnecting', false);
 					}
-					
+
 					// Have we just finished a job?
 					if (wasPrinting && !state.model.state.isPrinting) {
 						// Clear the cache of the last file

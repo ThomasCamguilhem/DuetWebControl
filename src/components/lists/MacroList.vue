@@ -87,18 +87,18 @@
 </style>
 
 <template>
-<div>
+	<div>
 	<v-card v-bind:class="{local: isLocal}" class="card" v-bind:style="isLocal?'min-height:650px':''">
 		<v-card-title v-if="!isLocal">
 			<v-icon small class="mr-1">polymer</v-icon> {{ $t('list.macro.caption') }}
 			<v-spacer></v-spacer>
-			<span v-show="isConnected" style="font-family: GTAmericaExpandedThin, sans-serif; text-transform: none; font-size: small;">{{ directory.replace('0:/macros', $t('list.macro.root')) }}</span>
+			<span v-show="isConnected" class="subtitle-2" style="font-family: GTAmericaExpandedThin, sans-serif; text-transform: none; font-size: small;">{{ directory.replace('0:/macros', $t('list.macro.root')) }}</span>
 		</v-card-title>
 
 		<v-card-title v-else>
 			<v-icon small class="mr-1">polymer</v-icon> {{ $t('list.macro.caption') }}
 			<v-spacer></v-spacer>
-			<v-btn @click="showJob"> <!---->
+			<v-btn @click="showJob">
 				{{ $t('list.baseFileList.showMore') }}
 			</v-btn>
 		</v-card-title>
@@ -124,10 +124,7 @@
 						<object :data="item.ico" v-if="true" class="list-icon" :class="item.isDirectory ? 'grey darken-1 white--text' : 'grey darken-2 white--text'" style="border-radius: 50%; padding: 10%">
 							<img :src="item.isDirectory ? '/img/ressources/folder.svg' : '/img/ressources/file.png'" style="width: 80%; height: 80%; margin-top: 9%;margin-bottom: 8%;"/>
 						</object>
-						<!--v-icon class="list-icon" :class="item.isDirectory ? 'grey darken-1 white--text' : 'grey darken-2 white--text'">
-							{{ item.isDirectory ? 'folder' : 'assignment' }}
-						</v-icon-->
-					</v-list-tile-avatar>
+				</v-list-tile-avatar>
 
 					<v-list-tile-content>
 						<v-list-tile-title v-bind:class="{local: isLocal}">{{ item.displayName }}</v-list-tile-title>
@@ -154,8 +151,7 @@
 						</v-list-tile-title>
 					</v-flex>
 				</v-layout>
-				<!-- @fileClicked="fileClicked"-->
-				<v-layout sm4 shrink v-for="(item, index) in filelist" v-if="(index < 9 && (!item.isDirectory || true)) || !isLocal" :key="item.name" @click="fileClicked(item)" v-bind:class="{'icon': item.ico}" :class="(item.isDirectory ? 'grey darken-1 white--text' : 'grey darken-2 white--text')" style="cursor: pointer;">
+				<v-layout sm4 shrink v-for="(item) in filelist.filter((item, index) => (index < 9 && (!item.isDirectory || true)) || !isLocal)" :key="item.name" @click="fileClicked(item)" :class="{'icon': item.ico, 'grey darken-1 white--text' : item.isDirectory, 'grey darken-2 white--text': !item.isDirectory}" style="cursor: pointer;">
 					<v-flex class="content">
 						<object :data="item.ico" v-if="item.ico || true" class="list-icon">
 							<img :src="item.isDirectory ? '/img/ressources/folder.svg' : '/img/ressources/file.png'" style="width: 70%; height: 70%; margin-top: 11%;margin-bottom: 6%;"/>
@@ -182,7 +178,7 @@
 			</v-list-tile>
 		</v-card-text>
 
-		<v-alert :value="!filelist.length" type="info">
+		<v-alert :value="!filelist.length" type="secondary">
 			{{ $t('list.macro.noMacros') }}
 		</v-alert>
 		</v-card>

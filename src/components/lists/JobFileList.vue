@@ -1,28 +1,28 @@
 <template>
 	<div class="component">
 		<v-toolbar>
-			<sd-card-btn class="hidden-sm-and-down" :directory="directory" @storageSelected="selectStorage" v-if="!isLocal && false"></sd-card-btn>
+			<sd-card-btn class="hidden-sm-and-down" :directory="directory" @storageSelected="selectStorage" v-if="false"></sd-card-btn>
 			<directory-breadcrumbs v-model="directory"></directory-breadcrumbs>
 
 			<v-spacer></v-spacer>
 
-			<v-btn class="hidden-sm-and-down" :disabled="uiFrozen" @click="showNewDirectory = true">
+			<v-btn class="hidden-sm-and-down mr-3" :disabled="uiFrozen" @click="showNewDirectory = true">
 				<v-icon class="mr-1">create_new_folder</v-icon> {{ $t('button.newDirectory.caption') }}
 			</v-btn>
-			<v-btn class="hidden-sm-and-down" color="grey darken-3" :loading="loading" :disabled="uiFrozen" @click="refresh">
+			<v-btn class="hidden-sm-and-down mr-3" color="grey darken-3" :loading="loading" :disabled="uiFrozen" @click="refresh">
 				<v-icon class="mr-1">refresh</v-icon> {{ $t('button.refresh.caption') }}
 			</v-btn>
-			<v-btn class="hidden-md-and-up" v-if="isLocal" color="grey darken-3" :loading="loading" :disabled="uiFrozen" @click="refresh">
+			<v-btn class="hidden-md-and-up" color="grey darken-3" :loading="loading" :disabled="uiFrozen" @click="refresh">
 				<v-icon class="mr-1">refresh</v-icon>
 			</v-btn>
-			<upload-btn class="hidden-sm-and-down" :directory="directory" target="gcodes" color="primary darken-1"></upload-btn>
+			<upload-btn class="hidden-sm-and-down" :directory="directory" target="gcodes" color="primary darken-1" v-on:refreshlist="refresh"></upload-btn>
 		</v-toolbar>
 
-		<base-file-list ref="filelist" v-model="selection" :headers="headers" :directory.sync="directory" :filelist.sync="filelist" :loading.sync="loading" sort-table="jobs" @directoryLoaded="directoryLoaded" @fileClicked="fileClicked">
+		<base-file-list ref="filelist" v-model="selection" :headers="headers" :directory.sync="directory" :filelist.sync="filelist" :loading.sync="loading" sort-table="jobs" @directoryLoaded="directoryLoaded" @fileClicked="fileClicked" no-files-text="list.jobs.noJobs">
 			<v-progress-linear slot="progress" :indeterminate="fileinfoProgress === -1" :value="(fileinfoProgress / filelist.length) * 100"></v-progress-linear>
 
 			<template slot="no-data">
-				<v-alert :value="true" type="info" class="ma-0" @contextmenu.prevent="">
+				<v-alert :value="true" color="secondary" class="ma-0" @contextmenu.prevent="">
 					{{ $t('list.jobs.noJobs') }}
 				</v-alert>
 			</template>
@@ -42,7 +42,7 @@
 			<v-btn :disabled="uiFrozen" @click="showNewDirectory = true" v-if="!isLocal">
 				<v-icon class="mr-1">create_new_folder</v-icon> {{ $t('button.newDirectory.caption') }}
 			</v-btn>
-			<v-btn color="info" :loading="loading" :disabled="uiFrozen" @click="refresh" v-if="!isLocal">
+			<v-btn color="grey darken-3" :loading="loading" :disabled="uiFrozen" @click="refresh" v-if="!isLocal">
 				<v-icon class="mr-1">refresh</v-icon> {{ $t('button.refresh.caption') }}
 			</v-btn>
 			<upload-btn :directory="directory" target="gcodes" color="primary darken-1" v-if="!isLocal"></upload-btn>
@@ -64,9 +64,11 @@ import Path from '../../utils/path.js'
 
 export default {
 	computed: {
-		...mapGetters(['isConnected', 'uiFrozen']),
+		...mapState('machine/cache', ['fileInfos']),
 		...mapState('machine/model', ['state', 'storages']),
 		...mapState('settings', ['language']),
+		...mapGetters(['isConnected', 'uiFrozen']),
+		...mapGetters('machine/model', ['isPrinting']),
 		...mapState({selectedMachine: state => state.selectedMachine}),
 		...mapState({isLocal: state => state.isLocal,}),
 		isFile() {
@@ -143,7 +145,7 @@ export default {
 	},
 	methods: {
 		...mapActions('machine', ['sendCode', 'getFileInfo']),
-		...mapMutations('machine/cache', ['clearFileInfo']),
+		...mapMutations('machine/cache', ['clearFileInfo', 'setFileInfo']),
 		async selectStorage(index) {
 			const storage = this.storages[index];
 			let mountSuccess = true, mountResponse;
@@ -272,6 +274,6 @@ export default {
 		simulate(item) {
 			this.sendCode(`M37 P"${Path.combine(this.directory, (item && item.name) ? item.name : this.selection[0].name)}"`);
 		}
-	},
+	}
 }
 </script>

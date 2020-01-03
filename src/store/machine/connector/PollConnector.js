@@ -64,7 +64,7 @@ export default class PollConnector extends BaseConnector {
 	messageBoxShown = false;
 
 	constructor(hostname, password, responseData) {
-		super(hostname);
+		super('poll', hostname);
 		this.password = password;
 		this.boardType = responseData.boardType;
 		this.sessionTimeout = responseData.sessionTimeout || 8000;	/// default timeout in RRF is 8000ms
@@ -247,13 +247,10 @@ export default class PollConnector extends BaseConnector {
 		}
 
 		// Standard Status Response
-		const fanRPMs = (response.data.sensors !== undefined ? ((response.data.sensors.fanRPM instanceof Array) ? response.data.sensors.fanRPM : [response.data.sensors.fanRPM]) : []);
-		if (response.data.sensors === undefined || response.data.params === undefined || response.data.params.fanPercent === undefined)
-			console.log(response.data);
-		else
+		const fanRPMs = (response.data.sensors.fanRPM instanceof Array) ? response.data.sensors.fanRPM : [response.data.sensors.fanRPM];
 		quickPatch(newData, {
 			fans: response.data.params.fanPercent.map((fanPercent, index) => ({
-				rpm: (index < fanRPMs.length) ? fanRPMs[index] : null,
+				rpm: (index < fanRPMs.length && fanRPMs[index] >= 0) ? fanRPMs[index] : null,
 				value: fanPercent / 100
 			})),
 			heat: {
@@ -263,7 +260,7 @@ export default class PollConnector extends BaseConnector {
 						standby: (response.data.temps.bed.standby === undefined) ? [] : [response.data.temps.bed.standby]
 					} : null
 				],
-				chambers: (response.data.temps.chamber || response.data.temps.cabinet) ? [
+				chambers: [
 					response.data.temps.chamber ? {
 						active: [response.data.temps.chamber.active],
 						standby: (response.data.temps.chamber.standby === undefined) ? [] : [response.data.temps.chamber.standby]
@@ -272,7 +269,7 @@ export default class PollConnector extends BaseConnector {
 						active: [response.data.temps.cabinet.active],
 						standby: (response.data.temps.cabinet.standby === undefined) ? [] : [response.data.temps.cabinet.standby]
 					} : null
-				] : [],
+				],
 				extra: response.data.temps.extra.map((extraHeater) => ({
 					current: extraHeater.temp,
 					name: extraHeater.name
@@ -283,35 +280,38 @@ export default class PollConnector extends BaseConnector {
 				}))
 			},
 			move: {
-				axes: response.data.coords.machine.map((machinePosition, drive) => ({
+				axes: response.data.coords.xyz.map((machinePosition, drive) => ({
 					homed: !!response.data.coords.axesHomed[drive],
 					machinePosition
 				})),
 				babystepZ: response.data.params.babystep,
 				currentMove: {
-					requestedSpeed: (response.data.speeds && response.data.speeds.requested ? response.data.speeds.requested : undefined),
-					topSpeed: (response.data.speeds && response.data.speeds.top ? response.data.speeds.top : undefined),
+					requestedSpeed: (response.data.speeds !== undefined) ? response.data.speeds.requested : null,
+					topSpeed: (response.data.speeds !== undefined) ? response.data.speeds.top : null
 				},
 				drives: [].concat(response.data.coords.xyz, response.data.coords.extr).map((xyz, drive) => ({
 					position: (drive < response.data.coords.xyz.length) ? xyz : response.data.coords.extr[drive - response.data.coords.xyz.length]
 				})),
-				extruders: response.data.params.extrFactors.map(factor => ({ factor: factor / 100 })),
+				extruders: response.data.params.extrFactors.map((factor, index) => ({
+					drives: [response.data.coords.xyz.length + index],
+					factor: factor / 100
+				})),
 				speedFactor: response.data.params.speedFactor / 100
 			},
 			scanner: (response.data.scanner) ? {
 				progress: response.data.scanner.progress,
 				status: response.data.scanner.status
 			} : {},
-			sensors: {
+			sensors: (response.data.sensors.probeValue !== undefined) || (response.data.sensors.probeSecondary !== undefined) ? {
 				probes: [
 					{
 						value: response.data.sensors.probeValue,
 						secondaryValues: response.data.sensors.probeSecondary ? response.data.sensors.probeSecondary : []
 					}
 				]
-			},
+			} : {},
 			state: {
-				atxPower: !!response.data.params.atxPower,
+				atxPower: (response.data.params.atxPower === -1) ? null : (response.data.params.atxPower !== 0),
 				currentTool: response.data.currentTool,
 				status: this.convertStatusLetter(response.data.status)
 			},
@@ -323,6 +323,7 @@ export default class PollConnector extends BaseConnector {
 
 		if (statusType === 2) {
 			// Extended Status Response
+			const axisNames = (response.data.axisNames !== undefined) ? response.data.axisNames.split('') : ['X', 'Y', 'Z', 'U', 'V', 'W', 'A', 'B', 'C'];
 			this.name = name;
 
 			quickPatch(newData, {
@@ -369,16 +370,15 @@ export default class PollConnector extends BaseConnector {
 					],
 					coldExtrudeTemperature: response.data.coldExtrudeTemp,
 					coldRetractTemperature: response.data.coldRetractTemp,
-					heaters: (response.data.temps.names ?
-						response.data.temps.names.map(name => ({
-							max: response.data.tempLimit,
-							name
-						})) : [{}])
+					heaters: response.data.temps.current.map((current, index) => ({
+						max: response.data.tempLimit,
+						name: (response.data.temps.names !== undefined) ? response.data.temps.names[index] : null
+					}))
 				},
 				move: {
-					axes: response.data.axisNames.split('').map((axis, index) => ({
-						letter: axis,
-						visible: index < response.data.axes
+					axes: response.data.coords.xyz.map((position, index) => ({
+						letter: axisNames[index],
+						visible: (response.data.axes !== undefined) ? (index < response.data.axes) : true
 					})),
 					compensation: response.data.compensation,
 					geometry: {
@@ -392,18 +392,18 @@ export default class PollConnector extends BaseConnector {
 					endstops: newData.move.drives.map((drive, index) => ({
 						triggered: (response.data.endstops & (1 << index)) !== 0
 					})),
-					probes: [
+					probes: (response.data.probe !== undefined) ? [
 						{
 							threshold: response.data.probe.threshold,
 							triggerHeight: response.data.probe.height,
 							type: response.data.probe.type
 						}
-					]
+					] : []
 				},
 				state: {
 					mode: response.data.mode ? response.data.mode : null,
 				},
-				tools: response.data.tools.map(tool => ({
+				tools: (response.data.tools !== undefined) ? response.data.tools.map(tool => ({
 					number: tool.number,
 					name: tool.name ? tool.name : null,
 					heaters: tool.heaters,
@@ -412,7 +412,7 @@ export default class PollConnector extends BaseConnector {
 					fans: bitmapToArray(tool.fans),
 					filament: tool.filament,
 					offsets: tool.offsets
-				}))
+				})) : []
 			});
 
 			newData.storages = [];
@@ -521,49 +521,47 @@ export default class PollConnector extends BaseConnector {
 		}
 
 		// Output Utilities
+		let beepFrequency = 0, beepDuration = 0, displayMessage = "", msgBoxMode = null;
 		if (response.data.output) {
 			// Beep
-			const frequency = response.data.output.beepFrequency;
-			const duration = response.data.output.beepDuration;
-			if (frequency && duration) {
-				this.store.commit(`machines/${this.hostname}/beep`, { frequency, duration });
+			if (response.data.output.hasOwnProperty("beepFrequency")) {
+				beepFrequency = response.data.output.beepFrequency;
+				beepDuration = response.data.output.beepDuration;
 			}
 
-			// Message
-			const message = response.data.output.message;
-			if (message) {
-				this.store.commit(`machines/${this.hostname}/message`, message);
+			// Persistent Message
+			if (response.data.output.hasOwnProperty("message")) {
+				displayMessage = response.data.output.message;
 			}
 
 			// Message Box
 			const msgBox = response.data.output.msgBox;
 			if (msgBox) {
-				this.messageBoxShown = true;
+				msgBoxMode = msgBox.mode;
 				quickPatch(newData, {
 					messageBox: {
-						mode: msgBox.mode,
 						title: msgBox.title,
 						message: msgBox.msg,
 						timeout: msgBox.timeout,
-						axisControls: bitmapToArray(msgBox.controls)
-					}
-				});
-			} else if (this.messageBoxShown) {
-				this.messageBoxShown = false;
-				quickPatch(newData, {
-					messageBox: {
-						mode: null
+						axisControls: bitmapToArray(msgBox.controls),
+						seq: msgBox.seq
 					}
 				});
 			}
-		} else if (this.messageBoxShown) {
-			this.messageBoxShown = false;
-			quickPatch(newData, {
-				messageBox: {
-					mode: null
-				}
-			});
 		}
+
+		quickPatch(newData, {
+			messageBox: {
+				mode: msgBoxMode
+			},
+			state: {
+				beep: {
+					frequency: beepFrequency,
+					duration: beepDuration
+				},
+				displayMessage: displayMessage
+			}
+		});
 
 		// Spindles
 		if (response.data.spindles) {
@@ -635,7 +633,7 @@ export default class PollConnector extends BaseConnector {
 		return 'unknown';
 	}
 
-	scheduleUpdate() {
+	async scheduleUpdate() {
 		if (this.justConnected || this.updateLoopTimer) {
 			const that = this;
 			// Perform status update
@@ -655,6 +653,7 @@ export default class PollConnector extends BaseConnector {
 					}
 				}
 			}, this.settings.updateInterval);
+			//await that.updateLoop.call(that);
 		}
 	}
 
@@ -975,6 +974,28 @@ export default class PollConnector extends BaseConnector {
 			});
 		}
 		const response = await this.axios.get('pc_shutdown', {
+			withCredentials: true,
+			params: {}
+		});
+
+		if (response.data.err) {
+			throw new OperationFailedError(`err ${response.data.err}`);
+		}
+		return response;
+	}
+	async doLoadAddresses(hostname) {
+		if (!this.axios){
+			let protocol = location.protocol;
+			this.axios = await axios.create({
+				baseURL:`${protocol}//`+hostname+`/`,
+				cancelToken: BaseConnector.getCancelSource().token,
+				timeout: 8000,	// default session timeout in RepRapFirmware
+				withCredentials: true,
+			});
+		}
+		//console.log(location.protocol);
+		//console.log(hostname)
+		const response = await this.axios.get('pc_getip', {
 			withCredentials: true,
 			params: {}
 		});

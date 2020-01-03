@@ -10,7 +10,7 @@
 }
 
 .local {
- font-size: large;
+	font-size: large;
 }
 </style>
 
@@ -20,6 +20,9 @@
 			<code-btn color="primary darken-1" small code="G28" :title="$t('button.home.titleAll')" class="ml-0 hidden-sm-and-down" >
 				{{ $t('button.home.captionAll') }}
 			</code-btn>
+			<code-btn color="primary darken-1" small code="M98 P0:/macros/_Machine/_Park position" :title="'Move the toolhead into it\'s parking position'" class="ml-0 hidden-sm-and-down" >
+				{{ $t('button.parkHead.caption') }}
+			</code-btn>
 
 			<v-spacer class="hidden-sm-and-down"></v-spacer>
 
@@ -27,7 +30,7 @@
 
 			<v-spacer></v-spacer>
 
-			<v-menu offset-y left :disabled="uiFrozen" v-tab-control>
+			<v-menu offset-y left :disabled="uiFrozen" v-tab-control :close-on-content-click="false">
 				<template slot="activator">
 					<v-btn color="primary darken-1" small class="mx-0" :disabled="uiFrozen">
 						{{ $t('panel.movement.compensation') }} <v-icon>arrow_drop_down</v-icon>
@@ -47,26 +50,41 @@
 						<v-list-tile @click="sendCode('G32')">
 							<v-icon class="mr-1">view_module</v-icon> {{ $t(move.geometry.type === 'delta' ? 'panel.movement.runDelta' : 'panel.movement.runBed') }}
 						</v-list-tile>
-						<v-list-tile :disabled="!move.compensation || move.compensation.indexOf('Point') === -1" @click="sendCode('M561')">
-							<v-icon class="mr-1">clear</v-icon> {{ $t('panel.movement.disableBedCompensation') }}
+						<v-list-tile :disabled="false" @click="nozzleHeightCalib">
+							<v-icon class="mr-1">vertical_align_bottom</v-icon> {{ $t('panel.movement.runNozzleHeight') }}
 						</v-list-tile>
-						<v-divider></v-divider>
-
-						<v-list-tile @click="sendCode('G29')">
-							<v-icon class="mr-1">grid_on</v-icon> {{ $t('panel.movement.runMesh') }}
-						</v-list-tile>
-						<v-list-tile @click="showMeshEditDialog = true">
-							<v-icon class="mr-1">edit</v-icon> {{ $t('panel.movement.editMesh') }}
-						</v-list-tile>
-						<v-list-tile @click="sendCode('G29 S1')">
-							<v-icon class="mr-1">save</v-icon> {{ $t('panel.movement.loadMesh') }}
-						</v-list-tile>
-						<v-list-tile @click="$router.push('/Heightmap')">
-							<v-icon class="mr-1">grid_on</v-icon> {{ 'Show the Height map' }}
-						</v-list-tile>
-						<v-list-tile :disabled="move.compensation !== 'Mesh'" @click="sendCode('G29 S2')">
-							<v-icon class="mr-1">grid_off</v-icon> {{ $t('panel.movement.disableMeshCompensation') }}
-						</v-list-tile>
+						<v-expansion-panel :value="-1" style="margin-bottom: 15px">
+							<v-expansion-panel-content style="background: #ffffff0f">
+								<template v-slot:header style="padding: 0">
+									<span style="font-size: normal;">
+										{{ $t('panel.settingsNetwork.advanced' )}}
+									</span>
+								</template>
+								<v-card style="background: #4d4d4d; padding: 0 20px">
+									<v-list-tile :disabled="!move.compensation || move.compensation.indexOf('Point') === -1" @click="sendCode('M561')">
+										<v-icon class="mr-1">clear</v-icon> {{ $t('panel.movement.disableBedCompensation') }}
+									</v-list-tile>
+									<v-divider></v-divider>
+									<v-list style="background: #4d4d4d;">
+										<v-list-tile @click="sendCode('G29')">
+											<v-icon class="mr-1">grid_on</v-icon> {{ $t('panel.movement.runMesh') }}
+										</v-list-tile>
+										<v-list-tile @click="showMeshEditDialog = true">
+											<v-icon class="mr-1">edit</v-icon> {{ $t('panel.movement.editMesh') }}
+										</v-list-tile>
+										<v-list-tile @click="sendCode('G29 S1')">
+											<v-icon class="mr-1">save</v-icon> {{ $t('panel.movement.loadMesh') }}
+										</v-list-tile>
+										<v-list-tile @click="$router.push('/Heightmap')">
+											<v-icon class="mr-1">grid_on</v-icon> {{ 'Show the Height map' }}
+										</v-list-tile>
+										<v-list-tile :disabled="move.compensation !== 'Mesh'" @click="sendCode('G29 S2')">
+											<v-icon class="mr-1">grid_off</v-icon> {{ $t('panel.movement.disableMeshCompensation') }}
+										</v-list-tile>
+									</v-list>
+								</v-card>
+							</v-expansion-panel-content>
+						</v-expansion-panel>
 					</v-list>
 				</v-card>
 			</v-menu>
@@ -76,9 +94,14 @@
 			<!-- Mobile home buttons -->
 			<v-layout justify-center row wrap class="hidden-md-and-up">
 				<v-flex>
-					<code-btn color="primary darken-1" code="G28" :title="$t('button.home.titleAll')" v-bind:class="{local: isLocal}" block>
-						{{ $t('button.home.captionAll') }}
-					</code-btn>
+					<v-layout row>
+						<code-btn color="primary darken-1" code="G28" :title="$t('button.home.titleAll')" v-bind:class="{local: isLocal}" block>
+							{{ $t('button.home.captionAll') }}
+						</code-btn>
+						<code-btn color="primary darken-1"  code="M98 P0:/macros/_Machine/_Park position" :title="'Move the toolhead into it\'s parking position'" v-bind:class="{local: isLocal}" block style="margin: 6px">
+							{{ $t('button.parkHead.caption') }}
+						</code-btn>
+					</v-layout>
 				</v-flex>
 				<v-flex v-if="false" v-for="axis in displayedAxes" :key="axis.letter">
 					<code-btn :color="axis.homed ? 'primary darken-1' : 'warning'" :disabled="uiFrozen" :title="$t('button.home.title', [axis.letter])" :code="`G28 ${axis.letter}`" block>
@@ -90,7 +113,7 @@
 
 			<v-layout row>
 				<!-- Regular home buttons -->
-				<v-flex shrink class="hidden-sm-and-down">
+				<v-flex shrink class="hidden-sm-and-down" v-if="move.geometry.type !== 'delta'">
 					<v-layout column>
 						<v-flex v-for="axis in displayedAxes" :key="axis.letter">
 							<code-btn :color="axis.homed ? 'primary darken-1' : 'warning'" :disabled="uiFrozen" :title="$t('button.home.title', [axis.letter])" :code="`G28 ${axis.letter}`" class="ml-0">
@@ -171,6 +194,7 @@ export default {
 		unhomedAxes() { return this.move.axes.filter(axis => axis.visible && !axis.homed); },
 		...mapState({
 			isLocal: state => state.isLocal,
+			name: state => state.machine.model.network.name,
 		}),
 	},
 	data() {
@@ -186,7 +210,7 @@ export default {
 		}
 	},
 	methods: {
-		...mapActions('machine', ['sendCode']),
+		...mapActions('machine', ['getFileList', 'sendCode']),
 		...mapMutations('machine/settings', ['setMoveStep']),
 		getMoveCellClass(index) {
 			let classes = '';
@@ -206,7 +230,40 @@ export default {
 		},
 		moveStepDialogConfirmed(value) {
 			this.setMoveStep({ axis: this.moveStepDialog.axis, index: this.moveStepDialog.index, value });
-		}
+		},
+		nozzleHeightCalib: async function() {
+			console.log("Running Nozzle Height");
+			const files = await this.getFileList("0:/macros/_Toolheads");
+			let name = this.name.substr(8, 5);
+			let tools = files.filter(tool => tool.name.includes(name))
+			console.log(name)
+			console.log(tools.length ? tools : "");
+			let that = this;
+			tools.forEach(function(item) {
+				if (item.isDirectory)
+				{
+					console.log(item);
+					that.preloadToolMatrix(item.directory + "/" + item.name)
+				}
+			});
+		},
+		preloadToolMatrix: async function(path){
+			try {
+				let files = await this.getFileList(path);
+				let name = (this.name.lastIndexOf("~")>0?this.name.substr(this.name.lastIndexOf("~")+1, 2):"");
+				console.log(name)
+				files = files.filter(file => file.name.includes("Nozzle") && file.name.includes(name))
+				console.log(files);
+				let that = this;
+				files.forEach(function (file) {
+					if(file != undefined && file.name.includes("Nozzle")) {
+						that.sendCode('M98 P' + files[0].directory + "/" + files[0].name)
+					}
+				});
+			} catch(e) {
+				console.error(e);
+			}
+		},
 	},
 	watch: {
 		isConnected() {

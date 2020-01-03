@@ -27,7 +27,8 @@ const webExtensions = ['.htm', '.html', '.ico', '.xml', '.css', '.map', '.js', '
 
 export default {
 	computed: {
-		...mapState(['isLocal','selectedMachine']),
+		...mapState(['isLocal', 'selectedMachine']),
+		...mapState('machine/model', ['electronics']),
 		...mapGetters(['isConnected', 'uiFrozen']),
 		...mapGetters('machine/model', ['board']),
 		caption() {
@@ -209,26 +210,47 @@ export default {
 				try {
 					// Start uploading
 					if (files.length > 1) {
-						await this.upload({ filename, content, showSuccess: !zipName, num: i + 1, count: files.length });
-						if(this.target === 'gcodes')
-						{
-							filename = filename.substring(10,filename.lastIndexOf("."));
-							console.log(filename);
+
+						if (content.size <= 4*1024*1024) {
+							await this.upload({ filename, content, showSuccess: !zipName, num: i + 1, count: files.length });
+						} else {
+							this.$makeNotification('warning',
+							"File skipped",
+							filename.substring(filename.lastIndexOf('/')+1) + " is too big to be reliably uploaded. Please upload it alone",
+							10000);
+							console.log(files)
+							console.log({ filename, content, showSuccess: !zipName, num: i + 1, count: files.length })
 						}
 					} else {
-						this.upload({ filename, content });
 						if(this.target === 'gcodes')
 						{
+							if (content.size > 4*1024*1024)
+							await this.upload({ filename, content });
+							else
+							this.upload({ filename, content });
 							filename = filename.substring(10,filename.lastIndexOf("."));
 							//console.log(content);
 							console.log(filename);
-							console.log(this.isLocal);
-							if(content.size <= 2*1024*1024 || this.isLocal) {
-								console.log(this.gcodeReader.lectDonnees(content, filename, this.selectedMachine));
+							if(content.size <= 2*1024*1024) {
+								console.log(this.gcodeReader.lectDonnees(content, filename, this));
+							} else if(content.size < 4*1024*1024){
+								this.$makeNotification('info',
+								filename.substring(filename.lastIndexOf('/')+1) + " is too big to generate Preview",
+								"This file is too big to be able to generate a preview fast enough",
+								5000);
 							}
+						} else {
+							await this.upload({ filename, content });
+						}
+						if (content.size > 4*1024*1024) {
+							this.$makeNotification('info',
+							filename.substring(filename.lastIndexOf('/')+1) + " has been added to queue",
+							"This file is quite big this may take up to " +
+							this.$displayTime(Math.floor(content.size/(500*1024)/10)*10)+" to be fully uploaded",
+							Math.max(Math.floor(content.size/(600*1024)), 10)*1000);
+							setTimeout(function(caller){caller.$emit('refreshlist');}, Math.max(Math.floor(content.size/(600*1024)), 10)*1000, this);
 						}
 					}
-
 					// Run it (if required)
 					if (this.target === 'start') {
 						await this.sendCode(`M32 "${filename}"`);

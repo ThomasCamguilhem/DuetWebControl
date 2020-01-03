@@ -1,12 +1,15 @@
 {
   "name": "duetwebcontrol",
   "version": "2.0.0",
+  "lxVersion": "1.0.0",
+  "buildDate": "02/01/20 16:52",
   "repository": "github:chrishamm/DuetWebControl#next",
   "homepage": "https://forum.duet3d.com/category/27/duet-web-control",
   "license": "GPL-3.0",
   "author": "Christian Hammacher <chr.hammacher@gmail.com> (https://chrishamm.io)",
   "scripts": {
     "serve": "vue-cli-service serve",
+    "serves": "vue-cli-service serve --https",
     "build": "vue-cli-service build",
     "report": "vue-cli-service build --report",
     "lint": "vue-cli-service lint"

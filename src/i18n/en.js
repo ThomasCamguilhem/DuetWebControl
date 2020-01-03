@@ -1,22 +1,46 @@
 export default {
 	language: 'English',
 	'$vuetify': {
+		close: 'Close',
 		dataIterator: {
-			rowsPerPageText: 'Items per page:',
-			rowsPerPageAll: 'All',
 			pageText: '{0}-{1} of {2}',
 			noResultsText: 'No matching records found',
-			nextPage: 'Next page',
-			prevPage: 'Previous page'
+			loadingText: 'Loading items...'
 		},
 		dataTable: {
-			rowsPerPageText: 'Rows per page:'
+			itemsPerPageText: 'Rows per page:',
+			ariaLabel: {
+				sortDescending: ': Sorted descending. Activate to remove sorting.',
+				sortAscending: ': Sorted ascending. Activate to sort descending.',
+				sortNone: ': Not sorted. Activate to sort ascending.'
+			},
 		},
-		noDataText: 'No data available'
+		dataFooter: {
+			itemsPerPageText: 'Items per page:',
+			itemsPerPageAll: 'All',
+			nextPage: 'Next page',
+			prevPage: 'Previous page',
+			firstPage: 'First page',
+			lastPage: 'Last page'
+		},
+		datePicker: {
+			itemsSelected: '{0} selected'
+		},
+		noDataText: 'No data available',
+		carousel: {
+			prev: 'Previous visual',
+			next: 'Next visual'
+		},
+		calendar: {
+			moreEvents: '{0} more'
+		}
 	},
 	button: {
 		add: {
 			caption: 'Add'
+		},
+		parkHead: {
+			caption: 'Park Toolhead'
 		},
 		connect: {
 			connect: 'Connect',
@@ -57,6 +81,12 @@ export default {
 		},
 		refresh: {
 			caption: 'Refresh'
+		},
+		preloadPrime: {
+			caption: 'Preload/Prime',
+			preload: 'Preload {0}',
+			prime: 'Prime {0}',
+			unload: 'Unload {0}',
 		},
 		upload: {
 			gcodes: {
@@ -153,6 +183,7 @@ export default {
 		connection: {
 			connecting: 'Connecting...',
 			disconnecting: 'Disconnecting...',
+			updating: 'Please wait while updates are being installed...',
 			loggingin: 'Logging In...',
 			loggingout: 'Logging Out...',
 			reconnecting: 'Connection lost, attempting to reconnect...',
@@ -178,7 +209,8 @@ export default {
 		fileEdit: {
 			gcodeReference: 'G-Code Reference',
 			menuReference: 'Menu Reference',
-			save: 'Save'
+			save: 'Save',
+			confirmClose: 'The file has been changed. If you proceed, your changes will be lost.'
 		},
 		meshEdit: {
 			title: 'Set Mesh Parameters',
@@ -216,6 +248,10 @@ export default {
 		startJob: {
 			title: 'Start {0}',
 			prompt: 'Do you want to start {0}?'
+		},
+		delete: {
+			title: 'Delete {0}',
+			prompt: 'Are you sure you want to delete : <ul>'
 		},
 		update: {
 			title: 'Install updates?',
@@ -287,12 +323,19 @@ export default {
 		info: 'Info',
 		warning: 'Warning',
 		success: 'Success',
+		print: 'Print',
+		showBuildplate: 'Show builplate',
+		showPreview: 'Show preview',
+		preload: 'Preload {0}',
+		unload: 'Unload {0}',
+		edit: 'Edit',
 		heaterStates: [
 			'off',
 			'standby',
 			'active',
 			'fault',
-			'tuning'
+			'tuning',
+			'offline'
 		],
 		status: {
 			updating: 'Updating',
@@ -321,7 +364,7 @@ export default {
 	input: {
 		code: {
 			send: 'Send',
-			placeholder: 'Send Code...'
+			placeholder: 'Send code...'
 		},
 		addTemperature: 'Value of new temperature',
 		addRPM: 'Value of new preset'
@@ -349,6 +392,7 @@ export default {
 			delete: 'Delete',
 			downloadZIP: 'Download as ZIP',
 			noFiles: 'No Files or Directories',
+			driveUnmounted: 'Drive is unmounted',
 			goUp: 'Go up',
 			showMore: 'Show More'
 		},
@@ -399,7 +443,8 @@ export default {
 			simulate: 'Simulate File'
 		},
 		sys: {
-			noFiles: 'No System Files'
+			noFiles: 'No System Files',
+			configToolNote: 'edit via config tool'
 		}
 	},
 	menu: {
@@ -507,10 +552,10 @@ export default {
 			error: 'Failed to upload {0}'
 		},
 		parse: {
-			title: 'Parsing {0} {2}% complete eta: {3}',
-			message: 'Please stand by while the file is being parsed...',
-			success: 'Parsing of {0} successful after {1}',
-			successMulti: 'Successfully parsed {0} files',
+			title: 'Generating preview {0} {2}% complete eta: {3}',
+			message: 'Please stand by while the preview is being generated...',
+			success: 'Generating preview of {0} successful after {1}',
+			successMulti: 'Successfully generated preview',
 			error: 'Failed to parse {0}'
 		}
 	},
@@ -557,17 +602,26 @@ export default {
 			orMore: 'or more',
 			orLess: 'or less',
 			axes: 'Axes:',
+			notAvailable: 'height map not available',
 			numPoints: 'Number of points: {0}',
 			radius: 'Probing radius: {0}',
 			area: 'Probe area: {0}',
 			maxDeviations: 'Maximum deviations: {0} / {1}',
-			meanError: 'Mean error: {0}',
+			biasError: 'Mean error: {0}',
+			meanError: 'Absolute error: {0}',
 			rmsError: 'RMS error: {0}',
 			topView: 'Top view',
+			perspective: 'Default view',
 			colorScheme: 'Color scheme:',
 			terrain: 'Terrain',
 			heat: 'Heat',
-			reload: 'Reload Height Map'
+			reload: 'Reload',
+			probing: {
+				perfect: 'Perfect',
+				valid: 'Valid',
+				danger: 'Danger',
+				reprobe: 'Reprobe'
+			}
 		},
 		jobControl: {
 			caption: 'Job Control',
@@ -593,12 +647,12 @@ export default {
 			jobDuration: 'Job Duration'
 		},
 		jobEstimations: {
-			caption: 'Estimations',
-			filament: 'Based on Filament Usage',
-			file: 'Based on File Progress',
-			layer: 'Based on Layer Time',
-			slicer: 'Based on Slicer',
-			simulation: 'Based on Simulation'
+			caption: 'Estimations based on',
+			filament: 'Filament Usage',
+			file: 'File Progress',
+			layer: 'Layer Time',
+			slicer: 'Slicer',
+			simulation: 'Simulation'
 		},
 		jobInfo: {
 			caption: 'Job Information',
@@ -619,12 +673,16 @@ export default {
 			runMesh: 'Run Mesh Compensation (G29)',
 			loadMesh: 'Load Saved Height Map from SD Card (G29 S1)',
 			axesNotHomed: 'The following axis is not homed:|The following axes are not homed:',
-			noAxes: 'No Axes'
+			noAxes: 'No Axes',
+			runNozzleHeight: 'Run nozzle height calibration',
+			showHeightmap: "Shown the Heightmap"
 		},
 		settingsAbout: {
 			caption: 'About',
 			developedBy: 'Web Interface developed by',
 			updatededBy: 'updated by',
+			buildDate: "Build date: ",
+			lxVersion: "Lynxter version: ",
 			for: 'for',
 			licensedUnder: 'Licensed under the terms of the'
 		},
@@ -633,20 +691,32 @@ export default {
 			darkTheme: 'Dark theme',
 			language: 'Language',
 			binaryFileSizes: 'Use binary file sizes',
-			binaryFileSizesTitle: 'File sizes are displayed with a basis of 1024 (IEC) instead of 1000 (SI)'
+			binaryFileSizesTitle: 'File sizes are displayed with a basis of 1024 (IEC) instead of 1000 (SI)',
+			disableAutoComplete: 'Disable auto-completion',
+			disableAutoCompleteTitle: 'Do not show auto-complete list when typing in code or temperature inputs'
 		},
 		settingsCommunication: {
 			caption: 'Communication',
+			pingInterval: 'PING interval when idle (ms)',
 			ajaxRetries: 'Number of maximum AJAX retries',
 			updateInterval: 'Update interval ({0})',
 			extendedUpdateEvery: 'Extended status update interval',
-			fileTransferRetryThreshold: 'Retry threshold for file transfers ({0})'
+			fileTransferRetryThreshold: 'Retry threshold for file transfers ({0})',
+			crcUploads: 'Use CRC32 checksums for uploads',
+			unavailable: 'No settings available'
 		},
 		settingsElectronics: {
 			caption: 'Electronics',
 			diagnostics: 'Diagnostics',
+			board: 'Board: {0}',
 			firmware: 'Firmware: {0} ({1})',
-			dwsFirmware: 'Duet WiFi Server Version: {0}'
+			dwsFirmware: 'Duet WiFi Server Version: {0}',
+			updateNote: 'Note: You can install updates on the System page.'
+		},
+		settingsEndstops: {
+			caption: 'Endstops',
+			index: 'Index',
+			triggered: 'Triggered'
 		},
 		settingsGeneral: {
 			caption: 'General',
@@ -668,6 +738,14 @@ export default {
 			revertDWC: 'Revert to DWC1',
 			babystepAmount: 'Babystep amount ({0})',
 			moveFeedrate: 'Feedrate for move buttons ({0})'
+		},
+		settingsNetwork: {
+			caption: 'Networking',
+			advanced: 'Advanced',
+			publicIP: 'Machine\'s address',
+			netmask: 'Netmask',
+			gateway: 'Gateway',
+			dns: 'DNS addresses'
 		},
 		settingsNotifications: {
 			caption: 'Notifications',
@@ -701,12 +779,13 @@ export default {
 			requestedSpeed: 'Requested Speed',
 			topSpeed: 'Top Speed',
 			sensors: 'Sensors',
-			cpuTemp: 'CPU',
-			cpuTempTitle: 'Minimum: {0}, Maximum: {1}',
 			mcuTemp: 'MCU',
 			mcuTempTitle: 'Minimum: {0}, Maximum: {1}',
+			cpuTemp: 'CPU',
+			cpuTempTitle: 'Minimum: {0}, Maximum: {1}',
 			vIn: 'Vin',
 			vInTitle: 'Minimum: {0}, Maximum {1}',
+			fanRPM: 'Fan RPM',
 			probe: 'Z-Probe|Z-Probes',
 			noStatus: 'No Status'
 		},
@@ -740,6 +819,40 @@ export default {
 		webcam: {
 			caption: 'Webcam Surveillance',
 			alt: '(webcam image)'
-		}
+		},
+		toolOffset: {
+			captionXY: 'X-Y Tool Offset',
+			captionZ: 'Z Probe Offset',
+			tool: 'Tool',
+			offset: 'Offset <b>{0}</b>:',
+			toolTrigHeight: 'Tool trigger height',
+			bbStepping: 'Usual babystepping'
+		},
+		toolAngle: {
+			caption: 'Tool angle calibration',
+			angle: 'Angle <b>{0}</b>',
+			active: 'Active angle',
+			standby: 'Standby angle'
+		},
+		tiltCompensation: {
+			caption: 'X-Y Tilt Compensation',
+			tilt: 'Tilt <b>{0}</b>',
+			offset: 'Offset <b>{0}</b>',
+			tooltip: 'Offset on {0} axis',
+			switch: 'Display tilt as :',
+			rotation: 'Rotation around {0}',
+			buttonCaption: {
+				decrease: 'Decrease bed tilt around the {0} axis (M666 {1}xxx)',
+				increase: 'Increase bed tilt around the {0} axis (M666 {1}xxx)',
+			}
+		},
+		toolPID: {
+			caption: 'PID calibration',
+			tool: 'Tool',
+			pid: 'Calibration PID <b>{0}</b>',
+			calibration: 'calibration T°',
+			pwm: 'calibration PWM'
+
+		},
 	}
 }

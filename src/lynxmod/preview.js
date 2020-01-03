@@ -1,6 +1,6 @@
 let $ = require('jquery');
 let THREE = require('three');
-import { mapState } from 'vuex'
+//import { mapState } from 'vuex'
 
 export default {
 	name: 'PreviewScene',
@@ -18,9 +18,9 @@ export default {
 			lays: [],
 			tempChartOptions: 	{
 				// This array should hold maxHeaters + maxTempSensors items
-							//43,98,53,  223°,57,41, cmyk(0%, 0%, 0%, 5%)
+				//43,98,53,  223°,57,41, cmyk(0%, 0%, 0%, 5%)
 				colors: ["#FDB913", "#403E3D", "#2D4EA2", "#FFA000", "#FF00FF", "#337AB7", "#000000", "#E0E000",	// Heater colors
-						"#AEAEAE", "#BC0000", "#00CB00", "#0000DC", "#FEABEF", "#A0A000", "#DDDD00", "#00BDBD", "#CCBBAA", "#AA00AA"],		// Virtual heater colors
+				"#AEAEAE", "#BC0000", "#00CB00", "#0000DC", "#FEABEF", "#A0A000", "#DDDD00", "#00BDBD", "#CCBBAA", "#AA00AA"],		// Virtual heater colors
 				grid: {
 					borderWidth: 0
 				},
@@ -38,20 +38,22 @@ export default {
 				}
 			},
 			selectedMachine: undefined,
+			DEBUG: false,
 		}
 	},
 	methods: {
 		initPreview: function(target) {
-			console.log(target);
+			//console.log(target);
 			this.selectedMachine = "http://"+target+"/";
-			console.log(this.selectedMachine);
+			//console.log(this.selectedMachine);
 			this.tempChartOptions = {
 				// This array should hold maxHeaters + maxTempSensors items
 				// This array should hold maxHeaters + maxTempSensors items
-							//43,98,53,  223°,57,41, cmyk(0%, 0%, 0%, 5%)
+				//43,98,53,  223°,57,41, cmyk(0%, 0%, 0%, 5%)
 				colors: ["#FDB913", "#2D4EA2", "#403e3d", "#FFA000", "#FF00FF", "#337AB7", "#000000", "#E0E000",	// Heater colors
-						"#AEAEAE", "#BC0000", "#00CB00", "#0000DC", "#FEABEF", "#A0A000", "#DDDD00", "#00BDBD", "#CCBBAA", "#AA00AA"],		// Virtual heater colors
+				"#AEAEAE", "#BC0000", "#00CB00", "#0000DC", "#FEABEF", "#A0A000", "#DDDD00", "#00BDBD", "#CCBBAA", "#AA00AA"],		// Virtual heater colors
 			}
+			this.DEBUG = false;
 			if (this.previewScene) {
 				if (this.DEBUG)
 				console.log("Scene already defined");
@@ -161,7 +163,7 @@ export default {
 			this.i = 0;
 			this.lay = 0;
 			if (!this.pointCloud)
-				this.pointCloud = [];
+			this.pointCloud = [];
 			this.nbKey = this.pointCloud.length;
 			this.keys = [];
 			for (let key in this.pointCloud) {
@@ -173,7 +175,8 @@ export default {
 				this.lays.push(gcodeLayer);
 			}
 			var color = new THREE.Color(this.tempChartOptions.colors[this.keys[this.i]]);
-			console.log(this.keys[this.i] +" ("+color.r+","+color.g+","+color.b+")")
+			if(this.DEBUG)
+				console.log(this.keys[this.i] +" ("+color.r+","+color.g+","+color.b+")")
 			this.pointMaterial = new THREE.LineBasicMaterial({
 				color: color,
 				linewidth: 2
@@ -226,28 +229,26 @@ export default {
 			bbox.name = "bbox";
 			this.previewScene.add(bbox);
 			//this.newStatus = this.parseRows[this.parsedFileCount].find("#status");
+			if(this.DEBUG)
 			console.log("BBox redrawn");
 			this.renderLoop(gcodeReader);
 		},
 		animate: function() {
-				//this.statsfps.begin();
-				this.previewControls.update();
+			//this.statsfps.begin();
+			this.previewControls.update();
 			if (this.hasGeoToRender)
-					requestAnimationFrame( this.animate );
-				if (this.hasGeoToRender)
-					this.previewRenderer.render( this.previewScene, this.previewCamera );
-				if (this.hasGeoToRender)
-					this.renderLoop();
-				//light.position.z -= 0.1;
-			},
+			requestAnimationFrame( this.animate );
+			if (this.hasGeoToRender)
+			this.previewRenderer.render( this.previewScene, this.previewCamera );
+			if (this.hasGeoToRender)
+			this.renderLoop();
+			//light.position.z -= 0.1;
+		},
 		renderLoop: function(gcodeReader) {
 			if (this.i == this.keys.length) {
 				this.hasGeoToRender = false;
 				console.log("Done ");
 				//this.initRedraw();
-				setTimeout(function() {
-					console.log("");
-				}, 1000);
 				var imgData;
 				try {
 					this.previewCamera.position.set(-800, 550, 0);
@@ -271,6 +272,16 @@ export default {
 					this.previewRenderer.render(this.previewScene, this.previewCamera);
 					imgData = this.previewRenderer.domElement.toDataURL(strMime);
 					this.savePicture(imgData.replace(strMime, this.strDownloadMime), this.fileName.substring(this.fileName.lastIndexOf("/" )+1) + "_ico.jpg");
+					if(this.DEBUG)
+					console.log(this.previewScene);
+					for (let key in this.pointCloud) {
+						if (this.slicer == undefined || key == "Unknown" || key != "length") {
+							for (let gcodeLayer in this.pointCloud[key]) {
+								//console.log(this.previewScene.getObjectByName(key + "_" + gcodeLayer))
+								this.previewScene.remove(this.previewScene.getObjectByName(key + "_" + gcodeLayer));
+							}
+						}
+					}
 				} catch (e) {
 					console.error(e);
 					return;
@@ -290,6 +301,7 @@ export default {
 					this.lays.push(gcodeLayer);
 				}
 				var color = new THREE.Color(this.tempChartOptions.colors[this.keys[this.i]]);
+				if(this.DEBUG)
 				console.log("key"+this.keys[this.i] +": ("+color.r+","+color.g+","+color.b+")")
 				this.pointMaterial = new THREE.LineBasicMaterial({
 					color: color,
@@ -299,70 +311,74 @@ export default {
 					color: color
 				});
 				this.lay = 0;
+				if(this.DEBUG)
 				console.log("Drawing " + this.keys[this.i]);
 			} else {
 				this.hasGeoToRender = false;
 				console.log("Done ");
 			}
-						this.renderLoop(gcodeReader);
+			this.renderLoop(gcodeReader);
 		},
 		redrawScene: function(key, layer, visible) {
 			if (this.previewScene.getObjectByName(key + "_" + layer))
-				this.previewScene.getObjectByName(key + "_" + layer).visible = visible;
+			this.previewScene.getObjectByName(key + "_" + layer).visible = visible;
 		},
 		renderGeo: function(key, gcodeLayer, gcodeReader) {
 			let threeDee;
 			if (this.pointCloud[key] && this.pointCloud[key][gcodeLayer]) {
 				try {
 					this.pointCloud[key][gcodeLayer].computeVertexNormals();
-				} catch (e) {};
+				} catch (e) {
+					console.error(e);
+					return;
+				}
 				if (gcodeReader.fileSize < 10 * 1024 * 1024) {
 					threeDee = (key != "MOVE" ? new THREE.Mesh(
-							new THREE.BufferGeometry().fromGeometry(this.pointCloud[key][gcodeLayer]), this.meshMaterial) :
+						new THREE.BufferGeometry().fromGeometry(this.pointCloud[key][gcodeLayer]), this.meshMaterial) :
 						new THREE.LineSegments(this.pointCloud[key][gcodeLayer], this.pointMaterial));
-				} else {
-					threeDee = new THREE.LineSegments(this.pointCloud[key][gcodeLayer], this.pointMaterial);
-				}
-				if (key == "MOVE")
+					} else {
+						threeDee = new THREE.LineSegments(this.pointCloud[key][gcodeLayer], this.pointMaterial);
+					}
+					if (key == "MOVE")
 					threeDee.visible = false;
-				threeDee.castShadow = true;
-				threeDee.receiveShadow = true;
-				threeDee.name = key + "_" + gcodeLayer;
-				this.previewScene.add(threeDee);
-			}
-		},
-		b64toBlob: function(e, t, n) {
-			t = t || "", n = n || 512;
-			for (var o = atob(e), r = [], a = 0; a < o.length; a += n) {
-				for (var l = o.slice(a, a + n), i = new Array(l.length), s = 0; s < l.length; s++) i[s] = l.charCodeAt(s);
-				var c = new Uint8Array(i);
-				r.push(c)
-			}
-			return new Blob(r, {
-				type: t
-			})
-		},
-		savePicture: function(e, t) {
-			document.getElementById("myAwesomeForm");
-			var n = e.split(";"),
+					threeDee.castShadow = true;
+					threeDee.receiveShadow = true;
+					threeDee.name = key + "_" + gcodeLayer;
+					this.previewScene.add(threeDee);
+				}
+			},
+			b64toBlob: function(e, t, n) {
+				t = t || "", n = n || 512;
+				for (var o = atob(e), r = [], a = 0; a < o.length; a += n) {
+					for (var l = o.slice(a, a + n), i = new Array(l.length), s = 0; s < l.length; s++) i[s] = l.charCodeAt(s);
+					var c = new Uint8Array(i);
+					r.push(c)
+				}
+				return new Blob(r, {
+					type: t
+				})
+			},
+			savePicture: function(e, t) {
+				document.getElementById("myAwesomeForm");
+				var n = e.split(";"),
 				o = n[0].split(":")[1],
 				r = this.b64toBlob(n[1].split(",")[1], o);
-			while (this.fileName.includes(" ")) {
-				this.fileName = this.fileName.replace(" ", "_");
-			}
-			//console.log("t = " + t)
-			//console.log("this.fileName = " + this.fileName)
-			var f = this.fileName;
-			while (f.includes(" ")) {
-				f = f.replace(" ", "_");
-						}
-			while (t.includes(" ")) {
-				t = t.replace(" ", "_");
-			}
-			/*if (!t.includes(this.fileName)) {
+				while (this.fileName.includes(" ")) {
+					this.fileName = this.fileName.replace(" ", "_");
+				}
+				//console.log("t = " + t)
+				//console.log("this.fileName = " + this.fileName)
+				var f = this.fileName;
+				while (f.includes(" ")) {
+					f = f.replace(" ", "_");
+				}
+				while (t.includes(" ")) {
+					t = t.replace(" ", "_");
+				}
+				/*if (!t.includes(this.fileName)) {
 				t = this.fileName + t;
 			}*/
-			console.log("uploading("+this.fileName+"):	" + f + "/" + t);
+			//console.log("uploading("+this.fileName+"):	" + f + "/" + t);
 			$.ajax({
 				url: (this.selectedMachine?this.selectedMachine:"/") + "rr_upload?name=0:/www/img/GCodePreview/" + f + "/" + t + "&time=" + encodeURIComponent(this.timeToStr(new Date)),
 				data: r,
@@ -383,18 +399,18 @@ export default {
 				}
 			})
 		},
-				timeToStr: function(time) {
-					// Should return an ISO-like datetime string like "2016-10-24T15:39:09"
-					// Cannot use toISOString() here because it doesn't output the localtime
-					var result = "";
-					result += time.getFullYear() + "-";
-					result += (time.getMonth() + 1) + "-";
-					result += time.getDate() + "T";
-					result += time.getHours() + ":";
-					result += time.getMinutes() + ":";
-					result += time.getSeconds();
-					return result;
-				},
+		timeToStr: function(time) {
+			// Should return an ISO-like datetime string like "2016-10-24T15:39:09"
+			// Cannot use toISOString() here because it doesn't output the localtime
+			var result = "";
+			result += time.getFullYear() + "-";
+			result += (time.getMonth() + 1) + "-";
+			result += time.getDate() + "T";
+			result += time.getHours() + ":";
+			result += time.getMinutes() + ":";
+			result += time.getSeconds();
+			return result;
+		},
 	},
 	mounted(){
 		console.log(this.selectedMachine);

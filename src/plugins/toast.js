@@ -18,13 +18,11 @@ const defaults = {
 let settings, openNotifications = []
 
 export function makeNotification(type, title, message = '', timeout) {
+	console.log({type:type, title:title, message:message, timeout:timeout})
 	// If there is already an equal notification, reset its time and don't display a new one
-	const equalNotification = openNotifications.find(item => item.type === type /*&& item.title == title && item.message === message*/);
+	const equalNotification = openNotifications.find(item => item.type === type && item.title == title && item.message === message);
 
 	if (equalNotification) {
-		console.log(equalNotification.toSource());
-		equalNotification.title = title;
-		equalNotification.message = message;
 		equalNotification.resetTimeout();
 		return equalNotification;
 	}
@@ -32,8 +30,8 @@ export function makeNotification(type, title, message = '', timeout) {
 	// Prepare and show new toast
 	const item = {}, options = Object.assign({
 		class: 'new-toast',
-		title: title.replace(/\n/g, '<br/>'),
-		message: message.replace(/\n/g, '<br/>'),
+		title: title.replace(/\n/g, '<br>'),
+		message: message ? message.replace(/\n/g, '<br>') : '',
 		onClosed() {
 			openNotifications = openNotifications.filter(notification => notification !== item);
 		},
@@ -85,6 +83,7 @@ export function makeNotification(type, title, message = '', timeout) {
 
 export function makeFileTransferNotification(type, destination, cancelSource, num, count) {
 	const filename = extractFileName(destination), titlePrefix = count ? `(${num}/${count}) ` : '';
+
 	// Prepare toast
 	iziToast.info({
 		class: 'file-transfer',

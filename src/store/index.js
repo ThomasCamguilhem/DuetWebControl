@@ -30,6 +30,7 @@ const store = new Vuex.Store({
 		isLoggingIn: false,
 		isLoggingOut: false,
 		isLoadingTool: false,
+		isUnloadingTool: false,
 		isLocal: ((location.hostname === 'localhost') || (location.hostname === '127.0.0.1') || (location.hostname === '[::1]')),
 		connectDialogShown: ((location.hostname === 'localhost') || (location.hostname === '127.0.0.1') || (location.hostname === '[::1]')) && ((location.port !== "80") && (location.port !== "")),
 		loginDialogShown: false,
@@ -145,156 +146,244 @@ const store = new Vuex.Store({
 		},
 
 		async login({ state, commit}, {usrLogin, usrPasswd}) {
-				//console.log("logging in");
-				//console.log(usrLogin + ": " + usrPasswd);
-				if (state.machines.hasOwnProperty(usrLogin)) {
-					throw new Error(`User ${usrLogin} is already connected!`);
-				}
-				if (state.isLoggingIn) {
-					throw new Error('Already logging in');
-				}
-				commit('setLoggingin', true);
-				try {
-					let hostname;
-					if (hostname == undefined)
-						hostname = state.selectedMachine; //Object.keys(machines)[1];
-					let result = await connector.doLogin(usrLogin, usrPasswd, hostname);
-					commit('setLoggingin', false);
-					commit(`setUser`, result.data);
+			//console.log("logging in");
+			//console.log(usrLogin + ": " + usrPasswd);
+			if (state.machines.hasOwnProperty(usrLogin)) {
+				throw new Error(`User ${usrLogin} is already connected!`);
+			}
+			if (state.isLoggingIn) {
+				throw new Error('Already logging in');
+			}
+			commit('setLoggingin', true);
+			try {
+				let hostname;
+				if (hostname == undefined)
+				hostname = state.selectedMachine; //Object.keys(machines)[1];
+				let result = await connector.doLogin(usrLogin, usrPasswd, hostname);
+				commit('setLoggingin', false);
+				commit(`setUser`, result.data);
 
-				} catch (e) {
-					/*if (!(e instanceof InvalidPasswordError) || password !== defaultPassword) {
-						logGlobal('error', i18n.t('error.connect', [hostname]), e.message);
+			} catch (e) {
+				/*if (!(e instanceof InvalidPasswordError) || password !== defaultPassword) {
+				logGlobal('error', i18n.t('error.connect', [hostname]), e.message);
+			}
+			if (e instanceof InvalidPasswordError) {
+			commit('askForPassword');
+		}*/
+		commit('setLoggingin', false);
+		//commit('setLogedin', false);
+		state.loginDialogShown = true;
+		console.error(e);
+	}
+},
+
+async logout({ state, commit}) {
+	console.log("logging out");
+	if (state.username == "") {
+		throw new Error('Already loged out');
+	}
+	if (state.isLoggingOut) {
+		throw new Error('Already logging out');
+	}
+	commit('setLoggingout', true);
+
+	try {
+		let hostname;
+		if (hostname == undefined)
+		hostname = state.selectedMachine; //location.host;
+		await connector.doLogout();
+		//console.log(result.data);
+		commit('setLoggingout', false);
+		commit(`setUser`, {});
+
+	} catch (e) {
+		commit('setLoggingout', false);
+		console.error(e);
+	}
+},
+
+async loadTool({state, commit}, name){
+	commit('setTool', name)
+	commit('setLoadingTool', false);
+},
+
+async shutdown({state, commit}) {
+	console.log('Shutting down');
+	try {
+		let hostname;
+		if (hostname == undefined)
+		hostname = state.selectedMachine; //location.host;
+		await connector.doShutdown(hostname);
+		//console.log(result.data);
+	} catch (e) {
+		console.error(e);
+	}
+},
+
+
+async setToolLoading({state, commit}, loading){
+	console.log('loading Tool ' + loading);
+	commit('setLoadingTool', loading);
+},
+
+async loadAddresses({state, commit}) {
+	//console.log('Loading addresses');
+	try {
+		let hostname;
+		if (hostname == undefined)
+		hostname = (state.selectedMachine !== defaultMachine ? state.selectedMachine: (location.hostname != 'localhost' ? location.host : '192.168.1.243'));
+
+		let result = await connector.doLoadAddresses(hostname);
+		let ifaces = result.data.filter(iface => iface.ifname == "enp1s0" || iface.ifname == "enp2s0")
+		//console.log(this.state.user.ifaces)
+		//console.log(ifaces)
+		let diff = false;
+		if(this.state.user.ifaces){
+			for (var i = 0; i < ifaces.length; i++) {
+				let keyI = ifaces[i]
+				let keysI = Object.keys(keyI);
+				for (var j = 0; j < keysI.length; j++) {
+					if (typeof(keyI[keysI[j]]) == "string") {
+						if (keyI[keysI[j]] !== this.state.user.ifaces[i][keysI[j]]) {
+							diff = true
+							console.log(keysI[j])
+							console.log(keyI[keysI[j]])
+							console.log(this.state.user.ifaces[i][keysI[j]])
+						}
+					} else if (typeof(keyI[keysI[j]]) == "object") {
+						let keyJ = keyI[keysI[j]]
+						let keysJ = Object.keys(keyJ);
+						for (var k = 0; k < keysJ.length; k++) {
+							if (typeof(keyJ[keysJ[k]]) == "string") {
+								if (keyJ[keysJ[k]] !== this.state.user.ifaces[i][keysI[j]][keysJ[k]]) {
+									diff = true
+									console.log(keysJ[k])
+									console.log(keyJ[keysJ[k]])
+									console.log(this.state.user.ifaces[i][keysI[j]][keysJ[k]])
+								}
+							} else if (typeof(keyJ[keysJ[k]]) == "object"){
+								let keyK = keyJ[keysJ[k]];
+								let keysK = Object.keys(keyK);
+								for (var l = 0; l < keysK.length; l++) {
+									if (typeof(keyK[keysK[l]]) == "string") {
+										if (keyK[keysK[l]] !== this.state.user.ifaces[i][keysI[j]][keysJ[k]][keysK[l]]) {
+											diff = true
+											console.log(keysK[l])
+											console.log(keyK[keysK[l]])
+											console.log(this.state.user.ifaces[i][keysI[j]][keysJ[k]][keysK[l]])
+										}
+									}
+								}
+							} else {
+								console.log(typeof(keyJ[keysJ[k]]))
+							}
+						}
+					} else {
+						console.log(typeof(keyJ))
 					}
-					if (e instanceof InvalidPasswordError) {
-						commit('askForPassword');
-					}*/
-					commit('setLoggingin', false);
-					//commit('setLogedin', false);
-					state.loginDialogShown = true;
-					console.error(e);
 				}
-		},
+			}
+		} else {
+			diff = true;
+		}
+		//console.log(diff);
+		if (diff) {
+			commit(`setIfaces`, result.data);
+		}
+	} catch (e) {
+		console.error(e);
+	}
+}
+},
+mutations: {
+	showConnectDialog: state => state.connectDialogShown = true,
+	showLoginDialog: state => state.loginDialogShown = true,
+	hideConnectDialog(state) {
+		state.connectDialogShown = false;
+		state.passwordRequired = false;
+	},
+	hideLoginDialog(state) {
+		state.loginDialogShown = false;
+	},
+	askForPassword(state) {
+		state.connectDialogShown = true;
+		state.passwordRequired = true;
+	},
 
-		async logout({ state, commit}) {
-			console.log("logging out");
-			if (state.username == "") {
-				throw new Error('Already loged out');
-			}
-			if (state.isLoggingOut) {
-				throw new Error('Already logging out');
-			}
-			commit('setLoggingout', true);
+	setConnecting: (state, connecting) => state.isConnecting = connecting,
+	addMachine(state, { hostname, moduleInstance }) {
+		machines[hostname] = moduleInstance;
+		this.registerModule(['machines', hostname], moduleInstance);
+	},
+	setDisconnecting: (state, disconnecting) => state.isDisconnecting = disconnecting,
+	removeMachine(state, hostname) {
+		this.unregisterModule(['machines', hostname]);
+		delete machines[hostname];
+	},
 
-			try {
-				let hostname;
-				if (hostname == undefined)
-					hostname = state.selectedMachine; //location.host;
-					await connector.doLogout();
-					//console.log(result.data);
-					commit('setLoggingout', false);
-					commit(`setUser`, {});
+	setLoggingin: (state, loggingin) => state.isLoggingIn = loggingin,
+	setLoggingout: (state, loggingout) => state.isLoggingOut = loggingout,
 
-			} catch (e) {
-				commit('setLoggingout', false);
-				console.error(e);
-			}
-		},
-		async loadTool({state, commit}, name){
-			commit('setTool', name)
-		},
-		async shutdown({state, commit}) {
-			console.log('Shutting down');
-			try {
-				let hostname;
-				if (hostname == undefined)
-					hostname = state.selectedMachine; //location.host;
-					await connector.doShutdown(hostname);
-					//console.log(result.data);
-			} catch (e) {
-				console.error(e);
-			}
+	setLoadingTool: (state, loadingtool) => state.isLoadingTool = loadingtool,
+	setUnloadingTool: (state, unloadingtool) => state.isUnloadingTool = unloadingtool,
+
+	setSelectedMachine(state, selectedMachine) {
+		this.unregisterModule('machine');
+		this.registerModule('machine', machines[selectedMachine]);
+		state.selectedMachine = selectedMachine;
+	},
+
+	setUser(state, user) {
+		let tmpUser = state.user;
+		state.user = {};
+		tmpUser.username = user.username;
+		tmpUser.level = user.level;
+		tmpUser.last_connect = user.date;
+		tmpUser.type = user.type;
+		console.log(state.user);
+		state.user = tmpUser;
+		if (state.user.username) {
+			console.log("Welcome back " + state.user.username);
+			console.log("you're " + state.user.type +"(" + state.user.level + ")")
+			console.log("last connection " + state.user.last_connect);
+		}
+
+		console.log(state.user);
+	},
+
+	setTool(state, tool) {
+		let tmpUser = state.user;
+		state.user = {};
+		tmpUser.loadedTool = tool
+		state.user = tmpUser;
+	},
+
+	setIfaces(state, iface) {
+		let tmpUser = state.user;
+		state.user = {};
+		tmpUser.ifaces = iface.filter(iface => iface.ifname == "enp1s0" || iface.ifname == "enp2s0");
+		state.user = tmpUser;
+		//console.log(state.user);
+	},
+},
+
+modules: {
+	// machine will provide the currently selected machine
+	machines: {
+		namespaced: true,
+		modules: {
+			[defaultMachine]: machines[defaultMachine]				// This represents the factory defaults
+			// ... other machines are added as sub-modules to this object
 		}
 	},
-	mutations: {
-		showConnectDialog: state => state.connectDialogShown = true,
-		showLoginDialog: state => state.loginDialogShown = true,
-		hideConnectDialog(state) {
-			state.connectDialogShown = false;
-			state.passwordRequired = false;
-		},
-		hideLoginDialog(state) {
-			state.loginDialogShown = false;
-		},
-		askForPassword(state) {
-			state.connectDialogShown = true;
-			state.passwordRequired = true;
-		},
-
-		setConnecting: (state, connecting) => state.isConnecting = connecting,
-		addMachine(state, { hostname, moduleInstance }) {
-			machines[hostname] = moduleInstance;
-			this.registerModule(['machines', hostname], moduleInstance);
-		},
-		setDisconnecting: (state, disconnecting) => state.isDisconnecting = disconnecting,
-		removeMachine(state, hostname) {
-			this.unregisterModule(['machines', hostname]);
-			delete machines[hostname];
-		},
-
-		setLoggingin: (state, loggingin) => state.isLoggingIn = loggingin,
-
-		setLoggingout: (state, loggingout) => state.isLoggingOut = loggingout,
-
-		setSelectedMachine(state, selectedMachine) {
-			this.unregisterModule('machine');
-			this.registerModule('machine', machines[selectedMachine]);
-			state.selectedMachine = selectedMachine
-		},
-
-		setUser(state, user) {
-			let tmpUser = state.user;
-			state.user = {};
-			tmpUser.username = user.username;
-			tmpUser.level = user.level;
-			tmpUser.last_connect = user.date;
-			tmpUser.type = user.type;
-			console.log(state.user);
-			state.user = tmpUser;
-			if (state.user.username) {
-				console.log("Welcome back " + state.user.username);
-				console.log("you're " + state.user.type +"(" + state.user.level + ")")
-				console.log("last connection " + state.user.last_connect);
-			}
-
-			console.log(state.user);
-		},
-
-		setTool(state, tool) {
-				let tmpUser = state.user;
-				state.user = {};
-				tmpUser.loadedTool = tool
-				state.user = tmpUser;
-		},
-	},
-
-	modules: {
-		// machine will provide the currently selected machine
-		machines: {
-			namespaced: true,
-			modules: {
-				[defaultMachine]: machines[defaultMachine] 				// This represents the factory defaults
-				// ... other machines are added as sub-modules to this object
-			}
-		},
-		settings
-	},
-	plugins: [
-		connector.installStore,
-		observer,
-		Plugins.installStore
-	],
-	strict: process.env.NODE_ENV !== 'production'
+	settings
+},
+plugins: [
+	connector.installStore,
+	observer,
+	Plugins.installStore
+],
+strict: process.env.NODE_ENV !== 'production'
 })
 
 // This has to be registered dynamically, else unregisterModule will not work cleanly

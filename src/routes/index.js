@@ -9,12 +9,11 @@ import Control from './Control'
 import Job from './Job'
 import Files from './Files'
 import Settings from './Settings'
-import Lynx from './Lynx'
+import Lynx from './Lynxter'
 import store from '../store'
 
 Vue.use(VueRouter)
-//console.log("isLocal: " + store.state.isLocal);
-//console.log("user: "+ store.getters.getUser.level);
+
 export const Routing = ( store.state.isLocal? [
 	// access Pannel
 	{
@@ -48,12 +47,12 @@ export const Routing = ( store.state.isLocal? [
 			},
 			// Jobs
 			{
-					icon: 'play_arrow',
-					caption: 'menu.files.jobs',
-					path: '/Files/Jobs',
-					component: Files.Jobs,
-					showLocal: true,
-					//minLevel: 1,
+				icon: 'play_arrow',
+				caption: 'menu.files.jobs',
+				path: '/Files/Jobs',
+				component: Files.Jobs,
+				showLocal: true,
+				//minLevel: 1,
 			},
 		]
 	},
@@ -63,90 +62,82 @@ export const Routing = ( store.state.isLocal? [
 		caption: 'menu.settings.caption',
 		showLocal: true,
 		pages: [
-				// Webcam
-				{
-					icon: 'photo_camera',
-					caption: 'menu.job.webcam',
-					path: '/Job/Webcam',
-					component: Job.Webcam,
-					condition: 'webcam',
-					showLocal: true,
-					minLevel: 1,
-				},
-				// Height Map
-				{
-					icon: 'grid_on',
-					caption: 'menu.control.heightmap',
-					path: '/Heightmap',
-					component: Control.Heightmap,
-					showLocal: true,
-					//minLevel: 0,
-				},
-				// Console
-				{
-					icon: 'code',
-					caption: 'menu.control.console',
-					path: '/Console',
-					component: Control.Console,
-					showLocal: true,
-					//minLevel: 1,
-				},
-				// Macros
-				{
-						icon: 'polymer',
-						caption: 'menu.files.macros',
-						path: '/Files/Macros',
-						component: Files.Macros,
-						showLocal: true,
-						//minLevel: 1,
-				},
-				// Calibration
-				{
-					icon: 'build',
-					caption: 'menu.lynx.calibrate',
-					path: '/Lynxter/Calibration',
-					component: Lynx.Calibration,
-					showLocal: true,
-				},
-				// System
-				/*{
-					icon: 'settings',
-					caption: 'menu.files.system',
-					path: '/Files/System',
-					component: Files.System,
-					showLocal: true,
-					//minLevel: 3,
-				}*/
-			]
-		},
-		// Settings
-		{
-			icon: 'build',
-			caption: 'menu.settings.caption',
-			showLocal: true,
-			minLevel: 2,
-			pages: [
-				// General
-				{
-					icon: 'settings',
-					caption: 'menu.settings.general',
-					path: '/Settings/General',
-					component: Settings.General,
-					showLocal: true,
-					minLevel: 3,
-				},
-				// Machine
-				{
-					icon: 'settings_applications',
-					caption: 'menu.settings.machine',
-					path: '/Settings/Machine',
-					component: Settings.Machine,
-					showLocal: true,
-					minLevel: 2,
-				}
-			]
-		}
-	] : [
+			// Webcam
+			{
+				icon: 'photo_camera',
+				caption: 'menu.job.webcam',
+				path: '/Job/Webcam',
+				component: Job.Webcam,
+				condition: 'webcam',
+				showLocal: true,
+				minLevel: 1,
+			},
+			// Height Map
+			{
+				icon: 'grid_on',
+				caption: 'menu.control.heightmap',
+				path: '/Heightmap',
+				component: Control.Heightmap,
+				showLocal: true,
+				//minLevel: 0,
+			},
+			// Console
+			{
+				icon: 'code',
+				caption: 'menu.control.console',
+				path: '/Console',
+				component: Control.Console,
+				showLocal: true,
+				//minLevel: 1,
+			},
+			// Macros
+			{
+				icon: 'polymer',
+				caption: 'menu.files.macros',
+				path: '/Files/Macros',
+				component: Files.Macros,
+				showLocal: true,
+				//minLevel: 1,
+			},
+		]
+	},
+	// Settings
+	{
+		icon: 'build',
+		caption: 'menu.settings.caption',
+		showLocal: true,
+		//minLevel: 2,
+		pages: [
+
+			// Machine
+			{
+				icon: 'settings_applications',
+				caption: 'menu.settings.machine',
+				path: '/Settings/Machine',
+				component: Settings.Machine,
+				showLocal: true,
+				//minLevel: 2,
+			},
+			// Calibration
+			{
+				icon: 'build',
+				caption: 'menu.lynx.calibrate',
+				path: '/Lynxter/Calibration',
+				component: Lynx.Calibration,
+				showLocal: true,
+			},
+			// General
+			/*{
+				icon: 'settings',
+				caption: 'menu.settings.general',
+				path: '/Settings/General',
+				component: Settings.General,
+				showLocal: true,
+				//minLevel: 3,
+			},*/
+		]
+	}
+] : [
 	// Control
 	{
 		icon: 'tune',
@@ -256,54 +247,56 @@ export const Routing = ( store.state.isLocal? [
 		pages: [
 			// Materials
 			{
-				icon: 'radio_button_checked',
-				caption: 'menu.material.materials',
-				path: '/Files/Materials',
-				component: Files.Materials,
-				showLocal: false,
-			},
-			// Filaments
-			{
-				icon: 'album',
-				caption: 'menu.material.filaments',
-				path: '/Files/Filaments',
-				component: Files.Filaments,
-				//minLevel: 1,
-			},
-			// Liquids
-			{
-				icon: 'invert_colors',
-				caption: 'menu.material.liquids',
-				path: '/Files/Liquids',
-				component: Files.Liquids,
-				//minLevel: 1,
-			},
-			// Pellets
-			{
-				icon: 'radio_button_checked',
-				caption: 'menu.material.pellets',
-				path: '/Files/Pellets',
-				component: Files.Pellets,
-				//minLevel: 1,
-			},
-			// Fibers
-			{
-				icon: 'radio_button_checked',
-				caption: 'menu.material.fibers',
-				path: '/Files/Fibers',
-				component: Files.Fibers,
-				//minLevel: 1,
-			},
-			// Materials
-			{
-				icon: 'radio_button_checked',
-				caption: 'menu.material.hybrids',
-				path: '/Files/Hybrids',
-				component: Files.Hybrids,
-				//minLevel: 1,
-			},
-		]
-	},*/
+			icon: 'radio_button_checked',
+			caption: 'menu.material.materials',
+			path: '/Files/Materials',
+			component: Files.Materials,
+			showLocal: false,
+		},
+		// Filaments
+		{
+			icon: 'album',
+			img: '/img/ressources/Medium_universe_FIL.svg',
+			caption: 'menu.material.filaments',
+			path: '/Files/Filaments',
+			component: Files.Filaments,
+			//minLevel: 1,
+		},
+		// Paste
+		{
+			icon: 'invert_colors',
+			img: '/img/ressources/Medium_universe_LIQ.svg',
+			caption: 'menu.material.liquids',
+			path: '/Files/Liquids',
+			component: Files.Liquids,
+			//minLevel: 1,
+		},
+		// Pellets
+		/*{
+		icon: 'radio_button_checked',
+		caption: 'menu.material.pellets',
+		path: '/Files/Pellets',
+		component: Files.Pellets,
+		//minLevel: 1,
+	},
+	// Fibers
+	{
+	icon: 'radio_button_checked',
+	caption: 'menu.material.fibers',
+	path: '/Files/Fibers',
+	component: Files.Fibers,
+	//minLevel: 1,
+	},
+	// Materials
+	{
+	icon: 'radio_button_checked',
+	caption: 'menu.material.hybrids',
+	path: '/Files/Hybrids',
+	component: Files.Hybrids,
+	//minLevel: 1,
+	},
+	]
+},*/
 	// Settings
 	{
 		icon: 'build',
@@ -336,45 +329,45 @@ export const Routing = ( store.state.isLocal? [
 			},
 			// Setup
 			/*{
-				icon: 'build',//'setup',
-				caption: 'menu.settings.setup',
-				path: '/Settings/Setup',
-				component: Settings.Setup
-			},
-			// Support
-			{
-				icon: 'build',//'tutorial',
-				caption: 'menu.settings.support',
-				path: '/Settings/Support',
-				component: Settings.Support,
-			},
-			// if is certified
-			// Maintenance
-			{
-				icon: 'build',//'maintenance',
-				caption: 'menu.settings.maintenance',
-				path: '/Settings/Maintenance',
-				component: Settings.Maintenance,
-			}*/
-			// Update (coming soon)
-			/* {
-				icon: 'update',
-				caption: 'menu.settings.update',
-				path: '/Settings/Update',
-				component: Settings.Update
-			} */
-		]
-	},
-]);
-
-export default new VueRouter({
-	mode: 'history',
-	base: process.env.BASE_URL,
-	routes: [
-		...Routing.map(category => category.pages).reduce((a, b) => a.concat(b)),
+			icon: 'build',//'setup',
+			caption: 'menu.settings.setup',
+			path: '/Settings/Setup',
+			component: Settings.Setup
+		},
+		// Support
 		{
-			path: '*',
-			component: Page404
-		}
-	],
-})
+		icon: 'build',//'tutorial',
+		caption: 'menu.settings.support',
+		path: '/Settings/Support',
+		component: Settings.Support,
+	},
+	// if is certified
+	// Maintenance
+	{
+	icon: 'build',//'maintenance',
+	caption: 'menu.settings.maintenance',
+	path: '/Settings/Maintenance',
+	component: Settings.Maintenance,
+	}*/
+	// Update (coming soon)
+	/* {
+	icon: 'update',
+	caption: 'menu.settings.update',
+	path: '/Settings/Update',
+	component: Settings.Update
+	} */
+	]
+	},
+	]);
+
+	export default new VueRouter({
+		mode: 'history',
+		base: process.env.BASE_URL,
+		routes: [
+			...Routing.map(category => category.pages).reduce((a, b) => a.concat(b)),
+			{
+				path: '*',
+				component: Page404
+			}
+		],
+	})

@@ -8,10 +8,29 @@ tr.isLocal td{
 }
 
 .sm4 {
-	width: 190px;
+	width: 200px;
 	height: 200px;
-	border-radius: 10%;
+	border-radius: 20px;
+	margin: 0%;
+	cursor: pointer;
+	transition: transform .1s;
+}
+
+.sm4:hover{
+	transform: scale(1.05)
+}
+
+.sm3 {
+	width: 147px;
+	height: 50px;
+	border-radius: 20px;
 	margin: 1%;
+	cursor: pointer;
+	transition: transform .1s;
+}
+
+.sm4:hover{
+	transform: scale(1.05)
 }
 
 th.checkbox {
@@ -26,9 +45,9 @@ th.checkbox {
 }
 
 .img_gcode{
-transform-origin: 0% 50%;
-transition: transform .5s;
-margin: 0 5px;
+	transform-origin: 0% 50%;
+	transition: transform .5s;
+	margin: 0 5px;
 }
 
 .img_gcode:hover{
@@ -36,16 +55,16 @@ margin: 0 5px;
 }
 
 a {
-		/*color: #fdb913;*/
-		color: white;
-		font-weight: bold;
+	/*color: #fdb913;*/
+	color: white;
+	font-weight: bold;
 }
 tr:hover:not(.v-datatable__expand-row).isLocal  {
-    background: none !important;
+	background: none !important;
 }
 
 .isLocal td:hover:not(.v-datatable__expand-row) {
-    background: #757575 !important;
+	background: #757575 !important;
 }
 .pr-0{
 	//margin-left: 10%;
@@ -54,19 +73,31 @@ tr:hover:not(.v-datatable__expand-row).isLocal  {
 
 .md3 {
 	display: inline-flex;
-	margin: 0px;
+	margin: 5px 0;
+}
+
+.hoverPreview {
+	cursor: pointer;
+	transition: transform .1s;
+}
+
+.hoverPreview:hover {
+	transform: scale(1.05)
+}
+.isLocal {
+	display: inline flex;
 }
 </style>
 <style scoped v-if="isLocal">
-table.v-table tbody td,
-table.v-table tbody th {
-  height: 75px;
-}
+	table.v-table tbody td,
+	table.v-table tbody th {
+		height: 75px;
+	}
 </style>
 
 <template>
 	<div>
-		<v-btn-toggle class="v-btn-toggle--only-child v-btn-toggle--selected" v-if="true">
+		<v-btn-toggle class="v-btn-toggle--only-child v-btn-toggle--selected">
 			<v-btn id="v-btn--list" class="v-btn--large v-btn--depressed " v-on:click="updateDis('l')" :class="{active:!isLocal}"><v-icon  class="mr-1"> view_list </v-icon></v-btn>
 			<v-btn id="v-btn--mini" class="v-btn--large v-btn--depressed " v-on:click="updateDis('m')" :class="{active:isLocal}"><v-icon  class="mr-1"> view_module </v-icon></v-btn>
 		</v-btn-toggle>
@@ -79,14 +110,14 @@ table.v-table tbody th {
 
 			<template slot="no-data">
 				<slot name="no-data">
-					<v-alert :value="true" type="info" class="ma-0" @contextmenu.prevent="">
+					<v-alert :value="true" type="secondary" class="ma-0" @contextmenu.prevent="">
 						{{ $t('list.baseFileList.noFiles') }}
 					</v-alert>
 				</slot>
 			</template>
 
-			<template slot="headers" slot-scope="props" v-if="displayMode.asList">
-				<tr>
+			<template slot="headers" slot-scope="props">
+				<tr v-if="displayMode.asList">
 					<th class="checkbox pr-0">
 						<v-checkbox :input-value="props.all" :indeterminate="props.indeterminate" primary hide-details @click.stop.prevent="toggleAll"></v-checkbox>
 					</th>
@@ -97,9 +128,23 @@ table.v-table tbody th {
 						</th>
 					</template>
 				</tr>
+				<v-flex shrink v-if="displayMode.asMini" class="isLocal">
+					<template v-for="header in props.headers">
+						<div :key="header.value" v-if="header.value === 'name' || (header.unit === 'bytes' && $vuetify.breakpoint.smAndUp) || header.unit === 'date' || (header.unit === 'time' && header.value === 'printTime' && $vuetify.breakpoint.smAndUp) || (header.unit === 'time' && $vuetify.breakpoint.lgAndUp) || !isLocal" :class="['text-xs-left column sortable', innerPagination.descending ? 'desc' : 'asc', header.value === innerPagination.sortBy ? 'active' : '']" @click="changeSort(header.value)" v-tab-control style="margin: 5px 5px 0 5px">
+							<v-layout sm3 shrink
+							class="hoverPreview grey darken-2 white--text"
+							@click="onItemClick(props)">
+								<div style="margin: auto">
+									{{ getHeaderText(header)}}
+									<v-icon small v-if="header.value === innerPagination.sortBy" :style="'transform: rotate(' + (innerPagination.descending?'0deg':'180deg') + ')'">arrow_upward</v-icon>
+								</div>
+							</v-layout>
+						</div>
+					</template>
+				</v-flex>
 			</template>
 
-			<template slot="items" slot-scope="props">
+			<template slot="items" slot-scope="props" v-if="!(loading || innerLoading)">
 				<tr  v-if="displayMode.asList"
 						:active="props.selected"
 						@touchstart="onItemTouchStart(props, $event)"
@@ -125,7 +170,7 @@ table.v-table tbody th {
 									</video>
 								</div>
 								<v-icon class="mr-1" v-else>{{ props.item.isDirectory ? 'folder' : 'assignment' }}</v-icon>
-								<span>{{ props.item.name.lastIndexOf('.') > 0 && props.item.name.substring(props.item.name.lastIndexOf('.')).includes('.g') ? props.item.name.substring(0, props.item.name.lastIndexOf('.')): props.item.name }}</span>
+								<span>{{ props.item.name.lastIndexOf('.') > 0 ? props.item.name.substring(0, props.item.name.lastIndexOf('.')): props.item.name }}</span>
 							</v-layout>
 						</td>
 						<td v-else-if="header.unit === 'bytes' && ($vuetify.breakpoint.mdAndUp || !isLocal)" :key="header.value">
@@ -153,84 +198,54 @@ table.v-table tbody th {
 						</td>
 					</template>
 				</tr>
-					<v-flex shrink md3 v-if="displayMode.asMini" v-for="row in rows" class="isLocal" v-bind:key="row+Math.random()*1000">
-						<div v-for="col in cols"
-							v-bind:key="col+row*cols.length"
-							v-if="((innerFilelist[col+row*cols.length] !== undefined) && (props.index == col+row*cols.length)) && !innerLoading && !loading"
+				<!--v-layout row wrap md12 v-if="displayMode.asMini"-->
+					<v-flex shrink md3 v-if="displayMode.asMini" class="isLocal">
+						<div
 							v-tab-control.contextmenu.dblclick
-							:active="innerFilelist[col+row*cols.length].selected"
-							:data-filename="(innerFilelist[col+row*cols.length].isDirectory ? '*' : '') + innerFilelist[col+row*cols.length].name" draggable="true"
-							@click="onItemClick({item:innerFilelist[col+row*cols.length], index:col*rows.length+row})"
-							@dblclick="onItemClick({item:innerFilelist[col+row*cols.length], index:col*rows.length+row})"
+							:active="props.selected"
+							:data-filename="(props.item.isDirectory ? '*' : '') + props.item.name" draggable="true"
+							@click="onItemClick(props)"
+							@dblclick="onItemClick(props)"
 							@contextmenu.prevent="onItemContextmenu(props, $event)"
-							@dragstart="dragStart(innerFilelist[col+row*cols.length], $event)"
-							@dragover="dragOver(innerFilelist[col+row*cols.length], $event)"
-							@drop.prevent="dragDrop(innerFilelist[col+row*cols.length], $event)"
-							@keydown.space="innerFilelist[col+row*cols.length].selected = !innerFilelist[col+row*cols.length].selected" style="margin: 5px">
-							<v-layout sm4 shrink :class="(innerFilelist[col+row*cols.length].isDirectory ? 'grey darken-2 white--text' : 'grey darken-2 white--text')" @click="onItemClick({item:innerFilelist[col+row*cols.length], index:col*rows.length+row})">
-								<v-tooltip bottom class="pr-0" v-if="innerFilelist[col+row*cols.length]" @click="onItemClick({item:innerFilelist[col+row*cols.length], index:col*rows.length+row})">
-									<a slot="activator" href="#" tabindex="-1" @click="onItemClick({item:innerFilelist[col+row*cols.length], index:col*rows.length+row})">
-										<v-layout column align-center @click="onItemClick({item:innerFilelist[col+row*cols.length], index:col*rows.length+row})">
-											<div style="height: 150px; margin-bottom: 10px;">
-												<object :data="innerFilelist[col+row*cols.length].isDirectory ? '/img/ressources/folder.png' : innerFilelist[col+row*cols.length].ico" class="img_gcode_miniature" style="margin: 10px 0px;border-radius: 10px;width: 150px;">
-													<img v-if="!innerFilelist[col+row*cols.length].isDirectory" src=" /img/ressources/file.png " style="height: 80%; margin-top: 22%; margin-bottom: 20%; margin-left: 0%;"/>
-													<img v-if=" innerFilelist[col+row*cols.length].isDirectory" src="/img/ressources/folder.png" style="width: 80%; height: 80%; margin-top: 9%; margin-bottom: 8%;"/>
-												</object>
-												<!--img :src="'/img/ressources/Medium_universe_' + (innerFilelist[col+row*cols.length].dir ? (innerFilelist[col+row*cols.length].dir.toLowerCase().includes('/_filament') ? 'FIL' : (innerFilelist[col+row*cols.length].dir.toLowerCase().includes('/_liquid') ? 'LIQ' : (innerFilelist[col+row*cols.length].dir.toLowerCase().includes('/_paste') ? 'PAS' : ''))) : '') + '.svg'" v-if = "innerFilelist[col+row*cols.length].isDirectory" class="a-gcode-miniature" style="position: absolute;margin: 62px 0 0 -80px; transform: skew(-16deg); filter: invert(30%);" width="60px"-->
-												<v-icon class="mr-1" v-if="false && !innerFilelist[col+row*cols.length].ico && !innerFilelist[col+row*cols.length].isDirectory"> {{ (innerFilelist[col+row*cols.length].isDirectory ? 'folder' : 'assignment') }} </v-icon>
-											</div>
-											<div style="width: 94%; text-align: center; overflow-x: hidden; margin: 0 3%; ">
-												{{ /*(col*rows.length+row) + ': ' +*/ (innerFilelist[col+row*cols.length].name.lastIndexOf('.') > 0  && innerFilelist[col+row*cols.length].name.substring(innerFilelist[col+row*cols.length].name.lastIndexOf('.')).includes('.g'))? innerFilelist[col+row*cols.length].name.substring(0, innerFilelist[col+row*cols.length].name.lastIndexOf('.')): innerFilelist[col+row*cols.length].name }}
-											</div>
-										</v-layout>
-									</a>
-									<span v-if="!innerFilelist[col+row*cols.length].isDirectory || true">
-										<template v-for="header in headers">
-											<p v-if="header.unit === 'bytes' && (innerFilelist[col+row*cols.length][header.value] != undefined)" :key="header.value" style="margin: 0px; padding: 0px">
-												{{getHeaderText(header)}}: {{ (innerFilelist[col+row*cols.length][header.value] != undefined) ? $displaySize(innerFilelist[col+row*cols.length][header.value]) : '' }}
-											</p>
-											<p v-else-if="header.unit === 'date' && innerFilelist[col+row*cols.length].lastModified && (innerFilelist[col+row*cols.length][header.value] !== 'n/a')" :key="header.value" style="margin: 0px; padding: 0px">
-												{{getHeaderText(header)}}: {{ innerFilelist[col+row*cols.length].lastModified ? innerFilelist[col+row*cols.length].lastModified.toLocaleString() : $t('generic.novalue') }}
-											</p>
-											<p v-else-if="header.unit === 'filaments'" :key="header.value" style="margin: 0px; padding: 0px">
-												<span v-if="innerFilelist[col+row*cols.length].filament && innerFilelist[col+row*cols.length].filament.length >= 1" :key="header.value" style="margin: 0px; padding: 0px">
-														{{getHeaderText(header)}}: {{ $display(innerFilelist[col+row*cols.length].filament, 1, 'mm') }}
-												</span>
-												<span v-else style="margin: 0px; padding: 0px">
-														{{getHeaderText(header)}}: {{ displayLoadingValue(innerFilelist[col+row*cols.length], 'filament', 1, 'mm') }}
-												</span>
-											</p>
-											<p v-else-if="header.unit === 'time' && innerFilelist[col+row*cols.length]" :key="header.value" style="margin: 0px; padding: 0px">
-												{{getHeaderText(header)}}: {{ displayTimeValue(innerFilelist[col+row*cols.length], header.value) }}
-											</p>
-											<p v-else-if="innerFilelist[col+row*cols.length]" :key="header.value" style="margin: 0px; padding: 0px">
-												{{getHeaderText(header)}}: {{ displayLoadingValue(innerFilelist[col+row*cols.length], header.value, header.precision, header.unit) }}
-											</p>
-										</template>
-									</span>
-								</v-tooltip>
+							@dragstart="dragStart(props, $event)"
+							@dragover="dragOver(props, $event)"
+							@drop.prevent="dragDrop(props, $event)"
+							@keydown.space="props.selected = !props.selected"
+							style="margin:5px" >
+							<v-layout sm4 shrink :class="(props.item.isDirectory ? 'grey darken-2 white--text' : 'grey darken-2 white--text')">
+								<v-layout column align-center>
+									<div style="height: 150px; margin-bottom: 10px;">
+										<object :data="props.item.ico" class="img_gcode_miniature" style="margin: 10px 0px;border-radius: 10px;width: 150px;">
+											<img :src="'/img/ressources/'+(props.item.isDirectory?'folder.png':'file.png')" :style="props.item.isDirectory?'width: 150px; height: 150px; margin-top: 9%; margin-bottom: 8%;':'height: 120px; margin-top: 22%; margin-bottom: 20%; margin-left: 0%;'"/>
+										</object>
+									</div>
+									<div style=" width: 150px; text-align: center; overflow: hidden">
+										{{ /*(col*rows.length+row) + ': ' +*/ props.item.name.lastIndexOf('.') > 0 ? props.item.name.substring(0, props.item.name.lastIndexOf('.')): props.item.name }}
+									</div>
+								</v-layout>
 							</v-layout>
 						</div>
 					</v-flex>
+				<!--/v-layout-->
 			</template>
 		</v-data-table>
-		<v-menu v-model="contextMenu.shown" :position-x="contextMenu.x" :position-y="contextMenu.y" absolute offset-y v-tab-control.contextmenu>
+		<v-menu v-model="contextMenu.shown" :position-x="contextMenu.x" :position-y="contextMenu.y" absolute offset-y>
 			<v-list>
 				<slot name="context-menu"></slot>
 
-				<v-list-tile v-show="!noDownload && innerValue.length === 1 && filesSelected" @click="download">
+				<v-list-tile v-show="!noDownload && innerValue.length === 1 && filesSelected && !isLocal" @click="download">
 					<v-icon class="mr-1">cloud_download</v-icon> {{ $tc('list.baseFileList.download', innerValue.length) }}
 				</v-list-tile>
-				<v-list-tile v-show="!noEdit && innerValue.length === 1 && filesSelected" :disabled="!canEditFile" @click="edit(innerValue[0])">
+				<v-list-tile v-show="!noEdit && innerValue.length === 1 && filesSelected && !isLocal" :disabled="!canEditFile" @click="edit(innerValue[0])">
 					<v-icon class="mr-1">edit</v-icon> {{ $t('list.baseFileList.edit') }}
 				</v-list-tile>
-				<v-list-tile v-show="!noRename && innerValue.length === 1" @click="rename">
+				<v-list-tile v-show="!noRename && innerValue.length === 1 && !isLocal" @click="rename">
 					<v-icon class="mr-1">short_text</v-icon> {{ $t('list.baseFileList.rename') }}
 				</v-list-tile>
 				<v-list-tile v-show="!noDelete" @click="remove">
 					<v-icon class="mr-1">delete</v-icon> {{ $t('list.baseFileList.delete') }}
 				</v-list-tile>
-				<v-list-tile v-show="!foldersSelected && innerValue.length > 1" @click="downloadZIP">
+				<v-list-tile v-show="!foldersSelected && innerValue.length > 1 && !isLocal" @click="downloadZIP">
 					<v-icon class="mr-1">archive</v-icon> {{ $t('list.baseFileList.downloadZIP') }}
 				</v-list-tile>
 			</v-list>
@@ -238,6 +253,7 @@ table.v-table tbody th {
 
 		<file-edit-dialog :shown.sync="editDialog.shown" :filename="editDialog.filename" v-model="editDialog.content" @editComplete="$emit('fileEdited', $event)"></file-edit-dialog>
 		<input-dialog :shown.sync="renameDialog.shown" :title="$t('dialog.renameFile.title')" :prompt="$t('dialog.renameFile.prompt')" :preset="renameDialog.item && renameDialog.item.name" @confirmed="renameCallback"></input-dialog>
+		<confirm-dialog :shown.sync="deleteDialog.shown" :question="deleteDialog.question" :prompt="deleteDialog.prompt" @confirmed="remove" :item="deleteDialog.item"></confirm-dialog>
 	</div>
 </template>
 
@@ -251,7 +267,7 @@ import VDataTable from 'vuetify/es5/components/VDataTable'
 import { mapState, mapGetters, mapActions, mapMutations } from 'vuex'
 
 import i18n from '../../i18n'
-import { getModifiedDirectories } from '../../store/machine'
+import { defaultMachine, getModifiedDirectories } from '../../store/machine'
 import { DisconnectedError, OperationCancelledError } from '../../utils/errors.js'
 import Path from '../../utils/path.js'
 
@@ -268,16 +284,20 @@ export default {
 					value: 'name'
 				},
 				{
-					text: () => i18n.t('list.baseFileList.lastModified'),
-					value: 'lastModified',
-					unit: 'date'
-				},
-				{
 					text: () => i18n.t('list.baseFileList.size'),
 					value: 'size',
 					unit: 'bytes'
 				},
+				{
+					text: () => i18n.t('list.baseFileList.lastModified'),
+					value: 'lastModified',
+					unit: 'date'
+				}
 			]
+		},
+		items: {
+			default: () => [],
+			required: false
 		},
 		sortBy: {
 			type: String,
@@ -285,7 +305,7 @@ export default {
 		},
 		descending: {
 			type: Boolean,
-			default: true
+			default: false
 		},
 		sortTable: String,
 		directory: {
@@ -294,21 +314,55 @@ export default {
 		},
 		filelist: Array,
 		value: Array,
+		fileIcon: {
+			type: String,
+			default: 'mdi-file'
+		},
+		folderIcon: {
+			type: String,
+			default: 'mdi-folder'
+		},
 		loading: Boolean,
 		doingFileOperation: Boolean,
 		noDragDrop: Boolean,
 		noDownload: Boolean,
 		noEdit: Boolean,
+		noFilesText:
+		{
+			type: String,
+			default: ''
+		},
 		noRename: Boolean,
 		noDelete: Boolean
 	},
 	computed: {
 		...mapState(['selectedMachine']),
-		...mapGetters(['isConnected']),
+		...mapGetters(['isConnected', 'getTool']),
 		...mapState('machine', ['isReconnecting']),
 		...mapState('machine/cache', ['sorting']),
 		...mapState('machine/model', ['storages']),
 		...mapState({isLocal: state => state.isLocal,}),
+		defaultHeaders() {
+			return [
+				{
+					text: i18n.t('list.baseFileList.fileName'),
+					value: 'name'
+				},
+				{
+					text: i18n.t('list.baseFileList.size'),
+					value: 'size',
+					unit: 'bytes'
+				},
+				{
+					text: i18n.t('list.baseFileList.lastModified'),
+					value: 'lastModified',
+					unit: 'date'
+				}
+			];
+		},
+		isLoading() {
+			return this.loading || this.innerLoading || this.doingFileOperation || this.innerDoingFileOperation;
+		},
 		storageIndex() {
 			const matches = /^(\d+)/.exec(this.innerDirectory);
 			if (matches) {
@@ -324,6 +378,24 @@ export default {
 		},
 		canEditFile() {
 			return (this.innerValue.length > 0) && (this.innerValue[0].size < maxEditFileSize);
+		},
+		noItemsText() {
+			if (this.selectedMachine === defaultMachine) {
+				return this.noFilesText;
+			}
+			return (this.storages.length > this.storageIndex && this.storages[this.storageIndex].mounted) ? this.noFilesText : 'list.baseFileList.driveUnmounted';
+		},
+		internalSortBy: {
+			get() { return this.sorting[this.sortTable].column; },
+			set(value) {
+				this.setSorting({ table: this.sortTable, column: value, descending: this.internalSortDesc });
+			}
+		},
+		internalSortDesc: {
+			get() { return this.sorting[this.sortTable].descending; },
+			set(value) {
+				this.setSorting({ table: this.sortTable, column: this.internalSortBy, descending: value });
+			}
 		}
 	},
 	data() {
@@ -341,9 +413,11 @@ export default {
 				rowsPerPage: -1
 			},
 			innerValue: [],
+			prevSelection: [],
 			contextMenu: {
 				shown: false,
 				touchTimer: undefined,
+				items: [],
 				x: 0,
 				y: 0
 			},
@@ -356,6 +430,12 @@ export default {
 				shown: false,
 				directory: '',
 				item: null
+			},
+			deleteDialog: {
+				question: '',
+				prompt: '',
+				item: undefined,
+				shown: false
 			},
 			displayMode:{
 				asList: false,
@@ -440,9 +520,23 @@ export default {
 			}
 
 			this.innerLoading = true;
+			let len = 0
 			try {
 				// Load file list and create missing props
-				const files = await this.getFileList(directory);
+				let files = await this.getFileList(directory);
+				let tool = this.getTool.substring(0,5);
+				//if (this.$route.path == "/Files/Jobs") {
+					len = files.filter(item => item.name.startsWith(tool)).length
+					if(len > 0) {
+						files = files.filter(item => item.name.startsWith(tool))
+					} else {
+						tool = this.getTool.substring(0,3);
+						len = files.filter(item => item.name.startsWith(tool)).length
+						if(len > 0) {
+							files = files.filter(item => item.name.startsWith(tool))
+						}
+					}
+				//}*/
 				files.forEach(function(item) {
 					this.headers.forEach(function(header) {
 						if (!item.hasOwnProperty(header.value)) {
@@ -466,11 +560,16 @@ export default {
 				}
 			}
 			this.innerLoading = false;
+
+			if( len == 1 && this.innerFilelist[0].isDirectory) {
+				console.log(this.innerFilelist);
+				//await this.loadDirectory(this.innerFilelist[0].dir)
+			}
 		},
 		displayLoadingValue(item, prop, precision, unit = '') {
-			/*if (item.isDirectory) {
+			if (item.isDirectory) {
 				return '';
-			}*/
+			}
 			if (!item[prop]) {
 				return this.$t((item[prop] === undefined) ? 'generic.loading' : 'generic.noValue');
 			}
@@ -491,9 +590,9 @@ export default {
 			return `${displayValue} ${unit}`;
 		},
 		displayTimeValue(item, prop) {
-			/*if (item.isDirectory) {
+			if (item.isDirectory) {
 				return '';
-			}*/
+			}
 			return (item[prop] !== null) ? this.$displayTime(item[prop]) : this.$t('generic.noValue');
 		},
 		onItemTouchStart(props, e) {
@@ -779,7 +878,17 @@ export default {
 					{
 						this.cols.push(i);
 					}
-					this.innerFilelist = this.sort(items, this.innerPagination.sortBy, this.innerPagination.descending)
+					items.sort(function(a, b){
+						if (a.isDirectory && !b.isDirectory)
+							return -1;
+						if (!a.isDirectory && b.isDirectory)
+							return 1;
+						if(a.name < b.name)
+							return -1;
+						if(a.name > b.name)
+							return 1;
+						return 0;
+					})
 					//console.log(items)
 				}
 			}

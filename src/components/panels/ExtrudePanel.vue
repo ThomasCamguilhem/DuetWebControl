@@ -38,7 +38,6 @@
 							{{ $t('panel.extrude.amount', ['mm']) }}
 						</p>
 						<v-btn-toggle v-model="amount" mandatory>
-							<!-- color="primary"-->
 							<v-btn v-for="(amount, index) in extruderAmounts" :key="index" :value="amount" :disabled="uiFrozen" @contextmenu.prevent="editAmount(index)"  v-bind:class="{local: isLocal}">
 								{{ amount }}
 							</v-btn>
@@ -92,7 +91,7 @@ export default {
 				const heaters = this.heat.heaters, minTemp = this.heat.coldExtrudeTemperature;
 				return !selectedHeaters.some(heater => heaters[heater].current < minTemp);
 			}
-			return this.heat.coldExtrudeTemperature == 0;
+			return (this.heat.coldExtrudeTemperature == 0 || this.currentTool && !this.currentTool.heaters.length);
 		},
 		canRetract() {
 			if (this.currentTool && this.currentTool.heaters.length) {
@@ -100,7 +99,7 @@ export default {
 				const heaters = this.heat.heaters, minTemp = this.heat.coldRetractTemperature;
 				return !selectedHeaters.some(heater => heaters[heater].current < minTemp);
 			}
-			return this.heat.coldRetractTemperature == 0;
+			return (this.heat.coldRetractTemperature == 0 || this.currentTool && !this.currentTool.heaters.length);
 		},
 		mix: {
 			get() {
@@ -148,7 +147,7 @@ export default {
 		...mapActions('machine', ['sendCode']),
 		...mapMutations('machine/settings', ['setExtrusionAmount', 'setExtrusionFeedrate']),
 		async buttonClicked(extrude) {
-			console.log(this.currentTool);
+			//console.log(this.currentTool);
 			if (!this.currentTool.extruders.length) {
 				return;
 			}
@@ -164,9 +163,8 @@ export default {
 
 			this.busy = true;
 			try {
-				const amount = amounts.map(amount => extrude ? amount : -amount).reduce((a, b) => `${a}:${b}`);
-				// TODO let users decide if they want to send M400 as well so this call blocks until the extrusion is complete
-				await this.sendCode(`G1 E${amount} F${this.feedrate * 60}`);
+				const amount = amounts.map(amount => extrude ? amount : -amount).join(':');
+				await this.sendCode(`M120\nM83\nG1 E${amount} F${this.feedrate * 60}\nM121`);
 			} catch (e) {
 				// handled before we get here
 			}
@@ -192,8 +190,9 @@ export default {
 		}
 	},
 	mounted() {
-		this.amount = this.extruderAmounts[0];
-		this.feedrate = this.extruderFeedrates[0];
+		this.amount = this.extruderAmounts[3];
+		this.feedrate = this.extruderFeedrates[3];
+		//console.log(this.tools)
 	},
 	watch: {
 		currentTool(to) {

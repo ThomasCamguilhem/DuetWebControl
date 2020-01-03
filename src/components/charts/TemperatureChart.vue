@@ -72,7 +72,8 @@ var maxSamples = 600				// 10min
 var maxTemperature = defaultMaxTemperature; // Maximum observed temp rounded
 
 function makeDataset(heaterIndex, extra, label) {
-	const color = getRealHeaterColor(heaterIndex, extra);
+	let trueHeater = isNaN(parseInt(heaterIndex)) ? parseInt(heaterIndex.substr(1)) : heaterIndex
+	const color = getRealHeaterColor(trueHeater, extra);
 	var dataset = {
 		heaterIndex,
 		extra,
@@ -80,8 +81,8 @@ function makeDataset(heaterIndex, extra, label) {
 		fill: false,
 		backgroundColor: color,
 		borderColor: color,
-		borderDash: extra ? [10, 5] : undefined,
-		borderWidth: 2,
+		borderDash: extra ? [10, 5] : isNaN(parseInt(heaterIndex)) ? [5, 5] : undefined,
+		borderWidth: extra ? 1 : 2,
 		data: [],
 		locale: i18n.locale,
 		pointRadius: 0,
@@ -99,7 +100,7 @@ var tempSamples = {
 	}
 }
 
-function pushSeriesData(machine, heaterIndex, heater, extra, tools) {
+function pushSeriesData(machine, heaterIndex, heater, extra, tools, that) {
 	// Get series from dataset
 	const machineData = tempSamples[machine];
 	let dataset = machineData.temps.find(function(item) {
@@ -107,26 +108,64 @@ function pushSeriesData(machine, heaterIndex, heater, extra, tools) {
 			return item;
 		}
 	});
-
+	const tool = (tools.filter((tool) => tool.heaters.includes(heaterIndex)))[0]
+	let label
 	if (!dataset || dataset.locale !== i18n.locale) {
-		const tool = (tools.filter((tool) => tool.heaters.includes(heaterIndex)))[0]
-		let label
-			if (tool)
-				label = (tool.name ? tool.name : (heater.name ? heater.name : (tool.number ? tool.number : i18n.t('chart.temperature.heater', [heaterIndex]))))
-			else 
-				label = heaterIndex == 0 ? "Bed" : heaterIndex == 4 ? "Chamber" : (heater.name ? heater.name : i18n.t('chart.temperature.heater', [heaterIndex]));
-		if (dataset) {
-			dataset.label = label;
-			dataset.locale = i18n.locale;
+		if (extra) {
+			label = heater.name;
 		} else {
-			dataset = makeDataset(heaterIndex, extra, label);
-			machineData.temps.push(dataset);
+			if (tool) {
+				label = (tool.name ? tool.name : (heater.name ? heater.name : (tool.number ? tool.number : i18n.t('chart.temperature.heater', [heaterIndex]))))
+			} else {
+				label = heaterIndex == 0 ?
+				(i18n.t('panel.tools.bed', [''])) :
+				heaterIndex == 4 ?
+				(i18n.t('panel.tools.chamber', [''])) :
+				(heater.name ?
+					heater.name :
+					i18n.t('chart.temperature.heater', [heaterIndex]));
+				}
+			}
+			if (dataset) {
+				dataset.label = label;
+				dataset.locale = i18n.locale;
+			} else {
+				dataset = makeDataset(heaterIndex, extra, label);
+				machineData.temps.push(dataset);
 		}
 	}
 
 	// Add new sample
 	dataset.data.push(heater.current);
 
+	if (!extra && heaterIndex <= 4) {
+		dataset = machineData.temps.find(function(item) {
+			if (item.heaterIndex === "t"+heaterIndex) {
+				return item;
+			}
+		});
+		let target = -1;
+		if (tool) {
+			target = (heater.state == 2 ? tool.active : (heater.state == 1 ? tool.standby : [-1]))[0]
+		} else if (heaterIndex == 0) { // Bed Heater
+			let bed = that.heat.beds.filter(bed => bed.heaters.includes(heaterIndex))[0]
+			target = (heater.state == 2 ? bed.active : (heater.state == 1 ? bed.standby : [-1]))[0]
+		} else if (heaterIndex == 4){ // Chamber Heater
+			let chamber = that.heat.chambers.filter(chamber => chamber.heaters.includes(heaterIndex))[0]
+			target = (heater.state == 2 ?chamber.active : (heater.state == 1 ? chamber.standby : [-1]))[0]
+		}
+		if (!dataset || dataset.locale !== i18n.locale) {
+			if (dataset) {
+				dataset.label = ("Tgt " + label).substr(0,8);
+				dataset.locale = i18n.locale;
+			} else {
+				dataset = makeDataset( "t"+heaterIndex, false, ("Tgt " + label).substr(0,8));
+				machineData.temps.push(dataset);
+			}
+		}
+		// Add new sample
+		dataset.data.push(target);
+	}
 }
 
 function isHeaterConfigured(state, machine, heaterIndex) {
@@ -140,13 +179,12 @@ let storeSubscribed = false, instances = []
 
 export default {
 	computed: {
-		...mapState(['selectedMachine']),
+		...mapState(['selectedMachine', 'isLocal']),
 		...mapGetters(['isConnected', 'uiFrozen']),
 		...mapGetters('machine/model', ['maxHeaterTemperature']),
 		...mapState('machine/model', ['heat', 'tools']),
 		...mapState('machine/settings', ['displayedExtraTemperatures']),
 		...mapState('settings', ['darkTheme']),
-		...mapState({isLocal: state => state.isLocal,}),
 		hasData() { return this.heat.heaters.length || this.displayedExtraTemperatures.length; }
 	},
 	data() {
@@ -160,21 +198,12 @@ export default {
 		update() {
 			if(tempSamples[this.selectedMachine].temps.length > 1){
 				this.chart.data.labels = tempSamples[this.selectedMachine].times.slice(-maxSamples);
-				function iterationCopy(src) {
-				  let target = [];
-				  for (let prop in src) {
-				    if (src.hasOwnProperty(prop)) {
-				      target[prop] = src[prop];
-				    }
-				  }
-				  return target;
-				}
+				tempSamples[this.selectedMachine].times = tempSamples[this.selectedMachine].times.slice(-maxSamples);
 				var customDatasets = []//iterationCopy(this.chart.data.datasets);
 				for (var i = 0; i < tempSamples[this.selectedMachine].temps.length; i++)
 				{
 					customDatasets[i] = [];
-					for(var j = Math.max(0, tempSamples[this.selectedMachine].temps[i].data.length - maxSamples);
-					 				j < tempSamples[this.selectedMachine].temps[i].data.length; j++) {
+					for(var j = Math.max(0, tempSamples[this.selectedMachine].temps[i].data.length - maxSamples); j < tempSamples[this.selectedMachine].temps[i].data.length; j++) {
 						customDatasets[i].push(tempSamples[this.selectedMachine].temps[i].data[j]);
 					}
 					this.chart.data.datasets[i].data = customDatasets[i];
@@ -221,14 +250,24 @@ export default {
 			legend: {
 				position: (this.isLocal ? 'right' : 'top'),
 				labels: {
-					filter: (legendItem, data) => data.datasets[legendItem.datasetIndex].showLine,
+					filter: (legendItem, data) => data.datasets[legendItem.datasetIndex].showLine && !isNaN(data.datasets[legendItem.datasetIndex].heaterIndex),
 					generateLabels: (chart) => {
 						var data = chart.data;
 						return data.datasets.map(function(dataset, i) {
+							let target = data.datasets.filter((data) => data.heaterIndex == "t"+dataset.heaterIndex && data.extra == dataset.extra && data.data[data.data.length -1] > 0);
+							let text = dataset.label + (this.isLocal && (dataset.data[dataset.data.length -1] > 0 && dataset.data[dataset.data.length -1] < 1000) ? ": " +dataset.data[dataset.data.length-1].toFixed(1) : "")
+							if (text.length > dataset.label.length && target.length > 0) {
+								target = target[0];
+								text += (target.data[dataset.data.length -1] > 0 && target.data[dataset.data.length -1] < 1000) ?
+								" / " + target.data[dataset.data.length-1].toFixed(1) : ""
+								}
+								if (text.length > dataset.label.length) {
+								text += this.isLocal ? "°C" : ""
+							}
 							return {
-								text: dataset.label + (this.isLocal ? ": " +dataset.data[dataset.data.length -1].toFixed(1) + "°C" : ""),
+								text: text,
 								fillStyle: dataset.backgroundColor,
-								hidden: !chart.isDatasetVisible(i) || dataset.data[dataset.data.length -1] > 1000,
+								hidden: !chart.isDatasetVisible(i) || dataset.data[dataset.data.length -1] <= 0 || dataset.data[dataset.data.length -1] > 1000,
 								lineCap: dataset.borderCapStyle,
 								lineDash: dataset.borderDash,
 								lineDashOffset: dataset.borderDashOffset,
@@ -241,7 +280,6 @@ export default {
 							};
 						}, this);
 					},
-
 					fontFamily: 'Roboto,sans-serif'
 				}
 			},
@@ -272,7 +310,7 @@ export default {
 								minute: 'HH:mm'
 							}
 						},
-						type: 'time'
+						type: 'time',
 					}
 				],
 				yAxes: [
@@ -300,7 +338,7 @@ export default {
 			}
 		};
 
-		console.log(this.selectedMachine);
+		//console.log(this.selectedMachine);
 		if(this.selectedMachine && this.selectedMachine !== "[default]") {
 			// Add new dataset for added machines
 			const dataset = {
@@ -343,11 +381,10 @@ export default {
 						const usedHeaters = []
 						state.machines[machine].model.heat.heaters.forEach(function(heater, heaterIndex) {
 							if (heater) {
-								if (Math.floor(heater.current) > maxTemperature && heater.current < 1000) {
+								if (Math.floor(heater.current) > maxTemperature && heater.current < heater.max) {
 									maxTemperature += (maxTemperature < 50 ? 10 : (maxTemperature < 150 ? 25 : (maxTemperature < 300 ? 50 : 100)));
-									console.log(heater.current);
 								}
-								pushSeriesData(machine, heaterIndex, heater, false, that.tools);
+								pushSeriesData(machine, heaterIndex, heater, false, that.tools, that);
 								if (isHeaterConfigured(state, machine, heaterIndex)) {
 									// Display it only if is mapped to at least one tool, bed or chamber
 									usedHeaters.push({ heaterIndex, extra: false });
@@ -356,11 +393,11 @@ export default {
 						});
 
 						state.machines[machine].model.heat.extra.forEach(function(heater, heaterIndex) {
-							pushSeriesData(machine, heaterIndex, heater, true, that.tools);
+							pushSeriesData(machine, heaterIndex, heater, true, that.tools, that);
 							if (state.machines[state.selectedMachine].settings.displayedExtraTemperatures.indexOf(heaterIndex) !== -1) {
 								if (Math.floor(heater.current) > maxTemperature && heater.current < 1000) {
 									maxTemperature += 25;
-									console.log(heater.current);
+									//console.log(heater.current);
 								}
 								// Visibility of extra temps can be configured
 								usedHeaters.push({ heaterIndex, extra: true });
@@ -376,14 +413,14 @@ export default {
 							}
 						})
 						if(is_NaN) {
-							console.log("time NaN")
+							//console.log("time NaN")
 							dataset.times.shift();
 						}
 						dataset.temps.forEach(function(dataset) {
-							dataset.showLine = usedHeaters.some(item => item.heaterIndex === dataset.heaterIndex && item.extra === dataset.extra);
+							dataset.showLine = usedHeaters.some(item => ( item.heaterIndex === dataset.heaterIndex || "t"+item.heaterIndex  === dataset.heaterIndex ) && item.extra === dataset.extra);
 							if(is_NaN) {
 								dataset.data.shift();
-								console.log("temp NaN");
+								//console.log("temp NaN");
 							}
 						});
 
@@ -430,7 +467,7 @@ export default {
 		selectedMachine(machine) {
 			// Each chart instance is fixed to the currently selected machine
 			// Reassign the corresponding dataset whenever the selected machine changes
-			console.log(machine);
+			//console.log(machine);
 			maxTemperature = defaultMaxTemperature;
 			this.chart.config.data = {
 				labels: tempSamples[machine].times,

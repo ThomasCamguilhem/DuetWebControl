@@ -95,7 +95,7 @@ export default {
 			return items;
 		},
 		...mapState({
-			getTool: state => {/*console.log(state.user.loadedTool);*/ return state.user.loadedTool}
+			getTool: state => { return state.user.loadedTool}
 		}),
 	},
 	methods: {

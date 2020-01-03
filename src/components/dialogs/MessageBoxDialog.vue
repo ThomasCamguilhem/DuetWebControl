@@ -7,7 +7,7 @@
 
 			<v-card-text>
 				<center>
-					{{ messageBox.message }}
+					<span v-html="messageBox.message"></span>
 				</center>
 
 				<!-- Jog control -->
@@ -104,9 +104,12 @@ export default {
 		}
 	},
 	watch: {
-		'messageBox.mode'(to) {
-			this.shown = (to !== null);
-			this.persistent = (to === 1);
+		messageBox: {
+			deep: true,
+			handler(to) {
+				this.shown = (to.mode !== null);
+				this.persistent = (to.mode !== 0);
+			}
 		}
 	}
 }

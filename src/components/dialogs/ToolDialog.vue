@@ -15,7 +15,7 @@
 					</v-list-tile>
 				</v-list>
 			</v-card-text>
-
+			
 			<v-card-actions>
 				<v-spacer></v-spacer>
 				<v-btn color="primary darken-1" flat @click="hide">{{ $t('generic.cancel') }}</v-btn>
@@ -94,46 +94,46 @@ export default {
 								'ico' : tool.ico,
 							}) : undefined;
 						});
+					}
+					console.log(this.tools);
+				} catch (e) {
+					if (!(e instanceof DisconnectedError)) {
+						console.warn(e);
+						this.$log('error', this.$t('error.toolsLoadFailed'), e.message);
+					}
+					this.hide();
 				}
-				console.log(this.tools);
-			} catch (e) {
-				if (!(e instanceof DisconnectedError)) {
-					console.warn(e);
-					this.$log('error', this.$t('error.toolsLoadFailed'), e.message);
-				}
+				this.loading = false;
+			},
+			toolClick(tool) {
 				this.hide();
-			}
-			this.loading = false;
-		},
-		toolClick(tool) {
-			this.hide();
-			//console.log(tool);
-			let code = 'M98 P"' + tool.path + '/' + tool.name + '"';
-			//console.log(code);
-			this.sendCode(code);
-			let myTool = tool.name;
-			if (tool.name.lastIndexOf(".") > 0){
-				myTool = myTool.substring(this.load?6:8,myTool.lastIndexOf("."));
-				console.log(myTool);
-			} else {
-			 	myTool = myTool.substring(this.load?6:8);
-				console.log(myTool)
-			}
-			this.$store.commit('setTool', this.load ? myTool : '');
+				//console.log(tool);
+				let code = 'M98 P"' + tool.path + '/' + tool.name + '"';
+				//console.log(code);
+				this.sendCode(code);
+				let myTool = tool.name;
+				if (tool.name.lastIndexOf(".") > 0){
+					myTool = myTool.substring(this.load?6:8,myTool.lastIndexOf("."));
+					console.log(myTool);
+				} else {
+					myTool = myTool.substring(this.load?6:8);
+					console.log(myTool)
+				}
+				this.$store.commit('setTool', this.load ? myTool : '');
 
-			this.$emit('tool_loaded', tool)
+				this.$emit('tool_loaded', tool)
+			},
+			hide() {
+				this.$emit('update:shown', false);
+			}
 		},
-		hide() {
-			this.$emit('update:shown', false);
-		}
-	},
-	watch: {
-		shown(to) {
-			if (to) {
-				// Load tools when this dialog is shown
-				this.loadTools();
+		watch: {
+			shown(to) {
+				if (to) {
+					// Load tools when this dialog is shown
+					this.loadTools();
+				}
 			}
 		}
 	}
-}
-</script>
+	</script>
