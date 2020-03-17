@@ -13,7 +13,7 @@
 		</v-flex>
 
 		<v-flex class="px-2">
-			<v-slider :value="innerValue" @change="$emit('input', $event)" :min="min" :max="max" :disabled="disabled" hide-details thumb-label="always" class="slider" :readonly="(fan == 1)" :color="(fan == 1) ? '#595959' : 'primary'"></v-slider>
+			<v-slider :value="innerValue.toFixed(0)" @change="$emit('input', $event)" :min="min" :max="max" :disabled="disabled" hide-details thumb-label="always" class="slider" :readonly="(fan == 1)" :color="(fan == 1) ? '#595959' : 'primary'"></v-slider>
 		</v-flex>
 
 		<v-flex shrink>

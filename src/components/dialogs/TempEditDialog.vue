@@ -63,7 +63,7 @@ export default {
     },
     prompt: {
       type: String,
-      //required: true
+      required: true
     },
     value: {
       type: String,

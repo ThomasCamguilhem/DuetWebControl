@@ -4,11 +4,14 @@ export default {
 	'$vuetify': {
 		close: 'Fermer',
 		dataIterator: {
+			pageText: '{0}-{1} sur {2}',
 			noResultsText: 'Aucun enregistrement correspondant trouvé',
-			loadingText: "Chargement de l'élément..."
+			loadingText: "Chargement de l'élément...",
+			rowsPerPageAll: 'Toutes',
 		},
 		dataTable: {
-			itemsPerPageText: 'Lignes par page:',
+			itemsPerPageText: 'Eléments par page:',
+			rowsPerPageText: 'Lignes par page',
 			ariaLabel: {
 				sortDescending: ': Tri décroissant. Activer pour supprimer le tri.',
 				sortAscending: ': Tri croissant. Activer pour trier par ordre décroissant.',
@@ -50,7 +53,7 @@ export default {
 			caption: 'Ajouter'
 		},
 		parkHead: {
-			caption: 'Abaisser la tête'
+			caption: 'Position parking'
 		},
 		connect: {
 			connect: 'Connecter',
@@ -70,21 +73,21 @@ export default {
 		},
 		home: {
 			caption: 'Origine {0}',
-			captionAll: 'Tout aux Origines',
+			captionAll: 'Tout aux origines',
 			title: 'Déplace l\'axe {0} à son origine (G28 {0})',
 			titleAll: 'Déplace tout les axes aux origines (G28)'
 		},
 		newDirectory: {
-			caption: 'Nouveau Dossier'
+			caption: 'Nouveau dossier'
 		},
 		newFilament: {
-			caption: 'Nouveau Filament'
+			caption: 'Nouveau filament'
 		},
 		newLiquid: {
-			caption: 'Nouveau Liquide'
+			caption: 'Nouveau liquide'
 		},
 		newFile: {
-			caption: 'Nouveau Fichier'
+			caption: 'Nouveau fichier'
 		},
 		refresh: {
 			caption: 'Rafraîchir'
@@ -97,7 +100,7 @@ export default {
 		},
 		upload: {
 			gcodes: {
-				caption: 'Envoyer Fichier(s) G-Code',
+				caption: 'Envoyer fichier(s) G-Code',
 				title: 'Envoyer un ou plusieurs fichiers G-Code (le glisser/déposer est supporté)'
 			},
 			start: {
@@ -105,56 +108,60 @@ export default {
 				title: 'Envoyer & lancer un fichier G-Code (le glisser/déposer est supporté)'
 			},
 			macros: {
-				caption: 'Envoyer Fichier(s) Macro',
+				caption: 'Envoyer fichier(s) macro',
 				title: 'Envoyer un ou plusieurs fichiers macros (le glisser/déposer est supporté)'
 			},
 			filaments: {
-				caption: 'Envoyer Configs Filament',
+				caption: 'Envoyer config filament',
 				title: 'Envoyer une ou plusieures configuration de filament (le glisser/déposer est supporté)'
 			},
-			filaments: {
-				caption: 'Envoyer Configs Liquide',
+			liquids: {
+				caption: 'Envoyer config liquide',
 				title: 'Envoyer une ou plusieures configuration de liquide (le glisser/déposer est supporté)'
 			},
 			display: {
-				caption: 'Envoyer Fichiers Menu',
+				caption: 'Envoyer fichiers menu',
 				title: 'Envoyer un ou plusieurs fichiers menu (le glisser/déposer est supporté)'
 			},
 			sys: {
-				caption: 'Envoyer Fichiers Système',
+				caption: 'Envoyer fichiers système',
 				title: 'Envoyer un ou plusieurs fichiers système (le glisser/déposer est supporté)'
 			},
 			www: {
-				caption: 'Envoyer Fichiers Web',
+				caption: 'Envoyer fichiers web',
 				title: 'Envoyer un ou plusieurs fichiers web (le glisser/déposer est supporté)'
 			},
 			update: {
-				caption: 'Envoyer Mise à Jour',
+				caption: 'Envoyer mise à jour',
 				title: 'Envoyer un paquet de mise à jour (le glisser/déposer est supporté)'
 			}
 		}
 	},
 	chart: {
 		layer: {
-			caption: 'Graphique de Couche',
-			layerTime: 'Temps de Couche',
+			caption: 'couches',
+			layerTime: 'Temps de couche',
 
-			showLastLayers: 'Afficher les {0} dernières Couches',
-			showAllLayers: 'Afficher Toutes les Couches',
+			showLastLayers: 'Afficher les {0} dernières couches',
+			showAllLayers: 'Afficher toutes les couches',
 
 			layer: 'Couche {0}',
 			layerDuration: 'Durée: {0}',
-			layerHeight: 'Hauteur de Couche: {0}',
-			filamentUsage: 'Utilisation de Filament: {0}',
-			fractionPrinted: 'Progrès du Fichier: {0}'
+			layerHeight: 'Hauteur de couche: {0}',
+			filamentUsage: 'Utilisation de filament: {0}',
+			fractionPrinted: 'Progrès du fichier: {0}'
 		},
 		temperature: {
-			caption: 'Graphique de Température',
+			caption: 'Températures',
 			heater: 'Résistance {0}',
 			noData: 'Aucune donnée'
 		}
 	},
 	dialog: {
+		cancel: {
+			title: "Annuler l'impression",
+			prompt: "Souhaitez vous annuler <b>'{0}'</b>?"
+		},
 		changeMoveStep: {
 			title: 'Modifier distance de mouvement',
 			prompt: 'Merci d\'entrer une nouvelle valeur pour le bouton de mouvement cliqué:'
@@ -163,14 +170,18 @@ export default {
 			title: 'Redémarrer la machine?',
 			prompt: 'Voulez-vous redémarrer la machine pour appliquer la mise à jour de la configuration?'
 		},
+		confirmShutdown: {
+			title: 'Eteindre machine',
+			prompt: "Etes vous sûr de vouloir éteindre la machine",
+		},
 		connect: {
-			title: 'Connecter à la Machine',
+			title: 'Connecter à la machine',
 			prompt: 'Merci d\'entrer le nom d\'hôte et le mot de passe de la machine à laquelle vous voulez vouz connecter:',
 			hostPlaceholder: 'Nom d\'Hôte',
 			hostRequired: 'Nom d\'Hôte requis',
-			passwordPlaceholderOptional: 'Mot de Passe (optionnel)',
-			passwordPlaceholder: 'Mot de Passe',
-			passwordRequired: 'Mot de Passe requis',
+			passwordPlaceholderOptional: 'Mot de passe (optionnel)',
+			passwordPlaceholder: 'Mot de passe',
+			passwordRequired: 'Mot de passe requis',
 			connect: 'Connexion'
 		},
 		connection: {
@@ -178,7 +189,8 @@ export default {
 			disconnecting: 'Déconnexion...',
 			updating: 'Veuillez patienter pendant l\'installation des mises à jour....',
 			reconnecting: 'Connexion perdue, tentative de reconnexion...',
-			standBy: 'Merci de patienter...'
+			standBy: 'Merci de patienter...',
+			loadingtool: "Chargement de l'outil, Merci de patienter..."
 		},
 		editExtrusionAmount: {
 			title: 'Modifier quantité d\'extrusion',
@@ -193,43 +205,44 @@ export default {
 			prompt: 'Etes-vous sûr de vouloir restaurer des paramètres d\'usine ? Tout les paramètres sauvegardés seront perdus.'
 		},
 		filament: {
-			titleChange: 'Changer Filament',
-			titleLoad: 'Charger Filament',
+			titleChange: 'Changer filament',
+			titleLoad: 'Charger filament',
 			prompt: 'Merci de choisir un filament:'
 		},
 		fileEdit: {
 			gcodeReference: 'Références G-Code',
-			menuReference: 'Référence Menu',
+			menuReference: 'Référence menu',
 			save: 'Sauvegarder',
 			confirmClose: 'Le fichier a été modifié. Si vous continuez, vos modifications seront perdues.'
 		},
 		meshEdit: {
-			title: 'Définir Paramètres de Maillage',
-			radius: 'Rayon de Palpage',
+			title: 'Définir paramètres de maillage',
+			radius: 'Rayon de palpage',
 			spacing: 'Espacement',
 			startCoordinate: 'Coordonnée de démarrage dans la direction {0}',
 			endCoordinate: 'Coordonnée de fin dans la direction {0}',
 			spacingDirection: 'Espacement dans la direction {0}'
 		},
 		newDirectory: {
-			title: 'Nouveau Dossier',
+			title: 'Nouveau dossier',
 			prompt: 'Merci d\'entrer un nom de nouveau dossier:'
 		},
 		newFilament: {
-			title: 'Nouveau Filament',
+			title: 'Nouveau filament',
 			prompt: 'Merci d\'entrer un nom pour le nouveau filament:'
 		},
 		newFile: {
-			title: 'Nouveau Fichier',
+			title: 'Nouveau fichier',
 			prompt: 'Merci d\'entrer un nom de nouveau fichier:'
 		},
 		renameFile: {
-			title: 'Renommer un Fichier ou Dossier',
+			title: 'Renommer un fichier ou dossier',
 			prompt: 'Merci d\'entrer un nouveau nom:'
 		},
 		resetHeaterFault: {
-			title: 'Réinitialiser Défaut de Résistance',
-			prompt: 'Un défaut de chauffage s\'est produit sur le chauffage {0}. Il est fortement recommandé d\'éteindre la machine maintenant et vérifier votre câblage avant de continuer. Si vous êtes absolument sûr qu\'il n\'y a pas de problème physique, vous pouvez réinitialiser le défaut <span style="color: red; font-weight: bold;">A VOS RISQUES ET PERILS</span>. Soyez conscient que ce n\'est <span style="color: red; font-weight: bold;">PAS RECOMMANDÉ</span> et peut provoquer plus de problèmes. Comment voulez-vous proceder?',
+			title: 'Réinitialiser Défaut de chauffe',
+			prompt: 'Un défaut de chauffe s\'est produit sur la <b>Résistance {0}</b>.<br/> Il est fortement recommandé d\'éteindre la machine maintenant et de vérifier le câblage avant de continuer.<br/><b>-</b> Si vous êtes sûr qu\'il n\'y a pas de problème physique, vous pouvez réinitialiser le défaut. Soyez conscient que ce n\'est <span style="color: red; font-weight: bold;">PAS RECOMMANDÉ</span> et peut provoquer d\'autres problèmes.<br/><b>-</b> Si le problème persiste nous vous conseillons de contacter le <a style="font-weight: bold;" href="mailto:support@lynxter.fr">SAV Lynxter</a>. <br/><br/>Comment voulez-vous proceder?',
+			/*Un défaut de chauffage s'est produit sur le chauffage 1. Il est fortement recommandé d'éteindre la machine maintenant et vérifier votre câblage avant de continuer. Si vous êtes absolument sûr qu'il n'y a pas de problème physique, vous pouvez réinitialiser le défaut <span style="color: red; font-weight: bold;">A VOS RISQUES ET PERILS</span>. Soyez conscient que ce n'est <span style="color: red; font-weight: bold;">PAS RECOMMANDÉ</span> et peut provoquer plus de problèmes. Comment voulez-vous proceder?*/
 			resetFault: 'Réinitialiser Défaut'
 		},
 		runMacro: {
@@ -241,15 +254,20 @@ export default {
 			prompt: 'Voulez-vous démarrer {0}?'
 		},
 		delete: {
-			title: 'Supprimer {0}',
-			prompt: 'Voulez vous vraiment supprimer {0}?'
+			title: 'Supprimer {0}?',
+			prompt: 'Voulez vous vraiment supprimer <ul>',
+			multiple: 'plusieurs fichiers'
 		},
 		update: {
 			title: 'Installer Mise à Jour?',
 			prompt: 'Vous avez envoyé au moins une mise à jour logiciel. Voulez-vous les installer maintenant?'
 		},
 		inputRequired: 'Merci d\'entrer une nouvelle valeur',
-		numberRequired: 'Merci d\'entrer un nombre valide'
+		numberRequired: 'Merci d\'entrer un nombre valide',
+		temperature:  {
+			title: "Saisir la nouvelle temperature",
+			prompt: "Saisir la temperature {1} pour {0}"
+		}
 	},
 	directory: {
 		display: 'Répertoire Menu',
@@ -272,7 +290,7 @@ export default {
 		driveUnmounted: 'Le lecteur cible est démonté',
 		directoryNotFound: 'Répertoire {0} introuvable',
 		fileNotFound: 'Fichier {0} introuvable',
-		invalidHeightmap: 'Carte de compensation Invalide',
+		invalidHeightmap: 'Carte de compensation invalide',
 		operationFailed: 'Échec de l\'opération (Raison: {0})',
 		uploadStartWrongFileCount: 'Seulement un fichier peut être envoyé & démarré',
 		uploadNoSingleZIP: 'Seulement un fichier ZIP peut être envoyé à la fois',
@@ -313,7 +331,7 @@ export default {
 		showBuildplate: 'Afficher plateau',
 		showPreview: 'Afficher pièce',
 		preload: 'Précharger {0}',
-		unload: 'Décharger {0}',
+		unload: 'Décharger l\'outil',
 		heaterStates: [
 			'off',
 			'veille',
@@ -323,18 +341,18 @@ export default {
 			'offline'
 		],
 		status: {
-			updating: 'Mise à Jour...',
+			updating: 'Mise à jour...',
 			off: 'Off',
 			halted: 'Interrompu',
-			pausing: 'Mise en Pause',
+			pausing: 'Mise en pause',
 			paused: 'Pause',
 			resuming: 'Reprise',
 			printing: 'Impression',
 			processing: 'Traitement',
 			simulating: 'Simulation',
 			busy: 'Occupé',
-			changingTool: 'Changement d\'Outil',
-			idle: 'Au repos',
+			changingTool: 'Changement d\'outil',
+			idle: 'Repos',
 			unknown: 'Inconnu'
 		},
 		rpm: 'TPM',
@@ -342,14 +360,14 @@ export default {
 		mounted: 'monté',
 		notMounted: 'non monté',
 		extracting: 'Extraction',
-		uploading: 'Envoi en Cours',
+		uploading: 'Envoi en cours',
 		active: 'Actif',
 		standby: 'Veille'
 	},
 	input: {
 		code: {
 			send: 'Envoyer',
-			placeholder: 'Envoyer Code...'
+			placeholder: 'Envoyer code...'
 		},
 		addTemperature: 'Valeur de la nouvelle température',
 		addRPM: 'Valeur du nouveau preset'
@@ -361,77 +379,78 @@ export default {
 		processed: 'Traitement {0}, 100 % complet',
 		printing: 'Impression {0}, {1} complète',
 		printed: 'Impression {0}, 100 % complète',
-		noJob: 'Aucun Travail en Cours.',
+		noJob: 'Aucun travail en cours.',
 		layer: 'Couche {0} sur {1}',
-		filament: 'Utilisation de Filament: {0}',
+		filament: 'Utilisation de filament: {0}',
 		filamentRemaining: '{0} restant'
 	},
 	list: {
 		baseFileList: {
 			fileName: 'Nom',
 			size: 'Taille',
-			lastModified: 'Dernière modification',
+			lastModified: 'Dernière modif',
 			download: 'Télécharger',
 			edit: 'Modifier',
 			rename: 'Renommer',
 			delete: 'Supprimer',
 			downloadZIP: 'Télécharger en ZIP',
-			noFiles: 'Aucun Fichiers ou Répertoires',
+			noFiles: 'Aucun fichiers ou Répertoires',
 			driveUnmounted: 'La carte n\'est pas monté',
 			goUp: 'Remonter',
 			showMore: 'Voir plus'
 		},
 		display: {
-			noFiles: 'Aucun Fichier d\'Affichage'
+			noFiles: 'Aucun fichier d\'Affichage'
 		},
 		eventLog: {
 			date: 'Date',
 			type: 'Type',
 			message: 'Événement',
-			noEvents: 'Aucun Événement',
+			noEvents: 'Aucun événement',
+			copy: 'Copier',
 			clear: 'Effacer',
-			downloadText: 'Télécharger en Texte',
+			downloadText: 'Télécharger en texte',
 			downloadCSV: 'Télécharger en CSV'
 		},
 		filament: {
 			noFilaments: 'Aucun Filaments'
 		},
 		liquid: {
-			noLiquids: 'Aucun Liquides'
+			noLiquids: 'Aucun Liquide'
 		},
 		macro: {
 			caption: 'Macros',
-			noMacros: 'Aucune Macros',
-			run: 'Lancer Macro',
+			noMacros: 'Aucune macro',
+			run: 'Lancer macro',
 			root: 'Source'
 		},
 		gcode: {
 			caption: 'Gcodes',
-			noGcodes: 'Aucun Gcodes',
-			run: 'Lancer Gcode',
+			noGcodes: 'Aucun gcode',
+			run: 'Lancer gcode',
 			root: 'Source'
 		},
 		jobs: {
-			height: 'Hauteur Objet',
-			layerHeight: 'Hauteur de Couche',
-			filament: 'Utilisation de Filament',
-			printTime: 'Temps d\'Impression',
-			simulatedTime: 'Temps Simulé',
+			height: 'Hauteur objet',
+			layerHeight: 'Hauteur de couche',
+			filament: 'Utilisation de filament',
+			printTime: 'Temps d\'impression',
+			simulatedTime: 'Temps simulé',
 			generatedBy: 'Généré par',
 
-			noJobs: 'Aucun Gcodes',
-			start: 'Lancer Fichier',
-			simulate: 'Simuler Fichier'
+			noJobs: 'Aucun gcode',
+			start: 'Lancer fichier',
+			simulate: 'Simuler fichier'
 		},
 		sys: {
-			noFiles: 'Aucun Fichiers Système',
+			noFiles: 'Aucun fichier système',
 			configToolNote: 'éditer via l\'outil de configuration'
 		}
 	},
 	menu: {
 		control: {
-			caption: 'Contrôle de la Machine',
-			dashboard: 'Tableau de Bord',
+			caption: 'Contrôle de la machine',
+			dashboard: 'Tableau de bord',
 			console: 'Console',
 			heightmap: 'Carte de compensation'
 		},
@@ -442,7 +461,7 @@ export default {
 			visualiser: 'Visualiser'
 		},
 		files: {
-			caption: 'Gestion de Fichiers',
+			caption: 'Gestion de fichiers',
 			jobs: 'GCodes',
 			filaments: 'Filaments',
 			macros: 'Macros',
@@ -462,12 +481,13 @@ export default {
 		settings: {
 			caption: 'Paramètres',
 			general: 'Général',
-			machine: 'Spécifique à la Machine',
-			update: 'Mise à Jour'
+			machine: 'Spécifique à la machine',
+			update: 'Mise à jour'
 		},
-		lynx: {
+		lynxter: {
 			control: 'Contrôles',
 			calibrate: 'Calibration',
+			advanced: "Avancé"
 		}
 	},
 	notification: {
@@ -500,7 +520,7 @@ export default {
 		},
 		message: 'Message',
 		mount: {
-			successTitle: 'Carte SD Montée',
+			successTitle: 'Carte SD montée',
 			errorTitle: 'Impossible de monter la carte SD'
 		},
 		newDirectory: {
@@ -522,20 +542,20 @@ export default {
 			errorTitle: 'Échec du renommage du filament',
 			errorStillLoaded: 'Ce filament est toujours chargé. Merci de le décharger avant de procéder'
 		},
-		responseTooLong: 'Réponse trop longue, voir la Console',
+		responseTooLong: 'Réponse trop longue, voir la console',
 		upload: {
 			title: 'Envoi {0} @ {1}, {2}% complet',
 			message: 'Veuillez patienter pendant que le fichier est envoyé...',
 			success: 'Envoi de {0} réussi après {1}',
 			successMulti: 'Envoi de {0} fichiers réusssi',
-			error: 'Échec de l\'envoi de {0}'
+			error: 'Échec de l\'envoi de {0}',
+			queueTitle: '{0} a été ajouté a la queue',
+			queued: 'Ce fichier peut prendre jusqu\'a {0} pour apparaitre',
 		},
 		parse: {
-			title: 'Parsing {0} {2}% complete eta: {3}',
-			message: 'Please stand by while the file is being parsed...',
-			success: 'Parsing of {0} successful after {1}',
-			successMulti: 'Successfully parsed {0} files',
-			error: 'Failed to parse {0}'
+			title: '<b>{0}</b>',
+			speed: '{0} {1}',
+			eta: 'Temps restant: {0}',
 		}
 	},
 	panel: {
@@ -546,115 +566,117 @@ export default {
 		},
 		babystepping: {
 			caption: 'Z Babystepping',
-			current: 'Décalage Actuel: {0}'
+			current: 'Décalage actuel: {0}'
 		},
 		extrude: {
-			caption: 'Contrôle de l\'Extrusion',
+			caption: 'Contrôle de l\'extrusion',
 			mix: 'Mix',
-			mixRatio: 'Mix Ratio:',
+			mixRatio: 'Mix ratio:',
 			amount: 'Avance en {0}:',
 			feedrate: 'Vitesse en {0}:',
 			retract: 'Rétracter',
 			extrude: 'Extruder'
 		},
 		extrusionFactors: {
-			caption: 'Facteurs d\'Extrusion',
-			changeVisibility: 'Changer Visibilité',
+			caption: 'Facteurs d\'extrusion',
+			changeVisibility: 'Changer visibilité',
 			extruder: 'Extruder {0}',
-			noExtruders: 'Aucun Extruders'
+			noExtruders: 'Aucun extruder'
 		},
 		fan: {
-			caption: 'Contrôle des Ventilateurs',
+			caption: 'Contrôle des ventilateurs',
 			selection: 'Séléction du ventilateur:',
-			toolFan: 'Ventilateur Outil',
+			toolFan: 'Ventilateur outil',
 			fan: 'Ventilateur {0}'
 		},
 		fans: {
 			caption: 'Ventilateurs',
-			changeVisibility: 'Changer Visibilité',
-			toolFan: 'Ventilateur Outil',
+			changeVisibility: 'Changer visibilité',
+			toolFan: 'Ventilateur outil',
 			fan: 'Ventilateur {0}',
-			noFans: 'Aucun Ventilateur'
+			noFans: 'Aucun ventilateur'
 		},
 		heightmap: {
 			scale: 'Échelle:',
 			orMore: 'ou plus',
 			orLess: 'ou moins',
 			axes: 'Axes:',
-			notAvailable: 'Machine de Hauteur non disponible',
+			notAvailable: 'Carte de compensation non disponible',
 			numPoints: 'Nombre de points: {0}',
 			radius: 'Rayon de palpage: {0}',
 			area: 'Zone de palpage: {0}',
-			maxDeviations: 'Maximum déviations: {0} / {1}',
+			maxDeviations: 'Déviation maximale: {0} / {1}',
 			biasError: 'Erreur moyenne: {0}',
 			meanError: 'Erreur absolue: {0}',
 			rmsError: 'Erreur RMS: {0}',
 			topView: 'Vue du dessus',
-			perspective: 'Vue Perspective',
-			colorScheme: 'Schéma couleur:',
+			perspective: 'Vue perspective',
+			colorScheme: 'Code couleur:',
 			terrain: 'Terrain',
 			heat: 'Chaleur',
+			diff: 'Diff',
 			reload: 'Recharger',
 			probing: {
-				perfect: 'Parfait',
-				valid: 'Valide',
-				danger: 'Danger',
-				reprobe: 'Repalper'
-			}
+				perfect: 'OK',
+				valid: 'OK',
+				danger: 'Moyen',
+				reprobe: 'Défaut'
+			},
+			probeDate: "Palpé le : {0} à {1}"
 		},
 		jobControl: {
-			caption: 'Contrôle du Travail',
-			cancelJob: 'Annuler Travail',
-			cancelPrint: 'Annuler Impression',
-			cancelSimulation: 'Annuler Simulation',
-			pauseJob: 'Pause Travail',
-			pausePrint: 'Pause Impression',
-			pauseSimulation: 'Pause Simulation',
-			resumeJob: 'Reprendre  Travail',
-			resumePrint: 'Reprendre Impression',
-			resumeSimulation: 'Reprendre Simulation',
+			caption: "Contrôle de l'impression",
+			cancelJob: 'Annuler travail',
+			cancelPrint: 'Annuler impression',
+			cancelSimulation: 'Annuler simulation',
+			pauseJob: 'Pause travail',
+			pausePrint: 'Pause impression',
+			pauseSimulation: 'Pause simulation',
+			resumeJob: 'Reprendre  travail',
+			resumePrint: 'Reprendre impression',
+			resumeSimulation: 'Reprendre simulation',
 			repeatJob: 'Recommencer',
 			repeatPrint: 'Réimprimer',
-			repeatSimulation: 'Simuler à Nouveau',
-			autoSleep: 'Activer Veille Automatique'
+			repeatSimulation: 'Simuler à nouveau',
+			autoSleep: 'Activer veille automatique'
 		},
 		jobData: {
-			caption: 'Données Collectés',
-			warmUpDuration: 'Temps de Chauffe',
-			currentLayerTime: 'Durée de la Couche Actuelle',
-			lastLayerTime: 'Durée de la Dernière Couche',
-			jobDuration: 'Durée du Travail'
+			caption: 'Données collectés',
+			warmUpDuration: 'Temps de chauffe',
+			currentLayerTime: 'Couche actuelle',
+			lastLayerTime: 'Dernière couche',
+			jobDuration: "Durée de l'impression"
 		},
 		jobEstimations: {
 			caption: 'Estimations basée sur',
-			filament: 'Utilisation de Filament',
-			file: 'Progrès du Fichier',
-			layer: 'Durée de la Dernière Couche',
+			filament: 'Utilisation de filament',
+			file: 'Progrès du fichier',
+			layer: 'Couche précédente',
 			slicer: 'Trancheur',
 			simulation: 'Simulation'
 		},
 		jobInfo: {
-			caption: 'Information du Travail',
+			caption: "Information sur l'impression",
 			height: 'Hauteur:',
-			layerHeight: 'Hauteur de Couche:',
-			filament: 'Utilisation de Filament:',
+			layerHeight: 'Hauteur de couche:',
+			filament: 'Utilisation de filament:',
 			generatedBy: 'Généré par:'
 		},
 		movement: {
-			caption: 'Mouvement Machine',
+			caption: 'Mouvement machine',
 			compensation: 'Compensation & Calibration',
-			runBed: 'Calibration du Plateau (G32)',
-			runDelta: 'Calibration Delta (G32)',
-			compensationInUse: 'Compensation en utilisation: {0}',
-			disableBedCompensation: 'Désactiver Compensation (M561)',
-			disableMeshCompensation: 'Désactiver Mesh Compensation (G29 S2)',
-			editMesh: 'Définir Zone pour la Compensation (M557)',
-			runMesh: 'Lancer Mesh Compensation (G29)',
-			loadMesh: 'Charger Compensation Depuis la SD (G29 S1)',
-			axesNotHomed: 'L\'axe suivant  n\'a pas été à son origine:|Les axes suivantss n\'ont pas été à leur origine:',
+			runBed: 'Calibration du plateau (G32)',
+			runDelta: 'Calibration delta (G32)',
+			compensationInUse: 'Compensation utilisée : {0}',
+			disableBedCompensation: 'Désactiver compensation (M561)',
+			disableMeshCompensation: 'Désactiver compensation (G29 S2)',
+			editMesh: 'Définir zone pour la compensation (M557)',
+			runMesh: 'Lancer macro compensation (G29)',
+			loadMesh: 'Charger compensation depuis la SD (G29 S1)',
+			axesNotHomed: 'L\'axe suivant  n\'a pas été à son origine:|Les axes suivants n\'ont pas été à leur origine:',
 			noAxes: 'Pas d\'axes',
 			runNozzleHeight: 'Calibration hauteur buses',
-			showHeightmap: "Afficher la Carte"
+			showHeightmap: "Afficher la carte"
 		},
 		settingsAbout: {
 			caption: 'À propos',
@@ -667,7 +689,7 @@ export default {
 		},
 		settingsAppearance: {
 			caption: 'Apparence',
-			darkTheme: 'Thème Sombre',
+			darkTheme: 'Thème sombre',
 			language: 'Langage',
 			binaryFileSizes: 'Utiliser des tailles de fichiers binaires',
 			binaryFileSizesTitle: 'Les tailles de fichier sont affichées avec une base de 1024 (IEC) au lieu de 1000 (SI)',
@@ -690,10 +712,10 @@ export default {
 			board: 'Carte: {0}',
 			firmware: 'Microprogramme: {0} ({1})',
 			dwsFirmware: 'Version Duet WiFi Server: {0}',
-			updateNote: 'Remarque: Vous pouvez installer les mises à jour sur la page Système.'
+			updateNote: 'Remarque: Vous pouvez installer les mises à jour sur la page \'Système\'.'
 		},
 		settingsEndstops: {
-			caption: 'Interrupteur de position',
+			caption: 'Fin de courses',
 			index: 'Index',
 			triggered: 'Déclenché'
 		},
@@ -708,22 +730,22 @@ export default {
 		settingsListItems: {
 			caption: 'Liste des Éléments',
 			toolTemperatures: 'Températures de l\'Outil',
-			bedTemperatures: 'Températures du Plateau',
-			chamberTemperatures: 'Températures de la Chambre',
+			bedTemperatures: 'Températures du plateau',
+			chamberTemperatures: 'Températures de la chambre',
 			spindleRPM: 'TPM de l\'axe'
 		},
 		settingsMachine: {
-			caption: 'Machine-Spécifique',
+			caption: 'Spécifique à la machine',
 			revertDWC: 'Revenir à DWC1',
-			babystepAmount: 'Longeur Babystep ({0})',
+			babystepAmount: 'Incrément Babystep ({0})',
 			moveFeedrate: 'Vitesse pour les boutons de mouvement ({0})'
 		},
 		settingsNetwork: {
 			caption: 'Paramètres réseaux',
-			publicIP: 'Addresse machine',
+			publicIP: 'Addresse IPv4 machine',
 			advanced: 'Avancé',
-			netmask: 'Masque',
-			gateway: 'Passerelle',
+			netmask: 'Masque de sous réseau',
+			gateway: 'Passerelle par défaut',
 			dns: 'Adresses DNS'
 		},
 		settingsNotifications: {
@@ -739,24 +761,26 @@ export default {
 			webcamEmbedded: 'Incorporer l\'image de la caméra dans un iframe',
 			webcamRotation: 'Pivoter l\'image de la caméra',
 			webcamFlip: 'Retourner l\'image de la caméra',
+			webcamResolution: 'Résolution de la caméra',
+			webcamFramerate: 'Ips de la caméra',
 			flipNone: 'Non',
-			flipX: 'Retourner X',
-			flipY: 'Retourner Y',
+			flipX: 'Horizontalement',
+			flipY: 'Verticalement',
 			flipBoth: 'Retourner les deux'
 		},
 		speedFactor: {
-			caption: 'Facteur de Vitesse'
+			caption: 'Facteur de vitesse'
 		},
 		status: {
 			caption: 'Status',
 			mode: 'Mode: {0}',
-			toolPosition: 'Position Outil',
-			machinePosition: 'Position Machine',
+			toolPosition: 'Position outil',
+			machinePosition: 'Position machine',
 			extruders: 'Extrudeuse',
 			extruderDrive: 'Moteur {0}',
 			speeds: 'Vitesses',
-			requestedSpeed: 'Vitesse Demandée',
-			topSpeed: 'Vitesses de Pointe',
+			requestedSpeed: 'Vitesse demandée',
+			topSpeed: 'Vitesses de pointe',
 			sensors: 'Capteurs',
 			cpuTemp: 'Température CPU',
 			cpuTempTitle: 'Minimum: {0}, Maximum: {1}',
@@ -764,24 +788,24 @@ export default {
 			mcuTempTitle: 'Minimum: {0}, Maximum: {1}',
 			vIn: 'Vin',
 			vInTitle: 'Minimum: {0}, Maximum {1}',
-			fanRPM: 'TPM Ventilateur',
+			fanRPM: 'TPM ventilateur',
 			probe: 'Sonde-Z|Sondes-Z',
-			noStatus: 'Pas de Statut'
+			noStatus: 'Pas de statut'
 		},
 		tools: {
 			caption: 'Outils',
-			controlAll: 'Tout Contrôler',
+			controlAll: 'Tout contrôler',
 			turnEverythingOff: 'Tout Éteindre',
 			allActiveTemperatures: 'Définir toutes les températures actives',
 			allStandbyTemperatures: 'Définir toutes les températures de veille',
 			tool: 'Outil {0}',
-			loadFilament: 'Charger Filament',
-			changeFilament: 'Changer Filament',
-			unloadFilament: 'Décharger Filament',
-			heater: 'Résistance {0}',
+			loadFilament: 'Charger filament',
+			changeFilament: 'Changer filament',
+			unloadFilament: 'Décharger filament',
+			heater: 'Chauffe {0}',
 			current: 'Actuel',
 			active: 'Actif',
-			standby: 'Veille',
+			standby: 'Repos',
 			target: 'Cible',
 			bed: 'Plateau {0}',
 			chamber: 'Chambre {0}',
@@ -789,31 +813,40 @@ export default {
 				caption: 'Extra',
 				sensor: 'Capteur',
 				value: 'Valeur',
-				showInChart: 'Afficher dans le Graphique',
+				showInChart: 'Afficher dans le graphique',
 				noItems: 'Pas de Résistance supplémentaire'
 			},
 			noTools: 'Pas d\'Outils'
 		},
 		webcam: {
 			caption: 'Caméra de surveillance',
-			alt: '(image caméra)'
+			alt: '(image caméra)',
+			advanced: 'Contrôles caméra avancés'
 		},
 		toolOffset: {
-			captionXY: 'Décalage entre outils',
-			captionZ: 'Décalage de la sonde Z',
+			captionXY: 'Décalage inter buses',
+			captionZ: 'Décalage de la jauge Z',
 			tool: 'Outil',
 			offset: 'Décalage <b>{0}</b> :',
-			toolTrigHeight: 'Hauteur de la sonde',
-			bbStepping: 'Babystepping usuel'
+			toolTrigHeight: 'Hauteur de la jauge',
+			bbStepping: 'Babystepping usuel',
+			dialog: {
+				title: "Décalage inter buses",
+				sucess: "Décalage inter buses sauvegardé",
+				error: "l'erreur suivante est survenue: {0}"
+			}
 		},
 		toolAngle: {
 			caption: 'Calibration angle outil',
 			angle: 'Angle <b>{0}</b>',
 			active: 'Angle actif',
-			standby: 'Angle veille'
+			standby: 'Angle veille',
+			run: 'Calibrer angle {0}',
+			auto: 'Calibraton auto',
+			move: 'Sortir&nbsp;<b>{0}</b>'
 		},
 		tiltCompensation: {
-			caption: 'Compensation de l\'Inclinaison',
+			caption: 'Compensation de l\'inclinaison',
 			tilt: 'Inclinaison <b>{0}</b>',
 			offset: 'Décalage <b>{0}</b>',
 			tooltip: 'Décalage sur l\'axe {0}',
@@ -829,7 +862,22 @@ export default {
 			tool: 'Outil',
 			pid: 'Calibration PID <b>{0}</b>',
 			calibration: 'T° calibration',
-			pwm: 'calibration PWM'
+			pwm: 'PWM de calibration',
+			run: 'Lancer la calibration',
+			save: 'Sauvegarder les résultats'
 		},
-	}
+	},
+	loadTool: {
+		toolhead: 'Charger une Tête',
+		network: {
+			disconnected: 'Câble déconnecté',
+			booting: 'Démarrage'
+		},
+		calibrationTool: "Charger l'outil de calibration",
+		debug: "Acceder a l'interface (sans outil)",
+		refreshIface: "Rafraichir l'interface",
+		refreshTools: "Rafraichir liste outils",
+		enableTool: "afficher/cacher outils",
+	},
+	power_settings: 'Option d\'alimentation',
 }

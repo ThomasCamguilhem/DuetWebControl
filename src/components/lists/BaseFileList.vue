@@ -98,8 +98,8 @@ tr:hover:not(.v-datatable__expand-row).isLocal  {
 <template>
 	<div>
 		<v-btn-toggle class="v-btn-toggle--only-child v-btn-toggle--selected">
-			<v-btn id="v-btn--list" class="v-btn--large v-btn--depressed " v-on:click="updateDis('l')" :class="{active:!isLocal}"><v-icon  class="mr-1"> view_list </v-icon></v-btn>
-			<v-btn id="v-btn--mini" class="v-btn--large v-btn--depressed " v-on:click="updateDis('m')" :class="{active:isLocal}"><v-icon  class="mr-1"> view_module </v-icon></v-btn>
+			<v-btn id="v-btn--list" class="v-btn--large v-btn--depressed " @click="updateDis('l')" :class="{active:!isLocal}"><v-icon  class="mr-1"> view_list </v-icon></v-btn>
+			<v-btn id="v-btn--mini" class="v-btn--large v-btn--depressed " @click="updateDis('m')" :class="{active:isLocal}"><v-icon  class="mr-1"> view_module </v-icon></v-btn>
 		</v-btn-toggle>
 		<v-data-table v-model="innerValue" v-bind="$props" :items="innerFilelist" :loading="loading || innerLoading" :custom-sort="sort" :pagination.sync="innerPagination" select-all hide-actions item-key="name" class="elevation-3" :class="{ 'empty-table-fix' : innerFilelist.length === 0, 'loading-cursor' : (loading || innerLoading || doingFileOperation || innerDoingFileOperation)}">
 			<template slot="progress">
@@ -170,7 +170,7 @@ tr:hover:not(.v-datatable__expand-row).isLocal  {
 									</video>
 								</div>
 								<v-icon class="mr-1" v-else>{{ props.item.isDirectory ? 'folder' : 'assignment' }}</v-icon>
-								<span>{{ props.item.name.lastIndexOf('.') > 0 ? props.item.name.substring(0, props.item.name.lastIndexOf('.')): props.item.name }}</span>
+								<span>{{ (props.item.name.lastIndexOf('.') > 0 && !props.item.name.toLowerCase().endsWith(".bak")) ? props.item.name.substring(0, props.item.name.lastIndexOf('.')): props.item.name }}</span>
 							</v-layout>
 						</td>
 						<td v-else-if="header.unit === 'bytes' && ($vuetify.breakpoint.mdAndUp || !isLocal)" :key="header.value">
@@ -242,7 +242,7 @@ tr:hover:not(.v-datatable__expand-row).isLocal  {
 				<v-list-tile v-show="!noRename && innerValue.length === 1 && !isLocal" @click="rename">
 					<v-icon class="mr-1">short_text</v-icon> {{ $t('list.baseFileList.rename') }}
 				</v-list-tile>
-				<v-list-tile v-show="!noDelete" @click="remove">
+				<v-list-tile v-show="!noDelete" @click="confirmDelete(innerValue)">
 					<v-icon class="mr-1">delete</v-icon> {{ $t('list.baseFileList.delete') }}
 				</v-list-tile>
 				<v-list-tile v-show="!foldersSelected && innerValue.length > 1 && !isLocal" @click="downloadZIP">
@@ -526,14 +526,14 @@ export default {
 				let files = await this.getFileList(directory);
 				let tool = this.getTool.substring(0,5);
 				//if (this.$route.path == "/Files/Jobs") {
-					len = files.filter(item => item.name.startsWith(tool)).length
+					len = files.filter(item => item.name.startsWith(tool) && !item.directory.includes(tool)).length
 					if(len > 0) {
-						files = files.filter(item => item.name.startsWith(tool))
+						files = files.filter(item => item.name.startsWith(tool) && !item.directory.includes(tool))
 					} else {
 						tool = this.getTool.substring(0,3);
-						len = files.filter(item => item.name.startsWith(tool)).length
+						len = files.filter(item => item.name.startsWith(tool) && !item.directory.includes(tool)).length
 						if(len > 0) {
-							files = files.filter(item => item.name.startsWith(tool))
+							files = files.filter(item => item.name.startsWith(tool) && !item.directory.includes(tool))
 						}
 					}
 				//}*/
@@ -561,9 +561,10 @@ export default {
 			}
 			this.innerLoading = false;
 
-			if( len == 1 && this.innerFilelist[0].isDirectory) {
 				console.log(this.innerFilelist);
-				//await this.loadDirectory(this.innerFilelist[0].dir)
+			if( len == 1 && this.innerFilelist[0].isDirectory && this.innerFilelist[0].name.startsWith(this.getTool.substring(0,5)) && !this.innerFilelist[0].directory.includes(this.getTool.substring(0,5))) {
+				console.log(this.innerFilelist[0].directory + "/" + this.innerFilelist[0].name);
+				await this.loadDirectory(this.innerFilelist[0].directory + "/" + this.innerFilelist[0].name)
 			}
 		},
 		displayLoadingValue(item, prop, precision, unit = '') {
@@ -912,7 +913,14 @@ export default {
 			}
 			await this.computeRowsCols();
 			//this.loadDirectory(this.innerDirectory);
-		}
+		},
+		async confirmDelete(items) {
+			this.deleteDialog.question = i18n.t('dialog.delete.title', [(items.length==1?items[0].name:i18n.t('dialog.delete.multiple'))]);
+			this.deleteDialog.prompt = i18n.t('dialog.delete.prompt');
+			items.forEach(item => this.deleteDialog.prompt+= "<li>"+item.name+"</li>");
+			this.deleteDialog.prompt += "</ul>";
+			this.deleteDialog.shown = true;
+		},
 	},
 	mounted() {
 		//console.log("mounted")

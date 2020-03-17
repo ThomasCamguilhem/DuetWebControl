@@ -24,21 +24,29 @@
 						<p class="mb-1" v-bind:class="{local: isLocal}">
 							{{ $t('panel.extrude.mixRatio') }}
 						</p>
-						<v-btn-toggle v-model="mix" mandatory multiple>
-							<v-btn flat value="mix" :disabled="uiFrozen" color="primary" v-bind:class="{local: isLocal}">
+						<v-btn-toggle v-if="false" v-model="mix" mandatory multiple>
+							<v-btn flat value="mix" :disabled="uiFrozen" v-bind:class="{local: isLocal}">
 								{{ $t('panel.extrude.mix') }}
 							</v-btn>
-							<v-btn flat v-for="extruder in currentTool.extruders" :key="extruder" :value="extruder" :disabled="uiFrozen" color="primary" v-bind:class="{local: isLocal}">
+							<v-btn flat v-for="extruder in currentTool.extruders" :key="extruder" :value="extruder" :disabled="uiFrozen" v-bind:class="{local: isLocal}">
 								{{ `E${extruder}` }}
 							</v-btn>
 						</v-btn-toggle>
+						<v-layout row v-for="(prct, index) in currentTool.mix.filter(() => mix == 'mix')">
+							<span style="vertical-align: middle;height: max-content;margin: auto;" :style="{'font-size': isLocal?'large':''}">{{ "E" + currentTool.extruders[index] }}</span>
+							<slider :key="Math.random()" :disabled="uiFrozen" :min="0" :max="100" :step="5" v-model="currentTool.mix[index]*100" @input="setExtrusionMix(index, $event)"></slider>
+						</v-layout>
+						<div style="height: 15px; overflow: hidden; border-radius: 5px; background: linear-gradient(to right, red, hsl(43, 98%, 50%) 15%, hsl(43, 98%, 50%) 40%, green 45%, green 55%, hsl(43, 98%, 50%) 60%, hsl(43, 98%, 50%) 85%, red); margin: 5px 60px 5px 75px;">
+							<div style="height: 100%; width: 2px; border-radius: 1px; background:black; overflow: hidden" :style="{'margin-left': (extrusionSum/currentTool.extruders.length + '%')}">
+							</div>
+						</div>
 					</v-flex>
 					<v-flex class="ma-1">
 						<p class="mb-1"  v-bind:class="{local: isLocal}">
 							{{ $t('panel.extrude.amount', ['mm']) }}
 						</p>
 						<v-btn-toggle v-model="amount" mandatory>
-							<v-btn v-for="(amount, index) in extruderAmounts" :key="index" :value="amount" :disabled="uiFrozen" @contextmenu.prevent="editAmount(index)"  v-bind:class="{local: isLocal}">
+							<v-btn v-for="(amount, index) in extruderAmounts" :key="index" :value="amount" :disabled="uiFrozen || disabled" @contextmenu.prevent="editAmount(index)"  v-bind:class="{local: isLocal}">
 								{{ amount }}
 							</v-btn>
 						</v-btn-toggle>
@@ -48,7 +56,7 @@
 							{{ $t('panel.extrude.feedrate', ['mm/s']) }}
 						</p>
 						<v-btn-toggle v-model="feedrate" mandatory>
-							<v-btn v-for="(feedrate, index) in extruderFeedrates" :key="index" :value="feedrate" :disabled="uiFrozen" @contextmenu.prevent="editFeedrate(index)"  v-bind:class="{local: isLocal}">
+							<v-btn v-for="(feedrate, index) in extruderFeedrates" :key="index" :value="feedrate" :disabled="uiFrozen || disabled" @contextmenu.prevent="editFeedrate(index)"  v-bind:class="{local: isLocal}">
 								{{ feedrate }}
 							</v-btn>
 						</v-btn-toggle>
@@ -56,11 +64,11 @@
 				</v-layout>
 			</v-flex>
 			<v-flex shrink class="ml-2 mb-1"  v-bind:style="{'margin-top: 25px': isLocal}">
-				<v-btn block :disabled="uiFrozen || !canRetract" :loading="busy" @click="buttonClicked(false)"  v-bind:class="{local: isLocal}">
+				<v-btn block :disabled="uiFrozen || !canRetract || disabled" :loading="busy" @click="buttonClicked(false)"  v-bind:class="{local: isLocal}">
 					<v-icon>arrow_upward</v-icon> {{ $t('panel.extrude.retract') }}
 				</v-btn>
 				<br>
-				<v-btn block :disabled="uiFrozen || !canExtrude" :loading="busy" @click="buttonClicked(true)"  v-bind:class="{local: isLocal}">
+				<v-btn block :disabled="uiFrozen || !canExtrude || disabled" :loading="busy" @click="buttonClicked(true)"  v-bind:class="{local: isLocal}">
 					<v-icon>arrow_downward</v-icon> {{ $t('panel.extrude.extrude') }}
 				</v-btn>
 			</v-flex>
@@ -84,6 +92,9 @@ export default {
 		...mapState('machine/settings', ['extruderAmounts', 'extruderFeedrates']),
 		...mapState({
 			isLocal: state => state.isLocal,
+		}),
+		...mapState('machine/model', {
+			disabled: (state) => {state = state.state; return ['updating', 'off', 'halted', 'pausing', 'resuming', 'processing', 'simulating', 'busy', 'changingTool'].indexOf(state.status) >= 0}
 		}),
 		canExtrude() {
 			if (this.currentTool && this.currentTool.heaters.length) {
@@ -140,7 +151,8 @@ export default {
 				shown: false,
 				index: 0,
 				preset: 0
-			}
+			},
+			extrusionSum: 50,
 		}
 	},
 	methods: {
@@ -187,18 +199,43 @@ export default {
 		setFeedrate(value) {
 			this.setExtrusionFeedrate({ index: this.editFeedrateDialog.index, value });
 			this.feedrate = value;
+		},
+		setExtrusionMix(index, event) {
+			//console.log(index, event)
+			this.currentTool.mix[index] = event/100
+			//console.log(this.currentTool, this.currentTool.mix)
+			let first = true;
+			let letter = 65
+			let out = "M563 P" + this.currentTool.number + ' S"'
+			this.currentTool.mix.forEach(extruder => out += (first?(first = false):"+") + Math.round(extruder*100) + String.fromCharCode(letter++))
+			out += '" D'
+			first = true;
+			this.currentTool.extruders.forEach(extruder => { out += (first?"":":") + extruder; (first = false) })
+			first = true;
+			out += "\nM567 P" + this.currentTool.number + " E";
+			this.currentTool.mix.forEach(extruder => { out += (first?"":":") + extruder.toFixed(2); (first = false)})
+			out += '\nT' + this.currentTool.number;
+			console.log(out);
+			this.sendCode(out)
+			this.extrusionSum = (this.currentTool.mix.reduce((a,b) => a+b)*100);
 		}
 	},
 	mounted() {
 		this.amount = this.extruderAmounts[3];
 		this.feedrate = this.extruderFeedrates[3];
 		//console.log(this.tools)
+		this.extrusionSum = (this.currentTool.mix.reduce((a,b) => a+b)*100);
 	},
 	watch: {
-		currentTool(to) {
-			if (!to || to.extruders.length <= 1) {
-				// Switch back to mixing mode if the selection panel is hidden
-				this.mix = ['mix'];
+		currentTool: {
+			deep: true,
+			handler(to) {
+				console.log(to)
+				if (!to || to.extruders.length <= 1) {
+					// Switch back to mixing mode if the selection panel is hidden
+					this.mix = ['mix'];
+				}
+				this.extrusionSum = (this.currentTool.mix.reduce((a,b) => a+b)*100);
 			}
 		},
 		extruderAmounts() {
@@ -206,6 +243,10 @@ export default {
 		},
 		extruderFeedrates() {
 			this.feedrate = this.extruderFeedrates[0];
+		},
+		extrusionSum() {
+			let sumMix = this.currentTool.mix.reduce((a,b) => a+b)
+			console.log(this.extrusionSum, sumMix)
 		}
 	}
 }

@@ -9,13 +9,13 @@ import Control from './Control'
 import Job from './Job'
 import Files from './Files'
 import Settings from './Settings'
-import Lynx from './Lynxter'
-import store from '../store'
+import Lynxter from './Lynxter'
+//import store from '../store'
 
 Vue.use(VueRouter)
 
-export const Routing = ( store.state.isLocal? [
-	// access Pannel
+export const Routing = ( [
+	// Control
 	{
 		icon: 'tune',
 		caption: 'menu.control.caption',
@@ -26,8 +26,16 @@ export const Routing = ( store.state.isLocal? [
 				icon: 'dashboard',
 				caption: 'menu.control.dashboard',
 				path: '/',
-				component: Lynx.Dashboard,
+				component: Lynxter.Dashboard,
 				showLocal: true,
+				showDist: false,
+			},
+			// Dashboard
+			{
+				icon: 'open_with',
+				caption: 'menu.lynxter.control',
+				path: '/',
+				component: Control.Dashboard,
 			},
 			// Status
 			{
@@ -40,10 +48,11 @@ export const Routing = ( store.state.isLocal? [
 			// Control
 			{
 				icon: 'open_with',
-				caption: 'menu.lynx.control',
+				caption: 'menu.lynxter.control',
 				path: '/Lynxter/Control',
-				component: Lynx.Control,
+				component: Lynxter.Control,
 				showLocal: true,
+				showDist: false,
 			},
 			// Jobs
 			{
@@ -54,14 +63,14 @@ export const Routing = ( store.state.isLocal? [
 				showLocal: true,
 				//minLevel: 1,
 			},
-		]
-	},
-	// Settings
-	{
-		icon: 'settings',
-		caption: 'menu.settings.caption',
-		showLocal: true,
-		pages: [
+			// Calibration
+			{
+				icon: 'build',
+				caption: 'menu.lynxter.calibrate',
+				path: '/Lynxter/Calibration',
+				component: Lynxter.Calibration,
+				showLocal: true,
+			},
 			// Webcam
 			{
 				icon: 'photo_camera',
@@ -70,8 +79,17 @@ export const Routing = ( store.state.isLocal? [
 				component: Job.Webcam,
 				condition: 'webcam',
 				showLocal: true,
-				minLevel: 1,
-			},
+				//minLevel: 1,
+			}
+		]
+	},
+	// Settings
+	{
+		icon: 'settings',
+		caption: 'menu.lynxter.advanced',
+		showLocal: true,
+		defaultClosed: true,
+		pages: [
 			// Height Map
 			{
 				icon: 'grid_on',
@@ -79,7 +97,7 @@ export const Routing = ( store.state.isLocal? [
 				path: '/Heightmap',
 				component: Control.Heightmap,
 				showLocal: true,
-				//minLevel: 0,
+				//minLevel: 1,
 			},
 			// Console
 			{
@@ -99,16 +117,24 @@ export const Routing = ( store.state.isLocal? [
 				showLocal: true,
 				//minLevel: 1,
 			},
-		]
-	},
-	// Settings
-	{
-		icon: 'build',
-		caption: 'menu.settings.caption',
-		showLocal: true,
-		//minLevel: 2,
-		pages: [
-
+			// System
+			{
+				icon: 'report',
+				caption: 'menu.files.system',
+				path: '/Files/System',
+				component: Files.System,
+				showLocal: false,
+				//minLevel: 3,
+			},
+			// General
+			{
+				icon: 'settings',
+				caption: 'menu.settings.caption',
+				path: '/Settings/General',
+				component: Settings.General,
+				showLocal: false,
+				//minLevel: 2,
+			},
 			// Machine
 			{
 				icon: 'settings_applications',
@@ -116,127 +142,9 @@ export const Routing = ( store.state.isLocal? [
 				path: '/Settings/Machine',
 				component: Settings.Machine,
 				showLocal: true,
-				//minLevel: 2,
+				showDist: false,
+				//minLevel: 3
 			},
-			// Calibration
-			{
-				icon: 'build',
-				caption: 'menu.lynx.calibrate',
-				path: '/Lynxter/Calibration',
-				component: Lynx.Calibration,
-				showLocal: true,
-			},
-			// General
-			/*{
-				icon: 'settings',
-				caption: 'menu.settings.general',
-				path: '/Settings/General',
-				component: Settings.General,
-				showLocal: true,
-				//minLevel: 3,
-			},*/
-		]
-	}
-] : [
-	// Control
-	{
-		icon: 'tune',
-		caption: 'menu.control.caption',
-		pages: [
-			// Dashboard
-			{
-				icon: 'dashboard',
-				caption: 'menu.control.dashboard',
-				path: '/',
-				component: Control.Dashboard,
-			},
-			// Console
-			{
-				icon: 'code',
-				caption: 'menu.control.console',
-				path: '/Console',
-				component: Control.Console,
-				//minLevel: 1,
-			},
-			// Height Map
-			{
-				icon: 'grid_on',
-				caption: 'menu.control.heightmap',
-				path: '/Heightmap',
-				component: Control.Heightmap,
-				//minLevel: 1,
-			}
-		]
-	},
-	// Job
-	{
-		icon: 'print',
-		caption: 'menu.job.caption',
-		pages: [
-			// Status
-			{
-				icon: 'info',
-				caption: 'menu.job.status',
-				path: '/Job/Status',
-				component: Job.Status,
-			},
-			// Webcam
-			{
-				icon: 'photo_camera',
-				caption: 'menu.job.webcam',
-				path: '/Job/Webcam',
-				component: Job.Webcam,
-				condition: 'webcam',
-				//minLevel: 1,
-			}
-			// Visualiser (coming soon)
-			/* {
-				icon: 'theaters',
-				caption: 'menu.job.visualiser',
-				path: '/Job/Visualiser',
-				component: Job.Visualiser
-			} */
-		]
-	},
-	// Files
-	{
-		icon: 'sd_storage',
-		caption: 'menu.files.caption',
-		//minLevel: 1,
-		pages: [
-			// Jobs
-			{
-				icon: 'play_arrow',
-				caption: 'menu.files.jobs',
-				path: '/Files/Jobs',
-				component: Files.Jobs,
-				//minLevel: 1,
-			},
-			// Macros
-			{
-				icon: 'polymer',
-				caption: 'menu.files.macros',
-				path: '/Files/Macros',
-				component: Files.Macros,
-				//minLevel: 1,
-			},
-			// Display
-			{
-				icon: 'format_list_numbered',
-				caption: 'menu.files.display',
-				path: '/Files/Display',
-				component: Files.Display,
-				condition: 'display',
-				//minLevel: 3,
-			},
-			// System
-			{
-				icon: 'settings',
-				caption: 'menu.files.system',
-				path: '/Files/System',
-				component: Files.System,
-				//minLevel: 3,
-			}
 		]
 	},
 	// Materials
@@ -298,9 +206,10 @@ export const Routing = ( store.state.isLocal? [
 	]
 },*/
 	// Settings
-	{
+	/*{
 		icon: 'build',
 		caption: 'menu.settings.caption',
+		showLocal: true,
 		//minLevel: 2,
 		pages: [
 			// General
@@ -309,6 +218,7 @@ export const Routing = ( store.state.isLocal? [
 				caption: 'menu.settings.general',
 				path: '/Settings/General',
 				component: Settings.General,
+				showLocal: true,
 				//minLevel: 2,
 			},
 			// Machine
@@ -317,47 +227,40 @@ export const Routing = ( store.state.isLocal? [
 				caption: 'menu.settings.machine',
 				path: '/Settings/Machine',
 				component: Settings.Machine,
-				//minLevel: 3
-			},
-			// Calibration
-			{
-				icon: 'build',
-				caption: 'menu.lynx.calibrate',
-				path: '/Lynxter/Calibration',
-				component: Lynx.Calibration,
 				showLocal: true,
+				//minLevel: 3
 			},
 			// Setup
 			/*{
-			icon: 'build',//'setup',
-			caption: 'menu.settings.setup',
-			path: '/Settings/Setup',
-			component: Settings.Setup
-		},
-		// Support
-		{
-		icon: 'build',//'tutorial',
-		caption: 'menu.settings.support',
-		path: '/Settings/Support',
-		component: Settings.Support,
-	},
-	// if is certified
-	// Maintenance
-	{
-	icon: 'build',//'maintenance',
-	caption: 'menu.settings.maintenance',
-	path: '/Settings/Maintenance',
-	component: Settings.Maintenance,
-	}*/
-	// Update (coming soon)
-	/* {
-	icon: 'update',
-	caption: 'menu.settings.update',
-	path: '/Settings/Update',
-	component: Settings.Update
-	} */
-	]
-	},
+				icon: 'build',//'setup',
+				caption: 'menu.settings.setup',
+				path: '/Settings/Setup',
+				component: Settings.Setup
+			},
+			// Support
+			{
+				icon: 'build',//'tutorial',
+				caption: 'menu.settings.support',
+				path: '/Settings/Support',
+				component: Settings.Support,
+			},
+			// if is certified
+			// Maintenance
+			{
+				icon: 'build',//'maintenance',
+				caption: 'menu.settings.maintenance',
+				path: '/Settings/Maintenance',
+				component: Settings.Maintenance,
+			}*/
+			// Update (coming soon)
+			/* {
+				icon: 'update',
+				caption: 'menu.settings.update',
+				path: '/Settings/Update',
+				component: Settings.Update
+				} */
+			/*]
+		},*/
 	]);
 
 	export default new VueRouter({

@@ -7,38 +7,34 @@
 	background-repeat: no-repeat;
 	background-blend-mode: overlay;
 }
-
 .v-card.liq {
 	/*background-image: url(/img/ressources/Medium_universe_LIQ.svg);*/
 }
-
 .v-card.fil {
 	/*background-image: url(/img/ressources/Medium_universe_FIL.svg);*/
 }
-
 table {
 	width: 100%;
 	border-spacing: 0;
 }
-
 table td,
 table th {
 	text-align: center;
 }
-
 table.tools th,
 table.tools td {
 	width: 20%;
 }
-
 table.extra th,
 table.extra td {
 	width: 25%;
 }
-
 table.extra tr > th:first-child,
 table.extra tr > td:first-child {
 	width: 50%;
+}
+.local {
+	font-size: large;
 }
 </style>
 <style>
@@ -50,7 +46,6 @@ table.extra tr > td:first-child {
 		background-position: -25% 50%;
 	}
 }
-
 @keyframes toolFault {
 	0% {
 		background: #ff0000;
@@ -83,8 +78,8 @@ table.extra tr > td:first-child {
 </style>
 
 <template>
-	<v-card v-bind:class=" getTool ? (getTool.toLowerCase().includes('filament') ? 'fil' : (getTool.toLowerCase().includes('liquid') ? 'liq' : '')) : ''" v-bind:style="isLocal?'font-size: large;':''">
-		<v-card-title class="py-2">
+	<v-card v-bind:class=" getTool ? (getTool.toLowerCase().includes('filament') ? 'fil' : (getTool.toLowerCase().includes('liquid') ? 'liq' : '')) : ''" v-bind:style="isLocal?'font-size: large;':''" id="toolContainer">
+		<v-card-title class="py-2" :class="{local: isLocal}">
 			<panel-link :active="currentPage !== 'tools'" @click="currentPage = 'tools'" class="mr-2">
 				<v-icon small>build</v-icon> {{ $t('panel.tools.caption') }}
 			</panel-link>
@@ -141,265 +136,133 @@ table.extra tr > td:first-child {
 									<span class="font-weight-regular caption" :style="{'font-size':isLocal?'large !important': ''}">
 										T{{ tool.number }}
 									</span>
-										<span v-if="isLocal && tool.heaters.length && heat.heaters[tool.heaters[0]] !== undefined && heat.heaters[tool.heaters[0]].state !== undefined" class="font-weight-regular caption" :class="{
-											red: heat.heaters[tool.heaters[0]] !== undefined && heat.heaters[tool.heaters[0]].state == 3,
-											[activeToolClass]: heat.heaters[tool.heaters[0]] !== undefined && (heat.heaters[tool.heaters[0]].state == 2 || heat.heaters[tool.heaters[0]].state == 4),
-											[standbyToolClass]: heat.heaters[tool.heaters[0]] !== undefined && heat.heaters[tool.heaters[0]].state == 1,
-											'grey darken-2': heat.heaters[tool.heaters[0]] !== undefined && heat.heaters[tool.heaters[0]].state == 0,}" style="padding:1px 5px; border-radius: 5px">
-											{{ $t(`generic.heaterStates[${heat.heaters[tool.heaters[0]].state}]`) }}
-										</span>
-										<span v-else-if="isLocal" class="font-weight-regular caption" :class="{
-											[activeToolClass]: (state.currentTool == tool.number),
-											'grey darken-2':  (state.currentTool != tool.number)}" style="padding:1px 5px">
-											{{ $t(`generic.heaterStates[${(state.currentTool == tool.number)?2:0}]`) }}
-										</span>
-										<div v-if="tool.heaters.length && isLocal" style="width: 60%; margin: 5px 0 5px 20%; overflow: hidden; height: 6px" :style="{display:(((heat.heaters[tool.heaters[0]].state == 2 &&  tool.active[0] <= 0) || (heat.heaters[tool.heaters[0]].state == 1 && tool.standby[0] <= 0 ) || (heat.heaters[tool.heaters[0]].state == 0)) ?'':'none')}"></div>
-										<div v-if="tool.heaters.length && isLocal" style="width: 60%; margin: 5px 0 5px 20%; border: 1px solid darkgray; border-radius: 2px; overflow: hidden;" :style="{display:(((heat.heaters[tool.heaters[0]].state == 2 &&  tool.active[0] > 0) || (heat.heaters[tool.heaters[0]].state == 1 && tool.standby[0] > 0 ) || (heat.heaters[tool.heaters[0]].state == 3)) ?'':'none')}">
-											<div :style="{width:
-												heat.heaters[tool.heaters[0]].state == 1 ?
-												(Math.min(heat.heaters[tool.heaters[0]].current,tool.standby[0])/Math.max(heat.heaters[tool.heaters[0]].current,tool.standby[0]))*100+'%' :
-												(heat.heaters[tool.heaters[0]].state == 2 ?
-												(Math.min(heat.heaters[tool.heaters[0]].current,tool.active[0])/Math.max(heat.heaters[tool.heaters[0]].current,tool.active[0]))*100+'%' :
-												'100%'
-												),
-												background:
-												heat.heaters[tool.heaters[0]].state == 1 ?
-												'#1565c0':
-												heat.heaters[tool.heaters[0]].state == 2 ? 'green': 'red',
-											}"
-											style="height: 4px; border-radius: 2px; overflow: hidden;">
-											<div v-if="((heat.heaters[tool.heaters[0]].state == 1) && (Math.abs(heat.heaters[tool.heaters[0]].current - tool.standby[0]) > 1)) || ((heat.heaters[tool.heaters[0]].state == 2) && (Math.abs(heat.heaters[tool.heaters[0]].current - tool.active[0]) > 1))"
-												style="width: 100%;
-												height:100%;
-												background: linear-gradient(to right, rgb(255, 142, 0) 45%, rgb(255, 214, 0) 50%, rgb(255, 142, 0) 55%) repeat scroll 0% 0% / 300% 300%;
-												background-size: 600% 600%;
-												animation: 2s linear 0s infinite normal none running toolHeating">
-											</div>
-											<div v-if="(heat.heaters[tool.heaters[0]].state == 3)"
+									<span v-if="isLocal && tool.heaters.length && heat.heaters[tool.heaters[0]] !== undefined && heat.heaters[tool.heaters[0]].state !== undefined" class="font-weight-regular caption" :class="{
+										red: heat.heaters[tool.heaters[0]] !== undefined && heat.heaters[tool.heaters[0]].state == 3,
+										[activeToolClass]: heat.heaters[tool.heaters[0]] !== undefined && (heat.heaters[tool.heaters[0]].state == 2 || heat.heaters[tool.heaters[0]].state == 4),
+										[standbyToolClass]: heat.heaters[tool.heaters[0]] !== undefined && heat.heaters[tool.heaters[0]].state == 1,
+										'grey darken-2': heat.heaters[tool.heaters[0]] !== undefined && heat.heaters[tool.heaters[0]].state == 0,}" style="padding:1px 5px; border-radius: 5px">
+										{{ $t(`generic.heaterStates[${heat.heaters[tool.heaters[0]].state}]`) }}
+									</span>
+									<span v-else-if="isLocal" class="font-weight-regular caption" :class="{
+										[activeToolClass]: (state.currentTool == tool.number),
+										'grey darken-2':  (state.currentTool != tool.number)}" style="padding:1px 5px">
+										{{ $t(`generic.heaterStates[${(state.currentTool == tool.number)?2:0}]`) }}
+									</span>
+									<div v-if="tool.heaters.length && isLocal" style="width: 60%; margin: 5px 0 5px 20%; overflow: hidden; height: 6px" :style="{display:(((heat.heaters[tool.heaters[0]].state == 2 &&  tool.active[0] <= 0) || (heat.heaters[tool.heaters[0]].state == 1 && tool.standby[0] <= 0 ) || (heat.heaters[tool.heaters[0]].state == 0)) ?'':'none')}"></div>
+									<div v-if="tool.heaters.length && isLocal" style="width: 60%; margin: 5px 0 5px 20%; border: 1px solid darkgray; border-radius: 2px; overflow: hidden;" :style="{display:(((heat.heaters[tool.heaters[0]].state == 2 &&  tool.active[0] > 0) || (heat.heaters[tool.heaters[0]].state == 1 && tool.standby[0] > 0 ) || (heat.heaters[tool.heaters[0]].state == 3)) ?'':'none')}">
+										<div :style="{width:
+											heat.heaters[tool.heaters[0]].state == 1 ?
+											(Math.min(heat.heaters[tool.heaters[0]].current,tool.standby[0])/Math.max(heat.heaters[tool.heaters[0]].current,tool.standby[0]))*100+'%' :
+											(heat.heaters[tool.heaters[0]].state == 2 ?
+											(Math.min(heat.heaters[tool.heaters[0]].current,tool.active[0])/Math.max(heat.heaters[tool.heaters[0]].current,tool.active[0]))*100+'%' :
+											'100%'
+											),
+											background:
+											heat.heaters[tool.heaters[0]].state == 1 ?
+											'#1565c0':
+											heat.heaters[tool.heaters[0]].state == 2 ? 'green': 'red',
+										}"
+										style="height: 4px; border-radius: 2px; overflow: hidden;">
+										<div v-if="((heat.heaters[tool.heaters[0]].state == 1) && (Math.abs(heat.heaters[tool.heaters[0]].current - tool.standby[0]) > 1)) || ((heat.heaters[tool.heaters[0]].state == 2) && (Math.abs(heat.heaters[tool.heaters[0]].current - tool.active[0]) > 1))"
 											style="width: 100%;
 											height:100%;
-											background: #ff0000;
-											animation: 2s linear 0s infinite normal none running toolFault">
+											background: linear-gradient(to right, rgb(255, 142, 0) 45%, rgb(255, 214, 0) 50%, rgb(255, 142, 0) 55%) repeat scroll 0% 0% / 300% 300%;
+											background-size: 600% 600%;
+											animation: 2s linear 0s infinite normal none running toolHeating">
 										</div>
-									</div>
-								</div>
-							</div>
-							<div v-if="(shown || !isLocal) && materials.length" @click.prevent="">
-								<v-menu offset-y left :disabled="uiFrozen" v-tab-control :close-on-content-click="false">
-									<template slot="activator">
-										<v-btn color="secondary darken-1" small class="mx-0" :disabled="uiFrozen">
-											{{ $t('button.preloadPrime.caption') }} <v-icon>arrow_drop_down</v-icon>
-										</v-btn>
-									</template>
-
-									<v-card>
-										<v-list>
-											<v-list-tile @click="sendCode('M98 P0:/macros/_Materials/' +  universe + '/Pre_load_' + tool.name + '.g')">
-												<v-btn color="secondary darken-1" small class="mx-0" :disabled="uiFrozen">
-													{{ $t('button.preloadPrime.preload', [(tool.name || $t('panel.tools.tool', [tool.number]))]) }}
-												</v-btn>
-											</v-list-tile>
-											<v-list-tile v-if="materials.length > 0">
-												<v-menu offset-y left :disabled="uiFrozen" v-tab-control>
-													<template slot="activator">
-														<v-btn color="secondary darken-1" small class="mx-0" :disabled="uiFrozen">
-															{{ $t('button.preloadPrime.prime', [(tool.name || $t('panel.tools.tool', [tool.number]))]) }} <v-icon>arrow_drop_down</v-icon>
-														</v-btn>
-													</template>
-
-													<v-card>
-														<v-list>
-															<v-list-tile v-for="material in materials" :key="material" @click="sendCode('M98 P0:/macros/_Materials/' +  universe + '/' + material + '/Prime ' + tool.name)">
-																{{ $t('button.preloadPrime.prime', [material]) }}
-															</v-list-tile>
-														</v-list>
-													</v-card>
-												</v-menu>
-											</v-list-tile>
-											<v-list-tile v-if="materials.length > 0">
-												<v-menu offset-y left :disabled="uiFrozen" v-tab-control>
-													<template slot="activator">
-														<v-btn color="secondary darken-1" small class="mx-0" :disabled="uiFrozen">
-															{{ $t('button.preloadPrime.unload', [(tool.name || $t('panel.tools.tool', [tool.number]))]) }} <v-icon>arrow_drop_down</v-icon>
-														</v-btn>
-													</template>
-
-													<v-card>
-														<v-list>
-															<v-list-tile v-for="material in materials" :key="material" @click="sendCode('M98 P0:/macros/_Materials/' +  universe + '/' + material + '/Unload ' + tool.name)">
-																{{ $t('button.preloadPrime.unload', [material]) }}
-															</v-list-tile>
-														</v-list>
-													</v-card>
-												</v-menu>
-											</v-list-tile>
-										</v-list>
-									</v-card>
-								</v-menu>
-							</div>
-						</th>
-
-						<th v-if="!isLocal">
-							<a v-if="tool.heaters.length" href="#" :class="getHeaterColor(tool.heaters[0])" @click.prevent="toolHeaterClick(tool, tool.heaters[0])">
-								{{ formatHeaterName(heat.heaters[tool.heaters[0]], tool.heaters[0]) }}
-							</a>
-							<br/>
-							<span v-if="tool.heaters.length && heat.heaters[tool.heaters[0]].state !== null" class="font-weight-regular caption" :class="{
-								red:	heat.heaters[tool.heaters[0]] !== undefined && heat.heaters[tool.heaters[0]].state == 3,
-								[activeToolClass]: heat.heaters[tool.heaters[0]] !== undefined && (heat.heaters[tool.heaters[0]].state == 2 || heat.heaters[tool.heaters[0]].state == 4),
-								[standbyToolClass]: heat.heaters[tool.heaters[0]] !== undefined && heat.heaters[tool.heaters[0]].state == 1,
-								'grey darken-2': heat.heaters[tool.heaters[0]] !== undefined && heat.heaters[tool.heaters[0]].state == 0,}" style="padding:1px 5px">
-								{{ $t(`generic.heaterStates[${heat.heaters[tool.heaters[0]].state}]`) }}
-							</span>
-						</th>
-						<td class="text-center">
-							<span v-if="tool.heaters.length">
-								{{ formatHeaterValue(heat.heaters[tool.heaters[0]]) }}
-							</span>
-							<span v-else-if="isNumber(tool.spindle) && tool.spindle >= 0 && tool.spindle < spindles.length">
-								{{ $display(spindles[tool.spindle].current, 0, $t('generic.rpm')) }}
-							</span>
-						</td>
-						<td class="pl-2 pr-1" v-if="!isLocal || shown || (tool.heaters.length && heat.heaters[tool.heaters[0]].state == 2)">
-							<tool-input :shown="shown" v-if="tool.heaters.length" :tool="tool" :heaterIndex="0" :precision="1" active></tool-input>
-							<tool-input :shown="shown" v-else-if="isNumber(tool.spindle) && tool.spindle >= 0" :spindle="spindles[tool.spindle]" active></tool-input>
-						</td>
-						<td class="pl-1 pr-2"	v-if="!isLocal || shown || (tool.heaters.length && heat.heaters[tool.heaters[0]].state == 1)">
-							<tool-input :shown="shown" v-if="tool.heaters.length" :tool="tool" :heaterIndex="0" :precision="1" standby></tool-input>
-						</td>
-						<td class="pl-1 pr-2" v-if="isLocal  && !shown && (!tool.heaters.length || heat.heaters[tool.heaters[0]].state == 0)">
-							<div class="control number">
-								<span >
-									0 C
-								</span>
-							</div>
-						</td>
-					</tr>
-
-					<tr v-for="(heater, heaterIndex) in tool.heaters.slice(1)" :class="{ 'grey lighten-4' : tool.number === state.currentTool }" :key="`tool-${index}-${heater}`">
-						<th>
-							<a href="#" :class="getHeaterColor(heater)" @click.prevent="toolHeaterClick(tool, heater)">
-								{{ formatHeaterName(heat.heaters[heater], heater) }}
-							</a>
-							<br/>
-							<span v-if="heat.heaters[heater].state !== null" class="font-weight-regular caption">
-								{{ $t(`generic.heaterStates[${heat.heaters[heater].state}]`) }}
-							</span>
-						</th>
-						<td>
-							{{ formatHeaterValue(heat.heaters[heater]) }}
-						</td>
-						<td class="pl-2 pr-1">
-							<tool-input :shown="shown" :tool="tool" :heaterIndex="heaterIndex + 1" :precision="1" active></tool-input>
-						</td>
-						<td class="pl-1 pr-2">
-							<tool-input :shown="shown" :tool="tool" :heaterIndex="heaterIndex + 1" :precision="1" standby></tool-input>
-						</td>
-					</tr>
-
-					<tr v-if="index !== tools.length - 1" :key="`div-tool-${index}`">
-						<td colspan="5">
-							<v-divider></v-divider>
-						</td>
-					</tr>
-				</template>
-
-				<!-- Beds -->
-				<template v-for="(bed, index) in heat.beds">
-					<template v-if="bed">
-						<tr :key="`div-bed-${index}`">
-							<td colspan="5">
-								<v-divider></v-divider>
-							</td>
-						</tr>
-
-						<tr :key="`bed-${index}-${bed.heaters.length && bed.heaters[0]}`" :class="{ [selectedToolClass] : ( heat.heaters[bed.heaters[0]] !== undefined
-							&& heat.heaters[bed.heaters[0]].state == 2)}">
-							<th :rowspan="Math.max(1, bed.heaters.length)" class="pl-2"
-							:class="{ 'pt-2 pb-2' : !bed.heaters.length,
-							/*red : ( isLocal && heat.heaters[bed.heaters[0]] !== undefined
-							&& heat.heaters[bed.heaters[0]].state == 3),
-							[activeToolClass]: isLocal && heat.heaters[bed.heaters[0]] !== undefined
-							&& heat.heaters[bed.heaters[0]].state == 2,
-							[standbyToolClass]: isLocal && heat.heaters[bed.heaters[0]] !== undefined
-							&& heat.heaters[bed.heaters[0]].state == 1,*/}"
-							:style="isLocal && shown? 'background: none !important; border: 2px solid; border-radius: 10px; border-color: #7b7b7b; cursor:pointer':''" @click.prevent="isLocal && shown?bedHeaterClick(bed, index, bed.heaters[0]):null">
-							<a href="#" :class="isLocal?getHeaterColor(bed.heaters[0]):''" @click.prevent="isLocal?null:bedClick(bed)">
-								{{ bed.name || $t('panel.tools.bed', [(heat.beds.length !== 1) ? index : '']) }}
-							</a>
-							<br/>
-							&nbsp;
-							<span v-if="isLocal && bed.heaters.length > 0 && heat.heaters[bed.heaters[0]] !== undefined && heat.heaters[bed.heaters[0]].state !== undefined" class="font-weight-regular caption"
-								:class="{red : ( heat.heaters[bed.heaters[0]] !== undefined
-									&& heat.heaters[bed.heaters[0]].state == 3),
-									[activeToolClass]: heat.heaters[bed.heaters[0]] !== undefined
-									&& (heat.heaters[bed.heaters[0]].state == 2 || heat.heaters[bed.heaters[0]].state == 4),
-									[standbyToolClass]: heat.heaters[bed.heaters[0]] !== undefined
-									&& heat.heaters[bed.heaters[0]].state == 1,
-									'grey darken-2': heat.heaters[bed.heaters[0]] !== undefined
-									&& heat.heaters[bed.heaters[0]].state == 0,}" style="padding:1px 5px; border-radius: 5px">
-									{{ $t(`generic.heaterStates[${heat.heaters[bed.heaters[0]].state}]`) }}
-								</span>
-								<div v-if="isLocal" style="width: 60%; margin: 5px 0 5px 20%; overflow: hidden; height: 6px" :style="{display:(((heat.heaters[bed.heaters[0]].state == 2 &&  bed.active[0] <= 0) || (heat.heaters[bed.heaters[0]].state == 1 && bed.standby[0] <= 0 ) || (heat.heaters[bed.heaters[0]].state == 0)) ?'':'none')}"></div>
-								<div v-if="isLocal" style="width: 60%; margin: 5px 0 5px 20%; border: 1px solid darkgray; border-radius: 2px; overflow: hidden;" :style="{display:(((heat.heaters[bed.heaters[0]].state == 2 &&  bed.active[0] > 0) || (heat.heaters[bed.heaters[0]].state == 1 && bed.standby[0] > 0 ) || (heat.heaters[bed.heaters[0]].state == 3)) ?'':'none')}">
-									<div :style="{width:
-										heat.heaters[bed.heaters[0]].state == 1 ?
-										(Math.min(heat.heaters[bed.heaters[0]].current,bed.standby[0])/Math.max(heat.heaters[bed.heaters[0]].current,bed.standby[0]))*100+'%' :
-										(heat.heaters[bed.heaters[0]].state == 2 ?
-										(Math.min(heat.heaters[bed.heaters[0]].current,bed.active[0])/Math.max(heat.heaters[bed.heaters[0]].current,bed.active[0]))*100+'%' :
-										'100%'
-										),
-										background:
-										heat.heaters[bed.heaters[0]].state == 1 ?
-										'#1565c0':
-										heat.heaters[bed.heaters[0]].state == 2 ? 'green': 'red',
-									}"
-									style="height: 4px; border-radius: 2px; overflow: hidden;">
-									<div v-if="((heat.heaters[bed.heaters[0]].state == 1) && (Math.abs(heat.heaters[bed.heaters[0]].current - bed.standby[0]) > 1 )) || ((heat.heaters[bed.heaters[0]].state == 2) && (Math.abs(heat.heaters[bed.heaters[0]].current - bed.active[0]) > 1 ))"
+										<div v-if="(heat.heaters[tool.heaters[0]].state == 3)"
 										style="width: 100%;
 										height:100%;
-										background: linear-gradient(to right, rgb(255, 142, 0) 45%, rgb(255, 214, 0) 50%, rgb(255, 142, 0) 55%) repeat scroll 0% 0% / 300% 300%;
-										background-size: 600% 600%;
-										animation: 2s linear 0s infinite normal none running toolHeating">
+										background: #ff0000;
+										animation: 2s linear 0s infinite normal none running toolFault">
 									</div>
-									<div v-if="(heat.heaters[bed.heaters[0]].state == 3)"
-									style="width: 100%;
-									height:100%;
-									background: #ff0000;
-									animation: 2s linear 0s infinite normal none running toolFault">
 								</div>
 							</div>
+						</div>
+						<div v-if="(shown || !isLocal) && materials.length && window.width > 385" @click.prevent="">
+							<v-menu offset-y left :disabled="uiFrozen" v-tab-control :close-on-content-click="false">
+								<template slot="activator">
+									<v-btn color="secondary darken-1" small class="mx-0" :disabled="uiFrozen">
+										{{ window.width > 475 ? $t('button.preloadPrime.caption') : $t('button.preloadPrime.caption').split('/')[0] }} <v-icon v-if="window.width > 405">arrow_drop_down</v-icon>
+									</v-btn>
+								</template>
+
+								<v-card>
+									<v-list>
+										<v-list-tile @click="sendCode('M98 P0:/macros/_Materials/' +  universe + '/Pre_load_' + tool.name + '.g')">
+											<v-btn color="secondary darken-1" small class="mx-0" :disabled="uiFrozen">
+												{{ $t('button.preloadPrime.preload', [(tool.name || $t('panel.tools.tool', [tool.number]))]) }}
+											</v-btn>
+										</v-list-tile>
+										<v-list-tile v-if="materials.length > 0">
+											<v-menu offset-y left :disabled="uiFrozen" v-tab-control>
+												<template slot="activator">
+													<v-btn color="secondary darken-1" small class="mx-0" :disabled="uiFrozen">
+														{{ $t('button.preloadPrime.prime', [(tool.name || $t('panel.tools.tool', [tool.number]))]) }} <v-icon>arrow_drop_down</v-icon>
+													</v-btn>
+												</template>
+
+												<v-card>
+													<v-list>
+														<v-list-tile v-for="material in materials" :key="material" @click="sendCode('M98 P0:/macros/_Materials/' +  universe + '/' + material + '/Prime ' + tool.name)">
+															{{ $t('button.preloadPrime.prime', [material]) }}
+														</v-list-tile>
+													</v-list>
+												</v-card>
+											</v-menu>
+										</v-list-tile>
+										<v-list-tile v-if="materials.length > 0">
+											<v-menu offset-y left :disabled="uiFrozen" v-tab-control>
+												<template slot="activator">
+													<v-btn color="secondary darken-1" small class="mx-0" :disabled="uiFrozen">
+														{{ $t('button.preloadPrime.unload', [(tool.name || $t('panel.tools.tool', [tool.number]))]) }} <v-icon>arrow_drop_down</v-icon>
+													</v-btn>
+												</template>
+
+												<v-card>
+													<v-list>
+														<v-list-tile v-for="material in materials" :key="material" @click="sendCode('M98 P0:/macros/_Materials/' +  universe + '/' + material + '/Unload ' + tool.name)">
+															{{ $t('button.preloadPrime.unload', [material]) }}
+														</v-list-tile>
+													</v-list>
+												</v-card>
+											</v-menu>
+										</v-list-tile>
+									</v-list>
+								</v-card>
+							</v-menu>
 						</div>
 					</th>
 
 					<th v-if="!isLocal">
-						<a v-if="bed.heaters.length" href="#" :class="getHeaterColor(bed.heaters[0])" @click.prevent="bedHeaterClick(bed, index, bed.heaters[0])" >
-							{{ formatHeaterName(heat.heaters[bed.heaters[0]], bed.heaters[0]) }}
+						<a v-if="tool.heaters.length" href="#" :class="getHeaterColor(tool.heaters[0])" @click.prevent="toolHeaterClick(tool, tool.heaters[0])">
+							{{ formatHeaterName(heat.heaters[tool.heaters[0]], tool.heaters[0]) }}
 						</a>
 						<br/>
-						<span v-if="bed.heaters.length > 0 && heat.heaters[bed.heaters[0]].state !== null" class="font-weight-regular caption"	:class="{red : ( heat.heaters[bed.heaters[0]] !== undefined
-							&& heat.heaters[bed.heaters[0]].state == 3),
-							[activeToolClass]: heat.heaters[bed.heaters[0]] !== undefined
-							&& (heat.heaters[bed.heaters[0]].state == 2 || heat.heaters[bed.heaters[0]].state == 4),
-							[standbyToolClass]: heat.heaters[bed.heaters[0]] !== undefined
-							&& heat.heaters[bed.heaters[0]].state == 1,
-							'grey darken-2': heat.heaters[bed.heaters[0]] !== undefined
-							&& heat.heaters[bed.heaters[0]].state == 0,}" style="padding:1px 5px">
-							{{ $t(`generic.heaterStates[${heat.heaters[bed.heaters[0]].state}]`) }}
+						<span v-if="tool.heaters.length && heat.heaters[tool.heaters[0]].state !== null" class="font-weight-regular caption" :class="{
+							red:	heat.heaters[tool.heaters[0]] !== undefined && heat.heaters[tool.heaters[0]].state == 3,
+							[activeToolClass]: heat.heaters[tool.heaters[0]] !== undefined && (heat.heaters[tool.heaters[0]].state == 2 || heat.heaters[tool.heaters[0]].state == 4),
+							[standbyToolClass]: heat.heaters[tool.heaters[0]] !== undefined && heat.heaters[tool.heaters[0]].state == 1,
+							'grey darken-2': heat.heaters[tool.heaters[0]] !== undefined && heat.heaters[tool.heaters[0]].state == 0,}" style="padding:1px 5px">
+							{{ $t(`generic.heaterStates[${heat.heaters[tool.heaters[0]].state}]`) }}
 						</span>
 					</th>
 					<td class="text-center">
-						<span v-if="bed.heaters.length">
-							{{ formatHeaterValue(heat.heaters[bed.heaters[0]]) }}
+						<span v-if="tool.heaters.length">
+							{{ formatHeaterValue(heat.heaters[tool.heaters[0]]) }}
+						</span>
+						<span v-else-if="isNumber(tool.spindle) && tool.spindle >= 0 && tool.spindle < spindles.length">
+							{{ $display(spindles[tool.spindle].current, 0, $t('generic.rpm')) }}
 						</span>
 					</td>
-					<td class="pl-2 pr-1" v-if="!isLocal || shown ||  heat.heaters[bed.heaters[0]].state == 2">
-						<tool-input :shown="shown" v-if="bed.heaters.length" :bed="bed" :bedIndex="0" :heaterIndex="0" :precision="1" active></tool-input>
+					<td class="pl-2 pr-1" v-if="!isLocal || shown || (tool.heaters.length && heat.heaters[tool.heaters[0]].state == 2)">
+						<tool-input :shown="shown" v-if="tool.heaters.length" :tool="tool" :heaterIndex="0" :precision="1" active></tool-input>
+						<tool-input :shown="shown" v-else-if="isNumber(tool.spindle) && tool.spindle >= 0" :spindle="spindles[tool.spindle]" active></tool-input>
 					</td>
-					<td class="pl-1 pr-2" v-if="!isLocal || shown || heat.heaters[bed.heaters[0]].state == 1">
-						<tool-input :shown="shown" v-if="bed.standby.length" :bed="bed" :bedIndex="0" :heaterIndex="0" :precision="1" standby></tool-input>
+					<td class="pl-1 pr-2"	v-if="!isLocal || shown || (tool.heaters.length && heat.heaters[tool.heaters[0]].state == 1)">
+						<tool-input :shown="shown" v-if="tool.heaters.length" :tool="tool" :heaterIndex="0" :precision="1" standby></tool-input>
 					</td>
-					<td class="pl-1 pr-2" v-if="isLocal && heat.heaters[bed.heaters[0]].state == 0 && !shown">
+					<td class="pl-1 pr-2" v-if="isLocal  && !shown && (!tool.heaters.length || heat.heaters[tool.heaters[0]].state == 0)">
 						<div class="control number">
 							<span >
 								0 C
@@ -407,9 +270,10 @@ table.extra tr > td:first-child {
 						</div>
 					</td>
 				</tr>
-				<tr v-for="(heater, heaterIndex) in bed.heaters.slice(1)" :key="`bed-${index}-${heater}`">
+
+				<tr v-for="(heater, heaterIndex) in tool.heaters.slice(1)" :class="{ 'grey lighten-4' : tool.number === state.currentTool }" :key="`tool-${index}-${heater}`">
 					<th>
-						<a href="#" :class="getHeaterColor(heater)" @click.prevent="bedHeaterClick(bed, index, heater)">
+						<a href="#" :class="getHeaterColor(heater)" @click.prevent="toolHeaterClick(tool, heater)">
 							{{ formatHeaterName(heat.heaters[heater], heater) }}
 						</a>
 						<br/>
@@ -421,130 +285,261 @@ table.extra tr > td:first-child {
 						{{ formatHeaterValue(heat.heaters[heater]) }}
 					</td>
 					<td class="pl-2 pr-1">
-						<tool-input :shown="shown" :bed="bed" :bedIndex="index" :heaterIndex="heaterIndex + 1" :precision="1" active></tool-input>
+						<tool-input :shown="shown" :tool="tool" :heaterIndex="heaterIndex + 1" :precision="1" active></tool-input>
 					</td>
 					<td class="pl-1 pr-2">
-						<tool-input :shown="shown" v-if="bed.standby.length > heaterIndex + 1" :bed="bed" :bedIndex="index" :heaterIndex="heaterIndex + 1" :precision="1" standby></tool-input>
+						<tool-input :shown="shown" :tool="tool" :heaterIndex="heaterIndex + 1" :precision="1" standby></tool-input>
 					</td>
 				</tr>
-			</template>
-		</template>
 
-		<!-- Chambers -->
-		<template v-for="(chamber, index) in heat.chambers">
-			<template v-if="chamber">
-				<tr :key="`div-${index}`">
+				<tr v-if="index !== tools.length - 1" :key="`div-tool-${index}`">
 					<td colspan="5">
 						<v-divider></v-divider>
 					</td>
 				</tr>
+			</template>
 
-				<tr :key="`chamber-${index}-${chamber.heaters.length && chamber.heaters[0]}`" :class="{ [selectedToolClass] : ( heat.heaters[chamber.heaters[0]] !== undefined
-					&& heat.heaters[chamber.heaters[0]].state == 2)}">
-					<th :rowspan="Math.max(1, chamber.heaters.length)" class="pl-2" :class="{ 'pt-2 pb-2' : !chamber.heaters.length,
-					/*red : ( isLocal && heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 3),
-					[activeToolClass]: isLocal && heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 2,
-					[standbyToolClass]: isLocal && heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 1,
-					'grey darken-3': isLocal && heat.heaters[chamber.heaters[0]] !== undefined
-					&& heat.heaters[chamber.heaters[0]].state == 0,*/}"
-					:style="isLocal && shown?'background: none !important; border: 2px solid; border-radius: 10px; border-color: #7b7b7b; cursor:pointer':''"
-					@click.prevent="isLocal && shown?chamberHeaterClick(chamber, index, chamber.heaters[0]):null" >
-					<a href="#" :class="isLocal?getHeaterColor(chamber.heaters[0]):''" @click.prevent="isLocal?null:chamberClick(chamber)">
-						{{ chamber.name || $t('panel.tools.chamber', [(heat.chambers.length !== 1) ? index : '']) }}
+			<!-- Beds -->
+			<template v-for="(bed, index) in heat.beds">
+				<template v-if="bed">
+					<tr :key="`div-bed-${index}`">
+						<td colspan="5">
+							<v-divider></v-divider>
+						</td>
+					</tr>
+
+					<tr :key="`bed-${index}-${bed.heaters.length && bed.heaters[0]}`" :class="{ [selectedToolClass] : ( heat.heaters[bed.heaters[0]] !== undefined
+						&& heat.heaters[bed.heaters[0]].state == 2)}">
+						<th :rowspan="Math.max(1, bed.heaters.length)" class="pl-2"
+						:class="{ 'pt-2 pb-2' : !bed.heaters.length,
+						/*red : ( isLocal && heat.heaters[bed.heaters[0]] !== undefined
+						&& heat.heaters[bed.heaters[0]].state == 3),
+						[activeToolClass]: isLocal && heat.heaters[bed.heaters[0]] !== undefined
+						&& heat.heaters[bed.heaters[0]].state == 2,
+						[standbyToolClass]: isLocal && heat.heaters[bed.heaters[0]] !== undefined
+						&& heat.heaters[bed.heaters[0]].state == 1,*/}"
+						:style="isLocal && shown? 'background: none !important; border: 2px solid; border-radius: 10px; border-color: #7b7b7b; cursor:pointer':''" @click.prevent="isLocal && shown?bedHeaterClick(bed, index, bed.heaters[0]):null">
+						<a href="#" :class="isLocal?getHeaterColor(bed.heaters[0]):''" @click.prevent="isLocal?null:bedClick(bed)">
+							{{ bed.name || $t('panel.tools.bed', [(heat.beds.length !== 1) ? index : '']) }}
+						</a>
+						<br/>
+						&nbsp;
+						<span v-if="isLocal && bed.heaters.length > 0 && heat.heaters[bed.heaters[0]] !== undefined && heat.heaters[bed.heaters[0]].state !== undefined" class="font-weight-regular caption"
+							:class="{red : ( heat.heaters[bed.heaters[0]] !== undefined
+								&& heat.heaters[bed.heaters[0]].state == 3),
+								[activeToolClass]: heat.heaters[bed.heaters[0]] !== undefined
+								&& (heat.heaters[bed.heaters[0]].state == 2 || heat.heaters[bed.heaters[0]].state == 4),
+								[standbyToolClass]: heat.heaters[bed.heaters[0]] !== undefined
+								&& heat.heaters[bed.heaters[0]].state == 1,
+								'grey darken-2': heat.heaters[bed.heaters[0]] !== undefined
+								&& heat.heaters[bed.heaters[0]].state == 0,}" style="padding:1px 5px; border-radius: 5px">
+								{{ $t(`generic.heaterStates[${heat.heaters[bed.heaters[0]].state}]`) }}
+							</span>
+							<div v-if="isLocal" style="width: 60%; margin: 5px 0 5px 20%; overflow: hidden; height: 6px" :style="{display:(((heat.heaters[bed.heaters[0]].state == 2 &&  bed.active[0] <= 0) || (heat.heaters[bed.heaters[0]].state == 1 && bed.standby[0] <= 0 ) || (heat.heaters[bed.heaters[0]].state == 0)) ?'':'none')}"></div>
+							<div v-if="isLocal" style="width: 60%; margin: 5px 0 5px 20%; border: 1px solid darkgray; border-radius: 2px; overflow: hidden;" :style="{display:(((heat.heaters[bed.heaters[0]].state == 2 &&  bed.active[0] > 0) || (heat.heaters[bed.heaters[0]].state == 1 && bed.standby[0] > 0 ) || (heat.heaters[bed.heaters[0]].state == 3)) ?'':'none')}">
+								<div :style="{width:
+									heat.heaters[bed.heaters[0]].state == 1 ?
+									(Math.min(heat.heaters[bed.heaters[0]].current,bed.standby[0])/Math.max(heat.heaters[bed.heaters[0]].current,bed.standby[0]))*100+'%' :
+									(heat.heaters[bed.heaters[0]].state == 2 ?
+									(Math.min(heat.heaters[bed.heaters[0]].current,bed.active[0])/Math.max(heat.heaters[bed.heaters[0]].current,bed.active[0]))*100+'%' :
+									'100%'
+									),
+									background:
+									heat.heaters[bed.heaters[0]].state == 1 ?
+									'#1565c0':
+									heat.heaters[bed.heaters[0]].state == 2 ? 'green': 'red',
+								}"
+								style="height: 4px; border-radius: 2px; overflow: hidden;">
+								<div v-if="((heat.heaters[bed.heaters[0]].state == 1) && (Math.abs(heat.heaters[bed.heaters[0]].current - bed.standby[0]) > 1 )) || ((heat.heaters[bed.heaters[0]].state == 2) && (Math.abs(heat.heaters[bed.heaters[0]].current - bed.active[0]) > 1 ))"
+									style="width: 100%;
+									height:100%;
+									background: linear-gradient(to right, rgb(255, 142, 0) 45%, rgb(255, 214, 0) 50%, rgb(255, 142, 0) 55%) repeat scroll 0% 0% / 300% 300%;
+									background-size: 600% 600%;
+									animation: 2s linear 0s infinite normal none running toolHeating">
+								</div>
+								<div v-if="(heat.heaters[bed.heaters[0]].state == 3)"
+								style="width: 100%;
+								height:100%;
+								background: #ff0000;
+								animation: 2s linear 0s infinite normal none running toolFault">
+							</div>
+						</div>
+					</div>
+				</th>
+
+				<th v-if="!isLocal">
+					<a v-if="bed.heaters.length" href="#" :class="getHeaterColor(bed.heaters[0])" @click.prevent="bedHeaterClick(bed, index, bed.heaters[0])" >
+						{{ formatHeaterName(heat.heaters[bed.heaters[0]], bed.heaters[0]) }}
 					</a>
 					<br/>
-					&nbsp;
-					<span v-if="isLocal && chamber.heaters.length > 0 && heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state !== undefined" class="font-weight-regular caption"	:class="{
-						red : ( heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 3),
-						[activeToolClass]: heat.heaters[chamber.heaters[0]] !== undefined && (heat.heaters[chamber.heaters[0]].state == 2 || heat.heaters[chamber.heaters[0]].state == 4),
-						[standbyToolClass]: heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 1,
-						'grey darken-2': heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 0,}" style="padding:1px 5px; border-radius: 5px">
-						{{ $t(`generic.heaterStates[${heat.heaters[chamber.heaters[0]].state}]`) }}
+					<span v-if="bed.heaters.length > 0 && heat.heaters[bed.heaters[0]].state !== null" class="font-weight-regular caption"	:class="{red : ( heat.heaters[bed.heaters[0]] !== undefined
+						&& heat.heaters[bed.heaters[0]].state == 3),
+						[activeToolClass]: heat.heaters[bed.heaters[0]] !== undefined
+						&& (heat.heaters[bed.heaters[0]].state == 2 || heat.heaters[bed.heaters[0]].state == 4),
+						[standbyToolClass]: heat.heaters[bed.heaters[0]] !== undefined
+						&& heat.heaters[bed.heaters[0]].state == 1,
+						'grey darken-2': heat.heaters[bed.heaters[0]] !== undefined
+						&& heat.heaters[bed.heaters[0]].state == 0,}" style="padding:1px 5px">
+						{{ $t(`generic.heaterStates[${heat.heaters[bed.heaters[0]].state}]`) }}
 					</span>
-					<div v-if="isLocal" style="width: 60%; margin: 5px 0 5px 20%; overflow: hidden; height: 6px" :style="{display:(((heat.heaters[chamber.heaters[0]].state == 2 &&  chamber.active[0] <= 0) || (heat.heaters[chamber.heaters[0]].state == 1 && chamber.standby[0] <= 0 ) || (heat.heaters[chamber.heaters[0]].state == 0)) ?'':'none')}"></div>
-					<div v-if="isLocal" style="width: 60%; margin: 5px 0 5px 20%; border: 1px solid darkgray; border-radius: 2px; overflow: hidden;" :style="{display:(((heat.heaters[chamber.heaters[0]].state == 2 &&  chamber.active[0] > 0) || (heat.heaters[chamber.heaters[0]].state == 1 && chamber.standby[0] > 0 ) || (heat.heaters[chamber.heaters[0]].state == 3)) ?'':'none')}">
-						<div :style="{width:
-							heat.heaters[chamber.heaters[0]].state == 1 ?
-							(Math.min(heat.heaters[chamber.heaters[0]].current,chamber.standby[0])/Math.max(heat.heaters[chamber.heaters[0]].current,chamber.standby[0]))*100+'%' :
-							(heat.heaters[chamber.heaters[0]].state == 2 ?
-							(Math.min(heat.heaters[chamber.heaters[0]].current,chamber.active[0])/Math.max(heat.heaters[chamber.heaters[0]].current,chamber.active[0]))*100+'%' :
-							'100%'
-							),
-							background:
-							heat.heaters[chamber.heaters[0]].state == 1 ?
-							'#1565c0':
-							heat.heaters[chamber.heaters[0]].state == 2 ? 'green': 'red',
-						}"
-						style="height: 4px; border-radius: 2px; overflow: hidden;">
-						<div v-if="((heat.heaters[chamber.heaters[0]].state == 1) && (Math.abs(heat.heaters[chamber.heaters[0]].current - chamber.standby[0]) > 1)) || ((heat.heaters[chamber.heaters[0]].state == 2) && (Math.abs(heat.heaters[chamber.heaters[0]].current - chamber.active[0]) > 1))"
-							style="width: 100%;
-							height:100%;
-							background: linear-gradient(to right, rgb(255, 142, 0) 45%, rgb(255, 214, 0) 50%, rgb(255, 142, 0) 55%) repeat scroll 0% 0% / 300% 300%;
-							background-size: 600% 600%;
-							animation: 2s linear 0s infinite normal none running toolHeating">
-						</div>
-						<div v-if="(heat.heaters[chamber.heaters[0]].state == 3)"
+				</th>
+				<td class="text-center">
+					<span v-if="bed.heaters.length">
+						{{ formatHeaterValue(heat.heaters[bed.heaters[0]]) }}
+					</span>
+				</td>
+				<td class="pl-2 pr-1" v-if="!isLocal || shown ||  heat.heaters[bed.heaters[0]].state == 2">
+					<tool-input :shown="shown" v-if="bed.heaters.length" :bed="bed" :bedIndex="0" :heaterIndex="0" :precision="1" active></tool-input>
+				</td>
+				<td class="pl-1 pr-2" v-if="!isLocal || shown || heat.heaters[bed.heaters[0]].state == 1">
+					<tool-input :shown="shown" v-if="bed.standby.length" :bed="bed" :bedIndex="0" :heaterIndex="0" :precision="1" standby></tool-input>
+				</td>
+				<td class="pl-1 pr-2" v-if="isLocal && heat.heaters[bed.heaters[0]].state == 0 && !shown">
+					<div class="control number">
+						<span >
+							0 C
+						</span>
+					</div>
+				</td>
+			</tr>
+			<tr v-for="(heater, heaterIndex) in bed.heaters.slice(1)" :key="`bed-${index}-${heater}`">
+				<th>
+					<a href="#" :class="getHeaterColor(heater)" @click.prevent="bedHeaterClick(bed, index, heater)">
+						{{ formatHeaterName(heat.heaters[heater], heater) }}
+					</a>
+					<br/>
+					<span v-if="heat.heaters[heater].state !== null" class="font-weight-regular caption">
+						{{ $t(`generic.heaterStates[${heat.heaters[heater].state}]`) }}
+					</span>
+				</th>
+				<td>
+					{{ formatHeaterValue(heat.heaters[heater]) }}
+				</td>
+				<td class="pl-2 pr-1">
+					<tool-input :shown="shown" :bed="bed" :bedIndex="index" :heaterIndex="heaterIndex + 1" :precision="1" active></tool-input>
+				</td>
+				<td class="pl-1 pr-2">
+					<tool-input :shown="shown" v-if="bed.standby.length > heaterIndex + 1" :bed="bed" :bedIndex="index" :heaterIndex="heaterIndex + 1" :precision="1" standby></tool-input>
+				</td>
+			</tr>
+		</template>
+	</template>
+
+	<!-- Chambers -->
+	<template v-for="(chamber, index) in heat.chambers">
+		<template v-if="chamber">
+			<tr :key="`div-${index}`">
+				<td colspan="5">
+					<v-divider></v-divider>
+				</td>
+			</tr>
+
+			<tr :key="`chamber-${index}-${chamber.heaters.length && chamber.heaters[0]}`" :class="{ [selectedToolClass] : ( heat.heaters[chamber.heaters[0]] !== undefined
+				&& heat.heaters[chamber.heaters[0]].state == 2)}">
+				<th :rowspan="Math.max(1, chamber.heaters.length)" class="pl-2" :class="{ 'pt-2 pb-2' : !chamber.heaters.length,
+				/*red : ( isLocal && heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 3),
+				[activeToolClass]: isLocal && heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 2,
+				[standbyToolClass]: isLocal && heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 1,
+				'grey darken-3': isLocal && heat.heaters[chamber.heaters[0]] !== undefined
+				&& heat.heaters[chamber.heaters[0]].state == 0,*/}"
+				:style="isLocal && shown?'background: none !important; border: 2px solid; border-radius: 10px; border-color: #7b7b7b; cursor:pointer':''"
+				@click.prevent="isLocal && shown?chamberHeaterClick(chamber, index, chamber.heaters[0]):null" >
+				<a href="#" :class="isLocal?getHeaterColor(chamber.heaters[0]):''" @click.prevent="isLocal?null:chamberClick(chamber)">
+					{{ chamber.name || $t('panel.tools.chamber', [(heat.chambers.length !== 1) ? index : '']) }}
+				</a>
+				<br/>
+				&nbsp;
+				<span v-if="isLocal && chamber.heaters.length > 0 && heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state !== undefined" class="font-weight-regular caption"	:class="{
+					red : ( heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 3),
+					[activeToolClass]: heat.heaters[chamber.heaters[0]] !== undefined && (heat.heaters[chamber.heaters[0]].state == 2 || heat.heaters[chamber.heaters[0]].state == 4),
+					[standbyToolClass]: heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 1,
+					'grey darken-2': heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 0,}" style="padding:1px 5px; border-radius: 5px">
+					{{ $t(`generic.heaterStates[${heat.heaters[chamber.heaters[0]].state}]`) }}
+				</span>
+				<div v-if="isLocal" style="width: 60%; margin: 5px 0 5px 20%; overflow: hidden; height: 6px" :style="{display:(((heat.heaters[chamber.heaters[0]].state == 2 &&  chamber.active[0] <= 0) || (heat.heaters[chamber.heaters[0]].state == 1 && chamber.standby[0] <= 0 ) || (heat.heaters[chamber.heaters[0]].state == 0)) ?'':'none')}"></div>
+				<div v-if="isLocal" style="width: 60%; margin: 5px 0 5px 20%; border: 1px solid darkgray; border-radius: 2px; overflow: hidden;" :style="{display:(((heat.heaters[chamber.heaters[0]].state == 2 &&  chamber.active[0] > 0) || (heat.heaters[chamber.heaters[0]].state == 1 && chamber.standby[0] > 0 ) || (heat.heaters[chamber.heaters[0]].state == 3)) ?'':'none')}">
+					<div :style="{width:
+						heat.heaters[chamber.heaters[0]].state == 1 ?
+						(Math.min(heat.heaters[chamber.heaters[0]].current,chamber.standby[0])/Math.max(heat.heaters[chamber.heaters[0]].current,chamber.standby[0]))*100+'%' :
+						(heat.heaters[chamber.heaters[0]].state == 2 ?
+						(Math.min(heat.heaters[chamber.heaters[0]].current,chamber.active[0])/Math.max(heat.heaters[chamber.heaters[0]].current,chamber.active[0]))*100+'%' :
+						'100%'
+						),
+						background:
+						heat.heaters[chamber.heaters[0]].state == 1 ?
+						'#1565c0':
+						heat.heaters[chamber.heaters[0]].state == 2 ? 'green': 'red',
+					}"
+					style="height: 4px; border-radius: 2px; overflow: hidden;">
+					<div v-if="((heat.heaters[chamber.heaters[0]].state == 1) && (Math.abs(heat.heaters[chamber.heaters[0]].current - chamber.standby[0]) > 1)) || ((heat.heaters[chamber.heaters[0]].state == 2) && (Math.abs(heat.heaters[chamber.heaters[0]].current - chamber.active[0]) > 1))"
 						style="width: 100%;
 						height:100%;
-						background: #ff0000;
-						animation: 2s linear 0s infinite normal none running toolFault">
+						background: linear-gradient(to right, rgb(255, 142, 0) 45%, rgb(255, 214, 0) 50%, rgb(255, 142, 0) 55%) repeat scroll 0% 0% / 300% 300%;
+						background-size: 600% 600%;
+						animation: 2s linear 0s infinite normal none running toolHeating">
 					</div>
+					<div v-if="(heat.heaters[chamber.heaters[0]].state == 3)"
+					style="width: 100%;
+					height:100%;
+					background: #ff0000;
+					animation: 2s linear 0s infinite normal none running toolFault">
 				</div>
 			</div>
-		</th>
+		</div>
+	</th>
 
-		<th v-if="!isLocal">
-			<a v-if="chamber.heaters.length > 0" href="#" :class="getHeaterColor(chamber.heaters[0])" @click.prevent="chamberHeaterClick(chamber, index, chamber.heaters[0])">
-				{{ formatHeaterName(heat.heaters[chamber.heaters[0]], chamber.heaters[0]) }}
-			</a>
-			<br/>
-			<span v-if="chamber.heaters.length > 0 && heat.heaters[chamber.heaters[0]].state !== null" class="font-weight-regular caption" :class="{
-				red : ( heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 3),
-				[activeToolClass]: heat.heaters[chamber.heaters[0]] !== undefined && (heat.heaters[chamber.heaters[0]].state == 2 || heat.heaters[chamber.heaters[0]].state == 4),
-				[standbyToolClass]: heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 1,
-				'grey darken-2': heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 0,}" style="padding:1px 5px">
-				{{ $t(`generic.heaterStates[${heat.heaters[chamber.heaters[0]].state}]`) }}
+	<th v-if="!isLocal">
+		<a v-if="chamber.heaters.length > 0" href="#" :class="getHeaterColor(chamber.heaters[0])" @click.prevent="chamberHeaterClick(chamber, index, chamber.heaters[0])">
+			{{ formatHeaterName(heat.heaters[chamber.heaters[0]], chamber.heaters[0]) }}
+		</a>
+		<br/>
+		<span v-if="chamber.heaters.length > 0 && heat.heaters[chamber.heaters[0]].state !== null" class="font-weight-regular caption" :class="{
+			red : ( heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 3),
+			[activeToolClass]: heat.heaters[chamber.heaters[0]] !== undefined && (heat.heaters[chamber.heaters[0]].state == 2 || heat.heaters[chamber.heaters[0]].state == 4),
+			[standbyToolClass]: heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 1,
+			'grey darken-2': heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state == 0,}" style="padding:1px 5px">
+			{{ $t(`generic.heaterStates[${heat.heaters[chamber.heaters[0]].state}]`) }}
+		</span>
+	</th>
+	<td class="text-center">
+		<span v-if="chamber.heaters.length > 0">
+			{{ formatHeaterValue(heat.heaters[chamber.heaters[0]]) }}
+		</span>
+	</td>
+	<td class="pl-2 pr-1" v-if="!isLocal || shown || heat.heaters[chamber.heaters[0]].state == 2">
+		<tool-input :shown="shown" v-if="chamber.heaters.length" :chamber="chamber" :chamberIndex="index" :heaterIndex="0" :precision="1" active></tool-input>
+	</td>
+	<td class="pl-1 pr-2" :shown="shown" v-if="!isLocal || heat.heaters[chamber.heaters[0]].state == 1">
+		<tool-input :shown="shown" v-if="chamber.standby.length" :chamber="chamber" :chamberIndex="index" :heaterIndex="0" :precision="1" standby></tool-input>
+	</td>
+	<td class="pl-1 pr-2" v-if="isLocal && heat.heaters[chamber.heaters[0]].state == 0 && !shown">
+		<div class="control number">
+			<span >
+				0 C
 			</span>
-		</th>
-		<td class="text-center">
-			<span v-if="chamber.heaters.length > 0">
-				{{ formatHeaterValue(heat.heaters[chamber.heaters[0]]) }}
-			</span>
-		</td>
-		<td class="pl-2 pr-1" v-if="!isLocal || shown || heat.heaters[chamber.heaters[0]].state == 2">
-			<tool-input :shown="shown" v-if="chamber.heaters.length" :chamber="chamber" :chamberIndex="index" :heaterIndex="0" :precision="1" active></tool-input>
-		</td>
-		<td class="pl-1 pr-2" :shown="shown" v-if="!isLocal || heat.heaters[chamber.heaters[0]].state == 1">
-			<tool-input :shown="shown" v-if="chamber.standby.length" :chamber="chamber" :chamberIndex="index" :heaterIndex="0" :precision="1" standby></tool-input>
-		</td>
-		<td class="pl-1 pr-2" v-if="isLocal && heat.heaters[chamber.heaters[0]].state == 0 && !shown">
-			<div class="control number">
-				<span >
-					0 C
-				</span>
-			</div>
-		</td>
-	</tr>
-	<tr v-for="(heater, heaterIndex) in chamber.heaters.slice(1)" :key="`chamber-${index}-${heater}`">
-		<th>
-			<a href="#" :class="getHeaterColor(heater)" @click.prevent="chamberHeaterClick(chamber, index, heater)">
-				{{ formatHeaterName(heat.heaters[heater], heater) }}
-			</a>
-			<br/>
-			<span v-if="heat.heaters[heater].state !== null" class="font-weight-regular caption">
-				{{ $t(`generic.heaterStates[${heat.heaters[heater].state}]`) }}
-			</span>
-		</th>
-		<td>
-			{{ formatHeaterValue(heat.heaters[heater]) }}
-		</td>
-		<td class="pl-2 pr-1">
-			<tool-input :shown="shown" :chamber="chamber" :chamberIndex="index" :heaterIndex="heaterIndex + 1" :precision="1" active></tool-input>
-		</td>
-		<td class="pl-1 pr-2">
-			<tool-input :shown="shown" v-if="chamber.standby.length > heaterIndex + 1" :chamber="chamber" :chamberIndex="index" :heaterIndex="heaterIndex + 1" :precision="1" standby></tool-input>
-		</td>
-	</tr>
+		</div>
+	</td>
+</tr>
+<tr v-for="(heater, heaterIndex) in chamber.heaters.slice(1)" :key="`chamber-${index}-${heater}`">
+	<th>
+		<a href="#" :class="getHeaterColor(heater)" @click.prevent="chamberHeaterClick(chamber, index, heater)">
+			{{ formatHeaterName(heat.heaters[heater], heater) }}
+		</a>
+		<br/>
+		<span v-if="heat.heaters[heater].state !== null" class="font-weight-regular caption">
+			{{ $t(`generic.heaterStates[${heat.heaters[heater].state}]`) }}
+		</span>
+	</th>
+	<td>
+		{{ formatHeaterValue(heat.heaters[heater]) }}
+	</td>
+	<td class="pl-2 pr-1">
+		<tool-input :shown="shown" :chamber="chamber" :chamberIndex="index" :heaterIndex="heaterIndex + 1" :precision="1" active></tool-input>
+	</td>
+	<td class="pl-1 pr-2">
+		<tool-input :shown="shown" v-if="chamber.standby.length > heaterIndex + 1" :chamber="chamber" :chamberIndex="index" :heaterIndex="heaterIndex + 1" :precision="1" standby></tool-input>
+	</td>
+</tr>
 </template>
 </template>
 </tbody>
@@ -655,12 +650,26 @@ export default {
 			faultyHeater: -1,
 			universe: undefined,
 			materials: [],
+			window: {
+				width: 0,
+				height: 0
+			},
+			interval: undefined,
 		}
+	},
+	destroyed() {
+		window.removeEventListener('resize', this.handleResize);
+		document.getElementById('toolContainer').removeEventListener('resize', this.handleResize);
 	},
 	methods: {
 		...mapActions('machine', ['getFileList', 'sendCode', 'download', 'upload']),
 		...mapMutations('machine/settings', ['toggleExtraHeaterVisibility']),
-
+		handleResize() {
+			console.log('Handle Resize')
+			this.window.width = document.getElementById('toolContainer').clientWidth;
+			this.window.height = document.getElementById('toolContainer').clientHeight;
+			console.log(this.window)
+		},
 		showDropdown() {
 			this.dropdownShown = !this.dropdownShown;
 			if (this.dropdownShown) {
@@ -872,20 +881,9 @@ export default {
 		}
 	},
 	mounted: async function () {
-		if(this.shown) {
+		if(this.shown || !this.isLocal) {
 			this.universe = this.user.loadedTool.substr(0,5)
-			/*switch (this.universe)
-			{
-				case "FIL":
-					this.universe = "Filament";
-					break;
-				case "LIQ":
-					this.universe = "Liquid";
-					break;
-				case "PAS":
-						this.universe = "Paste";
-						break;
-			}*/
+
 			let files = await this.getFileList("0:/macros/_Materials/" + this.universe);
 			const directories = files.filter((file) => file.isDirectory)
 			files = files.filter((file) => !file.isDirectory)
@@ -899,6 +897,14 @@ export default {
 			//console.log(this.universe);
 			//console.log(this.materials);
 		}
+		this.interval = setInterval(() => {
+			if (document.getElementById('toolContainer')) {
+				window.addEventListener('resize', this.handleResize);
+				document.getElementById('toolContainer').addEventListener('resize', this.handleResize);
+				this.handleResize();
+				clearInterval(this.interval)
+			}
+		}, 1000)
 	}
 }
 </script>

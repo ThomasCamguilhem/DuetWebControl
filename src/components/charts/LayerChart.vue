@@ -14,12 +14,16 @@
 .content > canvas {
 	position: absolute;
 }
+
+.local {
+	font-size: large;
+}
 </style>
 
 <template>
 	<v-card class="card">
 		<v-card-title>
-			<span>
+			<span :class="{local: isLocal}">
 				<v-icon small class="mr-1">timeline</v-icon> {{ $t('chart.layer.caption') }}
 			</span>
 			<v-spacer></v-spacer>
@@ -50,7 +54,8 @@ var maxLastLayerTime = 3;
 export default {
 	computed: {
 		...mapState('machine/model', ['job']),
-		...mapState('settings', ['darkTheme', 'language'])
+		...mapState('settings', ['darkTheme', 'language']),
+		...mapState(['isLocal']),
 	},
 	data() {
 		return {
@@ -60,7 +65,7 @@ export default {
 	},
 	methods: {
 		logN: function(base, value) {
-    	return Math.log(value) / Math.log(base);
+			return Math.log(value) / Math.log(base);
 		},
 		updateChart() {
 			layers = this.job.layers;
@@ -69,7 +74,7 @@ export default {
 			if (layers.length > 2) {
 				layers.forEach((layer) => {
 					if (layer.duration > maxLayerTime)
-						maxLayerTime = layer.duration;
+					maxLayerTime = layer.duration;
 				});
 				maxLastLayerTime = 0;
 				for(var i = Math.max(0, layers.length-30); i < layers.length; i++) {
@@ -81,7 +86,7 @@ export default {
 				maxLayerTime = 0;
 				layers.forEach((layer) => {
 					if (layer.duration > maxLayerTime)
-						maxLayerTime = layer.duration;
+					maxLayerTime = layer.duration;
 				});
 			}
 			//console.log(maxLayerTime + "s");
@@ -199,8 +204,8 @@ export default {
 			options: this.options,
 			data: {
 				datasets: [{
-					borderColor: 'rgba(0, 129, 214, 0.8)',
-					backgroundColor: 'rgba(0, 129, 214, 0.8)',
+					borderColor: 'rgba(253, 189, 28, 0.8)', //'rgba(0, 129, 214, 0.8)',
+					backgroundColor: 'rgba(253, 189, 28, 0.8)', //'rgba(0, 129, 214, 0.8)',
 					fill: false,
 					label: this.$t('chart.layer.layerTime')
 				}]

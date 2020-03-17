@@ -2,6 +2,11 @@
 'use strict'
 
 import axios from 'axios'
+import crc32 from 'turbo-crc32/crc32'
+import LineReader from '../../../lynxmod/ChunkReader.js'
+
+import i18n from '../../../i18n'
+import { displaySpeed } from '../../../plugins/display.js'
 
 import BaseConnector from './BaseConnector.js'
 import { FileInfo } from '../modelItems.js'
@@ -98,23 +103,23 @@ export default class PollConnector extends BaseConnector {
 
 			switch (response.data.err) {
 				case 0:
-					this.justConnected = true;
-					this.boardType = response.data.boardType;
-					this.sessionTimeout = response.data.sessionTimeout;
-					this.cancelSource = BaseConnector.getCancelSource()
-					this.axios.defaults.cancelToken = this.cancelSource.token;
-					this.axios.defaults.timeout = response.data.sessionTimeout / (this.settings.ajaxRetries + 1)
-					this.scheduleUpdate();
-					break;
+				this.justConnected = true;
+				this.boardType = response.data.boardType;
+				this.sessionTimeout = response.data.sessionTimeout;
+				this.cancelSource = BaseConnector.getCancelSource()
+				this.axios.defaults.cancelToken = this.cancelSource.token;
+				this.axios.defaults.timeout = response.data.sessionTimeout / (this.settings.ajaxRetries + 1)
+				this.scheduleUpdate();
+				break;
 				case 1:
-					this.dispatch('onConnectionError', new InvalidPasswordError());
-					break;
+				this.dispatch('onConnectionError', new InvalidPasswordError());
+				break;
 				case 2:
-					this.dispatch('onConnectionError', new NoFreeSessionError());
-					break;
+				this.dispatch('onConnectionError', new NoFreeSessionError());
+				break;
 				default:
-					this.dispatch('onConnectionError', new LoginError(`Unknown err value: ${response.data.err}`))
-					break;
+				this.dispatch('onConnectionError', new LoginError(`Unknown err value: ${response.data.err}`))
+				break;
 			}
 		} catch (e) {
 			const that = this;
@@ -214,10 +219,10 @@ export default class PollConnector extends BaseConnector {
 		// Decide which type of status update to poll and request it
 		const wasPrinting = ['D', 'S', 'R', 'P', 'M'].indexOf(this.lastStatusResponse.status) !== -1;
 		const statusType =
-			requestExtendedStatus ||
-			this.justConnected ||
-			(this.updateLoopCounter % this.settings.extendedUpdateEvery) === 0 ||
-			(this.verbose && (this.updateLoopCounter % 2) === 0) ? 2 : (wasPrinting ? 3 : 1);
+		requestExtendedStatus ||
+		this.justConnected ||
+		(this.updateLoopCounter % this.settings.extendedUpdateEvery) === 0 ||
+		(this.verbose && (this.updateLoopCounter % 2) === 0) ? 2 : (wasPrinting ? 3 : 1);
 		const response = await this.axios.get(`rr_status?type=${statusType}`);
 		const isPrinting = ['D', 'S', 'R', 'P', 'M'].indexOf(response.data.status) !== -1;
 		const newData = {};
@@ -411,7 +416,8 @@ export default class PollConnector extends BaseConnector {
 					axes: tool.axisMap,
 					fans: bitmapToArray(tool.fans),
 					filament: tool.filament,
-					offsets: tool.offsets
+					offsets: tool.offsets,
+					mix: tool.mix
 				})) : []
 			});
 
@@ -743,7 +749,7 @@ export default class PollConnector extends BaseConnector {
 
 	upload({ filename, content, cancelSource = axios.cancelToken.source(), onProgress }) {
 		const that = this;
-		return new Promise(function(resolve, reject) {
+		return new Promise(async function(resolve, reject) {
 			// Create upload options
 			const payload = (content instanceof(Blob)) ? content : new Blob([content]);
 			const options = {
@@ -761,22 +767,124 @@ export default class PollConnector extends BaseConnector {
 				}
 			};
 
-			try {
-				// Create file transfer and start it
-				that.axios.post('rr_upload', payload, options)
-					.then(function(response) {
-						resolve(response);
+			// Check if the CRC32 checksum is required
+			if (that.settings.crcUploads) {
+				const checksum = await new Promise(async function(resolve) {
+					const fileReader = new FileReader();
+					fileReader.onload = function(e){
+						const result = crc32(e.target.result);
+						resolve(result);
+					}
+					fileReader.readAsArrayBuffer(payload);
+				});
+
+				options.params.crc32 = checksum.toString(16);
+			}
+
+			if (Math.ceil(payload.size/(8*1024*1024)) > 1 && !filename.endsWith('.zip')) {
+				let totalCount = 0, instructionPos = -1, startTime = new Date();
+				let lineReader = Object.assign(LineReader.methods, LineReader.data);
+				document.querySelector('div.iziToast-progressbar').style.height = "5px"
+				document.querySelector('div.iziToast-progressbar > div').style.height = "5px"
+
+				options.params.parts = Math.ceil(payload.size/(8*1024*1024))
+				options.onUploadProgress = function(e) {
+					function toHMS(delta, toStr) {
+						var sec = delta % 60,
+						min = (delta = (delta - sec) / 60) % 60,
+						hour = (delta = (delta - min) / 60) % 24,
+						day = delta = (delta - hour) / 24;
+						if (toStr) {
+							var strTime = day + "d "
+							+ hour + "h "
+							+ ( min < 10 ? "0" : "" ) + min + "m "
+							+ ( sec < 10 ? "0" : "" ) + sec + "s";
+							return strTime = strTime.replace(/(?:0. )+/, "")
+						}
+						return {
+							d: day,
+							h: hour,
+							m: min,
+							s: sec
+						}
+					}
+					var elt = ((new Date() - startTime)/((instructionPos+e.loaded)/payload.size));
+					var ert = elt * (1-((instructionPos + e.loaded)/payload.size));
+
+					const uploadSpeed = (instructionPos + e.loaded) / (((new Date()) - startTime) / 1000), progress = ((instructionPos + e.loaded) / payload.size) * 100;
+					document.querySelector('strong.iziToast-title').textContent = i18n.t(`notification.upload.title`, [filename.substring(filename.lastIndexOf('/')+1, filename.lastIndexOf('.')), displaySpeed(uploadSpeed), Math.round(progress), toHMS(Math.round(ert/1000), true)]);
+					document.querySelector('div.iziToast-progressbar > div').style.width = progress.toFixed(1) + '%';
+				}
+				lineReader.LineReader({chunkSize: 8*1024*1024})
+				console.log(lineReader);
+				let myResponse;
+				lineReader.on('line', function(line, next) {
+					console.log(totalCount)
+					if (line) {
+						totalCount++;
+					}
+					//line = send(line, self.lineReader.offset);
+					const payload = (line instanceof(Blob)) ? line : new Blob([line])
+					options.cancelToken = undefined;
+					try {
+						// Create file transfer and start it
+						options.params.part = totalCount
+						that.axios.post('rr_upload', payload, options)
+						.then(function(response) {
+							instructionPos = lineReader.GetReadPos();
+							console.log(instructionPos)
+							myResponse = response;
+							setTimeout(next, 100);
+						})
+					} catch (e) {
+						reject(e);
+					}
+					//next();
+				});
+
+				lineReader.on('abort', function(abo) {
+					console.warn("read aborted");
+					console.warn(abo);
+				})
+
+				lineReader.on('error', function(err) {
+					console.error(err);
+				});
+
+				lineReader.on('end', function() {
+					console.log("Read complete!\n" + totalCount + " chunks sent")
+					document.querySelector('.iziToast-wrapper').innerHTML = "";
+					if (myResponse.data.err === 0) {
 						that.dispatch('onFileUploaded', { filename, content });
+						resolve(myResponse.data);
+					} else {
+						reject(new OperationFailedError(`err ${myResponse.data.err}`));
+					}
+				});
+
+				lineReader.read(payload);
+			} else {
+				try {
+					// Create file transfer and start it
+					that.axios.post('rr_upload', payload, options)
+					.then(function(response) {
+						if (response.data.err === 0) {
+							that.dispatch('onFileUploaded', { filename, content });
+							resolve(response.data);
+						} else {
+							reject(new OperationFailedError(`err ${response.data.err}`));
+						}
 					})
 					.catch(reject)
 					.then(function() {
 						that.fileTransfers = that.fileTransfers.filter(item => item !== cancelSource);
 					});
 
-				// Keep it in the list of transfers
-				that.fileTransfers.push(cancelSource);
-			} catch (e) {
-				reject(e);
+					// Keep it in the list of transfers
+					that.fileTransfers.push(cancelSource);
+				} catch (e) {
+					reject(e);
+				}
 			}
 		});
 	}
@@ -846,18 +954,18 @@ export default class PollConnector extends BaseConnector {
 			try {
 				// Create file transfer and start it
 				that.axios.get('rr_download', options)
-					.then(function(response) {
-						if (type === 'text') {
-							// see above...
-							response.data = Buffer.from(response.data).toString();
-						}
-						resolve(response.data);
-						that.dispatch('onFileDownloaded', { filename, content: response.data });
-					})
-					.catch(reject)
-					.then(function() {
-						that.fileTransfers = that.fileTransfers.filter(item => item !== cancelSource);
-					});
+				.then(function(response) {
+					if (type === 'text') {
+						// see above...
+						response.data = Buffer.from(response.data).toString();
+					}
+					resolve(response.data);
+					that.dispatch('onFileDownloaded', { filename, content: response.data });
+				})
+				.catch(reject)
+				.then(function() {
+					that.fileTransfers = that.fileTransfers.filter(item => item !== cancelSource);
+				});
 
 				// Keep it in the list of transfers and return the promise
 				that.fileTransfers.push(cancelSource);

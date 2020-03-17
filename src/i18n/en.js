@@ -152,6 +152,10 @@ export default {
 		}
 	},
 	dialog: {
+		cancel: {
+			title: "Cancel the print",
+			prompt: "Are you sure you want to cancel <b>'{0}'</b>?"
+		},
 		changeMoveStep: {
 			title: 'Change move step',
 			prompt: 'Please enter a new value for the clicked move button:'
@@ -159,6 +163,10 @@ export default {
 		configUpdated: {
 			title: 'Reset board?',
 			prompt: 'Would you like to restart your board to apply the updated configuration?'
+		},
+		confirmShutdown: {
+			title: 'Shutdown Printer',
+			prompt: "Are you sure you want to shutdown the Printer",
 		},
 		connect: {
 			title: 'Connect to Machine',
@@ -187,7 +195,8 @@ export default {
 			loggingin: 'Logging In...',
 			loggingout: 'Logging Out...',
 			reconnecting: 'Connection lost, attempting to reconnect...',
-			standBy: 'Please stand by...'
+			standBy: 'Please stand by...',
+			loadingtool: "Loading Tool please wait",
 		},
 		editExtrusionAmount: {
 			title: 'Edit extrusion amount',
@@ -238,7 +247,8 @@ export default {
 		},
 		resetHeaterFault: {
 			title: 'Reset Heater Fault',
-			prompt: 'A heater fault has occurred on heater {0}. It is strongly advised to turn off your machine now and to check your wiring before you continue. If you are absolutely sure that this is not a phsical problem, you can reset the heater fault <span style="color: red; font-weight: bold;">ON YOUR OWN RISK</span>. Be aware that this is <span style="color: red; font-weight: bold;">NOT RECOMMENDED</span> and can lead to further problems. How would you like to proceed?',
+			prompt: 'A heater fault has occurred on <b>Heater {0}</b>. It is strongly advised to turn off your machine now and to check your wiring before you continue.<br/><b>-</b> If you are absolutely sure that this is not a phsical problem, you can reset the heater fault. Be aware that this is <span style="color: red; font-weight: bold;">NOT RECOMMENDED</span> and can lead to further problems.<br/><b>-</b> If the issue persists we strongly advise you to contact <a style="font-weight: bold;" href="mailto:support@lynxter.fr"> Lynxter\'s customer service</a>. <br/><br/> How would you like to proceed?',
+			/*'A heater fault has occurred on heater {0}. It is strongly advised to turn off your machine now and to check your wiring before you continue. If you are absolutely sure that this is not a phsical problem, you can reset the heater fault <span style="color: red; font-weight: bold;">ON YOUR OWN RISK</span>. Be aware that this is <span style="color: red; font-weight: bold;">NOT RECOMMENDED</span> and can lead to further problems. How would you like to proceed?'*/
 			resetFault: 'Reset Fault'
 		},
 		runMacro: {
@@ -250,8 +260,9 @@ export default {
 			prompt: 'Do you want to start {0}?'
 		},
 		delete: {
-			title: 'Delete {0}',
-			prompt: 'Are you sure you want to delete : <ul>'
+			title: 'Delete {0}?',
+			prompt: 'Are you sure you want to delete : <ul>',
+			multiple: 'multiple files'
 		},
 		update: {
 			title: 'Install updates?',
@@ -263,7 +274,11 @@ export default {
 			prompt: 'Please choose a tool:'
 		},
 		inputRequired: 'Please enter a value',
-		numberRequired: 'Please enter a valid number'
+		numberRequired: 'Please enter a valid number',
+		temperature:  {
+			title: "Enter the target temperature",
+			prompt: "Enter {0} {1} temperature"
+		}
 	},
 	directory: {
 		display: 'Menu Directory',
@@ -324,10 +339,10 @@ export default {
 		warning: 'Warning',
 		success: 'Success',
 		print: 'Print',
-		showBuildplate: 'Show builplate',
+		showBuildplate: 'Show buildplate',
 		showPreview: 'Show preview',
 		preload: 'Preload {0}',
-		unload: 'Unload {0}',
+		unload: 'Unload tool',
 		edit: 'Edit',
 		heaterStates: [
 			'off',
@@ -367,7 +382,7 @@ export default {
 			placeholder: 'Send code...'
 		},
 		addTemperature: 'Value of new temperature',
-		addRPM: 'Value of new preset'
+		addRPM: 'Value of new preset',
 	},
 	jobProgress: {
 		simulating: 'Simulating {0}, {1} complete',
@@ -486,9 +501,10 @@ export default {
 			support: 'Support',
 			maintenance:'Maintnance',
 		},
-		lynx: {
+		lynxter: {
 			control: 'Controls',
 			calibrate: 'Calibrate',
+			advanced: 'Advanced'
 		}
 	},
 	notification: {
@@ -549,14 +565,14 @@ export default {
 			message: 'Please stand by while the file is being uploaded...',
 			success: 'Upload of {0} successful after {1}',
 			successMulti: 'Successfully uploaded {0} files',
-			error: 'Failed to upload {0}'
+			error: 'Failed to upload {0}',
+			queueTitle: '{0} has been added to queue',
+			queued: 'This file is quite big this may take up to {0} to be fully uploaded',
 		},
 		parse: {
-			title: 'Generating preview {0} {2}% complete eta: {3}',
-			message: 'Please stand by while the preview is being generated...',
-			success: 'Generating preview of {0} successful after {1}',
-			successMulti: 'Successfully generated preview',
-			error: 'Failed to parse {0}'
+			title: 'Parsing: <b>{0}</b>',
+			speed: 'Speed: {0} {1}',
+			eta: 'Time left: {0}',
 		}
 	},
 	panel: {
@@ -616,12 +632,14 @@ export default {
 			terrain: 'Terrain',
 			heat: 'Heat',
 			reload: 'Reload',
+			diff: 'Diff',
 			probing: {
-				perfect: 'Perfect',
-				valid: 'Valid',
-				danger: 'Danger',
-				reprobe: 'Reprobe'
-			}
+				perfect: 'OK',
+				valid: 'OK',
+				danger: 'Average',
+				reprobe: 'Default'
+			},
+			probeDate: "Probed the : {0} at {1}"
 		},
 		jobControl: {
 			caption: 'Job Control',
@@ -760,6 +778,8 @@ export default {
 			webcamEmbedded: 'Embed webcam image in an iframe',
 			webcamRotation: 'Rotate webcam image',
 			webcamFlip: 'Flip webcam image',
+			webcamResolution: 'Webcam resolution',
+			webcamFramerate: 'Webcam framerate',
 			flipNone: 'None',
 			flipX: 'Flip X',
 			flipY: 'Flip Y',
@@ -818,7 +838,8 @@ export default {
 		},
 		webcam: {
 			caption: 'Webcam Surveillance',
-			alt: '(webcam image)'
+			alt: '(webcam image)',
+			advanced: 'Advanced webcam controls'
 		},
 		toolOffset: {
 			captionXY: 'X-Y Tool Offset',
@@ -826,13 +847,20 @@ export default {
 			tool: 'Tool',
 			offset: 'Offset <b>{0}</b>:',
 			toolTrigHeight: 'Tool trigger height',
-			bbStepping: 'Usual babystepping'
+			bbStepping: 'Usual babystepping',
+			dialog: {
+				title: "X-Y Tool Offset",
+				sucess: "Successfully saved new Tool offset",
+				error: "An error occured {0}"
+			}
 		},
 		toolAngle: {
 			caption: 'Tool angle calibration',
 			angle: 'Angle <b>{0}</b>',
 			active: 'Active angle',
-			standby: 'Standby angle'
+			standby: 'Standby angle',
+			run: 'Calibrate {0} angle',
+			auto: 'Auto calibraton'
 		},
 		tiltCompensation: {
 			caption: 'X-Y Tilt Compensation',
@@ -851,8 +879,22 @@ export default {
 			tool: 'Tool',
 			pid: 'Calibration PID <b>{0}</b>',
 			calibration: 'calibration T°',
-			pwm: 'calibration PWM'
+			pwm: 'calibration PWM',
+			run: 'Run PID tuning',
+			save: 'Save results'
 
 		},
-	}
+	},
+	loadTool: {
+		toolhead: 'Select a toolhead',
+		network: {
+			disconnected: 'Network disconnected',
+			booting: 'Booting'
+		},
+		calibrationTool: "Load calibration tool",
+		debug: "Access DWC (No tool)",
+		refreshIface: "Refresh the interface",
+		refreshTools: "Refresh tools List",
+	},
+	power_settings: 'Power settings',
 }

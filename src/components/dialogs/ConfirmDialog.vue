@@ -89,7 +89,7 @@
 					{{$t('list.jobs.generatedBy')}} : {{ item.generatedBy }} <br>
 					{{$t('list.jobs.layerHeight')}}: {{ item.layerHeight }} mm <br>
 					{{$t('list.jobs.height')}}: {{ item.height }} mm <br>
-					<template v-if="item.simulatedTime != null">
+					<template v-if="item.simulatedTime != null && item.simulatedTime > 0">
 						{{$t('list.jobs.simulatedTime')}}: {{ $displayTime(item.simulatedTime) }}<br>
 					</template>
 					{{$t('list.jobs.printTime')}}: {{ $displayTime(item.printTime) }}<br>

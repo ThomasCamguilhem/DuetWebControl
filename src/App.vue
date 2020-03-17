@@ -33,12 +33,12 @@
 }
 
 input[type='number'] {
-    -moz-appearance: textfield;
+	-moz-appearance: textfield;
 }
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
+	-webkit-appearance: none;
 }
 
 a:not(:hover) {
@@ -89,6 +89,23 @@ a:hover {
 		margin-top: 0px;
 	}
 }
+
+#state {
+	animation-duration: 5s;
+	animation-direction: normal;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear;
+	animation-name: animateCon;
+}
+
+@keyframes animateCon {
+	from {
+		transform: rotate(0deg)
+	}
+	to {
+		transform: rotate(360deg)
+	}
+}
 </style>
 
 <template>
@@ -97,15 +114,15 @@ a:hover {
 			<load-tool-panel></load-tool-panel>
 		</template>
 		<template v-if="getTool">
-			<v-navigation-drawer persistent clipped v-model="drawer" enable-resize-watcher fixed app>
+			<v-navigation-drawer v-model="drawer" persistent clipped fixed app enable-resize-watcher >
 				<v-list class="pt-0" :expand="$vuetify.breakpoint.mdAndUp || isLocal">
-					<v-list-group v-for="(category, index) in routing.filter((category, index) => checkLynxCatCondition(category.showLocal, category.minLevel))" :key="index" :prepend-icon="category.icon" no-action :value="isExpanded(category)">
+					<v-list-group v-for="(category, index) in routing.filter((category, index) => checkLynxCatCondition(category.showLocal, category.minLevel, category.showDist))" :key="index" :prepend-icon="category.icon" no-action :value="isExpanded(category)">
 						<v-list-tile slot="activator">
 							<v-list-tile-title>{{ $t(category.caption) }}</v-list-tile-title>
 						</v-list-tile>
 
 						<template v-for="(page, pageIndex) in category.pages">
-							<v-list-tile v-if="checkMenuCondition(page.condition) && checkLynxCondition(page.showLocal, page.minLevel)" :key="`${index}-${pageIndex}`" v-ripple :to="page.path" @click.prevent>
+							<v-list-tile v-if="checkMenuCondition(page.condition) && checkLynxCondition(page.showLocal, page.minLevel, page.showDist)" :key="`${index}-${pageIndex}`" v-ripple :to="page.path" @click.prevent>
 								<v-list-tile-action>
 									<img  v-if="page.img" :src="page.img" width="24" height="24">
 									<v-icon v-else>{{ page.icon }}</v-icon>
@@ -114,53 +131,50 @@ a:hover {
 							</v-list-tile>
 						</template>
 					</v-list-group>
-					<v-list-group prepend-icon="power_settings_new" no-action :value="isExpanded(/* category */)" class="hidden-md-and-up">
-						<v-list-tile slot="activator">
-							<v-list-tile-title>{{ /*$t(category.caption)*/ 'power_settings' }}</v-list-tile-title>
-						</v-list-tile>
-						<v-list-tile v-if="isLocal">
-							<connect-btn class="mb-3" block></connect-btn>
-						</v-list-tile>
-						<v-list-tile v-if="!isLocal && isLocal">
-							<login-btn class="mb-3" block></login-btn>
-						</v-list-tile>
-						<v-list-tile class="hidden-sm-and-up">
-							<emergency-btn block></emergency-btn>
-						</v-list-tile>
-						<v-list-tile>
-							<v-btn block v-if="isLocal" color="" @click="confirmShutdownDialog.shown = !confirmShutdownDialog.shown">
-								<v-icon mr-1 >
-									power_settings_new
-								</v-icon>
-								Shutdown printer
-							</v-btn>
-						</v-list-tile>
-						<v-list-tile class="pa-2 hidden-md-and-up" v-if="isLocal" >
-							<div style="width: max-content; margin: auto" :style="isLocal?'font-size: large':''">
-								<v-btn icon onclick="window.history.back()"><v-icon>arrow_back</v-icon></v-btn>
-								<v-btn icon onclick="location.href = 'http://' + location.host"><v-icon>refresh</v-icon></v-btn>
-								<v-btn icon onclick="window.history.forward()"><v-icon>arrow_forward</v-icon></v-btn>
-							</div>
-						</v-list-tile>
-					</v-list-group>
+					<v-list-tile v-if="isLocal && false">
+						<connect-btn class="mb-3" block></connect-btn>
+					</v-list-tile>
+					<v-list-tile v-if="!isLocal && isLocal">
+						<login-btn class="mb-3" block></login-btn>
+					</v-list-tile>
+					<v-list-tile class="hidden-sm-and-up">
+						<emergency-btn block></emergency-btn>
+					</v-list-tile>
+					<v-list-tile>
+						<v-btn block v-if="isLocal" color="" @click="confirmShutdownDialog.shown = !confirmShutdownDialog.shown">
+							<v-icon mr-1 >
+								power_settings_new
+							</v-icon>
+							{{$t('dialog.confirmShutdown.title')}}
+						</v-btn>
+					</v-list-tile>
+					<v-list-tile class="pa-2" v-if="isLocal" >
+						<div style="width: max-content; margin: auto" :style="isLocal?'font-size: large':''">
+							<v-btn icon onclick="window.history.back()"><v-icon>arrow_back</v-icon></v-btn>
+							<v-btn icon onclick="location.href = 'http://' + location.host"><v-icon>refresh</v-icon></v-btn>
+							<v-btn icon onclick="window.history.forward()"><v-icon>arrow_forward</v-icon></v-btn>
+						</div>
+					</v-list-tile>
 				</v-list>
 
-			<div class=" hidden-md-and-up" v-if="true == false">
-				<connect-btn v-if="isLocal" class="mb-3" block></connect-btn>
-				<emergency-btn class="hidden-sm-and-up" block></emergency-btn>
-			</div>
-		</v-navigation-drawer>
+				<div class=" hidden-md-and-up" v-if="true == false">
+					<connect-btn v-if="isLocal && false" class="mb-3" block></connect-btn>
+					<emergency-btn class="hidden-sm-and-up" block></emergency-btn>
+				</div>
+			</v-navigation-drawer>
 
-		<v-toolbar ref="appToolbar" app clipped-left>
-			<v-toolbar-side-icon @click.stop="drawer = !drawer" v-tab-control :style="{transform: (isLocal? 'scale(1.75)':'')}"></v-toolbar-side-icon>
-			<v-toolbar-title :style="isLocal ? 'margin-left: 10px' : ''">
+			<v-toolbar ref="appToolbar" app clipped-left>
+				<v-toolbar-side-icon @click.stop="drawer = !drawer" v-tab-control :style="{transform: (isLocal? 'scale(1.75)':'')}"></v-toolbar-side-icon>
+				<v-toolbar-title :style="isLocal ? 'margin-left: 10px' : ''">
 					<!-- TODO: Optional OEM branding -->
-					<a id="title" v-tab-control @click="$router.push('/');" style="font-size: large;">{{ (isLocal?name.substring(8):name) }}</a>
+					<div @click="$router.push('/');" style="cursor:pointer; padding:10px 15px;margin: 0 10px 0 0;">
+						<a id="title" v-tab-control style="width: max-content; margin: 0px auto;position: relative;"> {{ /*isLocal ?*/ (name.substr(0, 8) + name.substr(8).split('-').map(tname => tname.substr(0,tname.indexOf('_'))).join('_')) /*: name*/	}}</a>
+					</div>
 					<!--img src="/img/ressources/logoLynxter-dark.png" style="width:35px;"-->
 					<a id="user" v-tab-control style="color: inherit" v-if="!isLocal && isLocal">{{ username }} ({{ type }})</a>
-			</v-toolbar-title>
+				</v-toolbar-title>
 				<status-label v-if="state.status && isLocal" style="font-size: large; letter-spacing: 0.1rem;"></status-label>
-				<connect-btn v-if="isLocal" class="hidden-sm-and-down"></connect-btn>
+				<connect-btn v-if="isLocal && false" class="hidden-sm-and-down"></connect-btn>
 				<!--login-btn v-if="!isLocal || isLocal" class="hidden-sm-and-down"></login-btn-->
 
 				<v-spacer></v-spacer>
@@ -183,13 +197,13 @@ a:hover {
 
 			<v-content id="content">
 				<v-scroll-y-transition>
-					<v-container fluid id="global-container" class="container" v-show="!hideGlobalContainer || $vuetify.breakpoint.mdAndUp" v-if="!isLocal">
+					<v-container v-show="!hideGlobalContainer || $vuetify.breakpoint.mdAndUp" id="global-container" fluid v-if="!isLocal" class="container">
 						<v-layout row wrap v-if="!isLocal">
-							<v-flex xs12 sm3 md4 lg4>
+							<v-flex xs12 sm4 md4 lg4>
 								<status-panel></status-panel>
 							</v-flex>
 
-							<v-flex xs12 sm9 md5 lg4>
+							<v-flex xs12 sm8 md5 lg4>
 								<tools-panel></tools-panel>
 							</v-flex>
 
@@ -211,12 +225,13 @@ a:hover {
 			<template v-if="showDebug">
 				{{$route.path}}
 			</template>
+
 			<div :style="{'bottom': ((this.$route.path=='/Console'||this.$route.path=='/Settings/Machine') && isLocal?'40px':'10px')}" style="position: fixed;left: -75px; color: white; margin-left: 50%; padding:0 15px; height: 20px; overflow: hidden; width: 150px">
 				<div id="clock" style="height: 20px; margin: 0 auto; width: max-content; background: #323232; border-radius: 2px; padding: 0 10px">12:00</div>
 				<div v-if="ifaces && ifaces.length > 0" style="width: max-content; margin: 0px auto 10px auto;	background: #323232; border-radius: 2px; padding: 0 10px">
 					<div style="border-radius: 50%; display: inline-flex; margin-left: 0; vertical-align: middle; width: 15px; height: 15px" id="state"
-					v-bind:style="{ background: ((ifaces.filter(iface => iface.ifname == 'enp1s0')[0] && ifaces.filter(iface => iface.ifname == 'enp1s0')[0].operstate == 'UP' && ifaces.filter(iface => iface.ifname == 'enp2s0')[0] && ifaces.filter(iface => iface.ifname == 'enp2s0')[0].operstate == 'UP' ) ? 'GREEN' : (( ifaces.filter(iface => iface.ifname == 'enp1s0')[0] && ifaces.filter(iface => iface.ifname == 'enp1s0')[0].operstate == 'UP' || ifaces.filter(iface => iface.ifname == 'enp2s0')[0] && ifaces.filter(iface => iface.ifname == 'enp2s0')[0].operstate == 'UP' ) ? 'ORANGE' : ((ifaces.filter(iface => iface.ifname == 'enp1s0')[0] && ifaces.filter(iface => iface.ifname == 'enp1s0')[0].operstate == 'DOWN' || ifaces.filter(iface => iface.ifname == 'enp2s0')[0] && ifaces.filter(iface => iface.ifname == 'enp2s0')[0].operstate == 'DOWN' ) ? 'RED' : 'GRAY'))) }"></div>&nbsp;
-					{{ (ifaces.filter( iface => iface.ifname == "enp2s0" ).length > 0 ? (ifaces.filter( iface => iface.ifname == "enp1s0" ).length > 0 ? ifaces.filter( iface => iface.ifname == "enp1s0" )[0].addr_info.filter( addr => addr.family == 'inet' )[0].local : 'Disconected') : 'Booting') }}
+					v-bind:style="stateColor"></div>&nbsp;
+					{{ ifaces.ip /*(ifaces.filter( iface => iface.ifname == "enp2s0" ).length > 0 ? (ifaces.filter( iface => iface.ifname == "enp1s0" ).length > 0 ? ifaces.filter( iface => iface.ifname == "enp1s0" )[0].addr_info.filter( addr => addr.family == 'inet' )[0].local : 'Disconected') : 'Booting')*/ }}
 				</div>
 			</div>
 
@@ -228,7 +243,7 @@ a:hover {
 			<connection-dialog></connection-dialog>
 			<messagebox-dialog></messagebox-dialog>
 			<!--login-dialog></login-dialog-->
-			<confirm-dialog :shown.sync="confirmShutdownDialog.shown" :question="confirmShutdownDialog.question" :prompt="confirmShutdownDialog.prompt" @confirmed="shutdown"></confirm-dialog>
+			<confirm-dialog :shown.sync="confirmShutdownDialog.shown" :question="confirmShutdownDialog.title" :prompt="confirmShutdownDialog.prompt" @confirmed="shutdown"></confirm-dialog>
 		</template>
 	</v-app>
 </template>
@@ -257,7 +272,60 @@ export default {
 			type: state => state.user.type,
 			username: state => state.user.username,
 			darkTheme: state => state.settings.darkTheme,
-			webcam: state => state.settings.webcam
+			webcam: state => state.settings.webcam,
+			stateColor() {
+				console.log(this.ifaces);
+
+				function GetNavigatorInfo() {
+					var ua= navigator.userAgent, tem,
+					M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+					if(/trident/i.test(M[1])){
+						tem=  /\brv[ :]+(\d+)/g.exec(ua) || [];
+						return 'IE '+(tem[1] || '');
+					}
+					if(M[1]=== 'Chrome'){
+						tem= ua.match(/\b(OPR|Edge)\/(\d+)/);
+						if(tem!= null) return tem.slice(1).join(' ').replace('OPR', 'Opera');
+					}
+					M = M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
+					if((tem= ua.match(/version\/(\d+)/i))!= null) M.splice(1, 1, tem[1]);
+					return M.join(' ');
+				}
+				function CanonicalGradientSupported() {
+					var navInfo = GetNavigatorInfo().split(' ')
+					switch (navInfo[0]) {
+						case 'Edge':
+						return navInfo[1] >= 79;
+						case 'Chrome':
+						return navInfo[1] >= 69;
+						default:
+						return false;
+					}
+				}
+
+
+				if(this.ifaces.filter(iface => iface.ifname == 'enp1s0')[0] &&
+				this.ifaces.filter(iface => iface.ifname == 'enp1s0')[0].operstate == 'UP' &&
+				this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0] &&
+				this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0].operstate == 'UP' ) {
+					console.log('green');
+					return 'background: green;'
+				} else if( this.ifaces.filter(iface => iface.ifname == 'enp1s0')[0] &&
+				this.ifaces.filter(iface => iface.ifname == 'enp1s0')[0].operstate == 'UP' ||
+				this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0] &&
+				this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0].operstate == 'UP' ) {
+					console.log('orange')
+					return CanonicalGradientSupported() ? 'background: conic-gradient(yellow, orange 10% 90%, yellow);':'background: orange;'
+				} else if (this.ifaces.filter(iface => iface.ifname == 'enp1s0')[0] &&
+				this.ifaces.filter(iface => iface.ifname == 'enp1s0')[0].operstate == 'DOWN' ||
+				this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0] &&
+				this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0].operstate == 'DOWN' ) {
+					console.log('red')
+					return CanonicalGradientSupported() ? 'background: conic-gradient(red, darkred 10% 40%, red, darkred 60% 90%, red);animation-duration: 2s' : 'background: red;'
+				} else {
+					return 'background: GRAY'
+				}
+			}
 		}),
 		...mapState(['user']),
 		...mapGetters('machine', ['hasTemperaturesToDisplay']),
@@ -281,8 +349,8 @@ export default {
 			routing: Routing,
 			wasXs: this.$vuetify.breakpoint.xsOnly,
 			confirmShutdownDialog: {
-				question: 'Shutdown the Printer',
-				prompt: "Are you sure you want to shutdown the Printer (this operation will need a restart of the printer after)",
+				title: this.$t('dialog.confirmShutdown.title'),
+				prompt: this.$t('dialog.confirmShutdown.prompt'),
 				shown: false
 			},
 			timeout: -1,
@@ -305,18 +373,28 @@ export default {
 			}
 			return true;
 		},
-		checkLynxCondition(show, level) {
-			return !(this.isLocal && !show) && (level === undefined || level <= this.level);
+		checkLynxCondition(showLocal, level, showDist) {
+			//console.log(showLocal, showDist);
+			return !(this.isLocal && !showLocal) &&
+			(level === undefined || level <= this.level) &&
+			(this.isLocal || (showDist == undefined || showDist));
 		},
-		checkLynxCatCondition(show, level) {
-			return !(this.isLocal && !show) && (level === undefined || level <= this.level);
+		checkLynxCatCondition(showLocal, level, showDist) {
+			//console.log(showLocal, showDist);
+			return  !(this.isLocal && !showLocal) &&
+			(level === undefined || level <= this.level) &&
+			(this.isLocal || (showDist == undefined || showDist));
 		},
 		isExpanded(category) {
 			if (this.$vuetify.breakpoint.xsOnly && category) {
 				const route = this.$route;
 				return category.pages.some(page => page.path === route.path);
 			}
-			return true;
+			if (category && category.defaultClosed) {
+				return false
+			} else {
+				return true;
+			}
 		},
 		updateTitle() {
 			const jobProgress = this.jobProgress;
@@ -352,8 +430,8 @@ export default {
 		window.addEventListener('unload', this.disconnectAll);
 
 		// Connect if running on a board
-		if(((location.port === "8080") || (location.port === "8081"))){
-			this.connect({hostname: "192.168.1.72"});
+		if(((location.port === "8080") || (location.port === "8081") || (location.port === "8082"))){
+			this.connect({hostname: "192.168.1.70"});
 		} else if (!this.isLocal || (location.port === "80") || (location.port === "")) {
 			this.connect();
 		}
@@ -390,7 +468,7 @@ export default {
 					//console.log(document.getElementsByClassName("v-dialog--active").length == 0)
 					//console.log(document.getElementsByClassName("v-dialog--active").length == 0 || document.getElementsByClassName("v-dialog--active")[0].childNodes[0].id != "fileEditDialog");
 				}
-			}, 1000*60*10);
+			}, 1000*60*30);
 		}
 		//this.$router.push('/');
 

@@ -45,7 +45,7 @@
 			<v-btn color="grey darken-3" :loading="loading" :disabled="uiFrozen" @click="refresh" v-if="!isLocal">
 				<v-icon class="mr-1">refresh</v-icon> {{ $t('button.refresh.caption') }}
 			</v-btn>
-			<upload-btn :directory="directory" target="gcodes" color="primary darken-1" v-if="!isLocal"></upload-btn>
+			<upload-btn :directory="directory" target="gcodes" color="primary darken-1" v-if="!isLocal || showDebug"></upload-btn>
 		</v-layout>
 
 		<new-directory-dialog :shown.sync="showNewDirectory" :directory="directory"></new-directory-dialog>
@@ -77,6 +77,9 @@ export default {
 		loading: {
 			get() { return this.loadingValue || this.fileinfoProgress !== -1; },
 			set(value) { this.loadingValue = value; }
+		},
+		showDebug() {
+			return this.isLocal && ((location.port === "8080") || (location.port === "8081"))
 		}
 	},
 	data() {

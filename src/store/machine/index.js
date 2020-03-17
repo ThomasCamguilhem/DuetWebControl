@@ -80,8 +80,9 @@ export default function(hostname, connector) {
 
 			// Upload a file and show progress
 			async upload(context, { filename, content, showProgress = true, showSuccess = true, showError = true, num, count }) {
+				console.log(filename)
 				const cancelSource = BaseConnector.getCancelSource();
-				const notification = showProgress && ((count > 1 || content.size > 4*1024*1024) ? makeFileTransferNotification('upload', filename, cancelSource, num, count) : null);
+				const notification = (showProgress && (count > 1 || content.size > 3*1024*1024) ? makeFileTransferNotification('upload', filename, cancelSource, num, count) : null);
 				try {
 					// Check if config.g needs to be backed up
 					if (filename === Path.configFile) {
@@ -96,7 +97,8 @@ export default function(hostname, connector) {
 
 					// Perform upload
 					const startTime = new Date();
-					const response = await connector.upload({ filename, content, cancelSource, onProgress: notification && notification.onProgress });
+					const response = await connector.upload({ filename, content, cancelSource, onProgress: (notification ? notification.onProgress : (e) => {	document.getElementById('fileProgress').style.width = ((e.loaded / e.total) * 100).toFixed(1) + '%'})
+				});
 
 					// Show success message
 					if (showSuccess && num === count && (count > 1 || content.size > 4*1024*1024)) {

@@ -16,21 +16,22 @@
 
 <template>
 	<v-card>
-		<v-card-title class="pt-2 pb-0" v-bind:class="{local: isLocal}">
-			<code-btn color="primary darken-1" small code="G28" :title="$t('button.home.titleAll')" class="ml-0 hidden-sm-and-down" >
+		<v-card-title class="pt-2 pb-0" :class="{local: isLocal}">
+			<code-btn color="primary darken-1" small code="G28" :title="$t('button.home.titleAll')" class="ml-0 hidden-sm-and-down" :disabled="disabled">
 				{{ $t('button.home.captionAll') }}
 			</code-btn>
-			<code-btn color="primary darken-1" small code="M98 P0:/macros/_Machine/_Park position" :title="'Move the toolhead into it\'s parking position'" class="ml-0 hidden-sm-and-down" >
+			<code-btn color="primary darken-1" small code="M98 P0:/macros/_Machine/_Park position" :title="'Move the toolhead into it\'s parking position'" class="ml-0 hidden-sm-and-down" :disabled="disabled">
 				{{ $t('button.parkHead.caption') }}
 			</code-btn>
 
 			<v-spacer class="hidden-sm-and-down"></v-spacer>
 
-			<v-icon small class="mr-1">swap_horiz</v-icon> {{ $t('panel.movement.caption') }}
+			<v-icon small class="mr-1">swap_horiz</v-icon>
+			{{ $t('panel.movement.caption') }}
 
 			<v-spacer></v-spacer>
 
-			<v-menu offset-y left :disabled="uiFrozen" v-tab-control :close-on-content-click="false">
+			<v-menu offset-y left :disabled="uiFrozen || disabled" v-tab-control :close-on-content-click="false">
 				<template slot="activator">
 					<v-btn color="primary darken-1" small class="mx-0" :disabled="uiFrozen">
 						{{ $t('panel.movement.compensation') }} <v-icon>arrow_drop_down</v-icon>
@@ -76,7 +77,7 @@
 											<v-icon class="mr-1">save</v-icon> {{ $t('panel.movement.loadMesh') }}
 										</v-list-tile>
 										<v-list-tile @click="$router.push('/Heightmap')">
-											<v-icon class="mr-1">grid_on</v-icon> {{ 'Show the Height map' }}
+											<v-icon class="mr-1">grid_on</v-icon> {{ $t('panel.movement.showHeightmap') }}
 										</v-list-tile>
 										<v-list-tile :disabled="move.compensation !== 'Mesh'" @click="sendCode('G29 S2')">
 											<v-icon class="mr-1">grid_off</v-icon> {{ $t('panel.movement.disableMeshCompensation') }}
@@ -95,10 +96,10 @@
 			<v-layout justify-center row wrap class="hidden-md-and-up">
 				<v-flex>
 					<v-layout row>
-						<code-btn color="primary darken-1" code="G28" :title="$t('button.home.titleAll')" v-bind:class="{local: isLocal}" block>
+						<code-btn color="primary darken-1" code="G28" :title="$t('button.home.titleAll')" v-bind:class="{local: isLocal}" block :disabled="disabled">
 							{{ $t('button.home.captionAll') }}
 						</code-btn>
-						<code-btn color="primary darken-1"  code="M98 P0:/macros/_Machine/_Park position" :title="'Move the toolhead into it\'s parking position'" v-bind:class="{local: isLocal}" block style="margin: 6px">
+						<code-btn color="primary darken-1"  code="M98 P0:/macros/_Machine/_Park position" :title="'Move the toolhead into it\'s parking position'" v-bind:class="{local: isLocal}" block style="margin: 6px" :disabled="disabled">
 							{{ $t('button.parkHead.caption') }}
 						</code-btn>
 					</v-layout>
@@ -116,7 +117,7 @@
 				<v-flex shrink class="hidden-sm-and-down" v-if="move.geometry.type !== 'delta'">
 					<v-layout column>
 						<v-flex v-for="axis in displayedAxes" :key="axis.letter">
-							<code-btn :color="axis.homed ? 'primary darken-1' : 'warning'" :disabled="uiFrozen" :title="$t('button.home.title', [axis.letter])" :code="`G28 ${axis.letter}`" class="ml-0">
+							<code-btn :color="axis.homed ? 'primary darken-1' : 'warning'" :disabled="uiFrozen || disabled" :title="$t('button.home.title', [axis.letter])" :code="`G28 ${axis.letter}`" class="ml-0">
 								{{ $t('button.home.caption', [axis.letter]) }}
 							</code-btn>
 						</v-flex>
@@ -133,7 +134,7 @@
 								<v-flex v-for="index in numMoveSteps" :key="-index" :class="getMoveCellClass(index - 1)">
 									<v-layout column>
 										<v-flex v-for="axis in displayedAxes" :key="axis.letter">
-											<code-btn :code="`G91\nG1 ${axis.letter}${-moveSteps(axis.letter)[index - 1]} F${Math.round(moveFeedrate * 60)}\nG90`" no-wait @contextmenu.prevent="showMoveStepDialog(axis.letter, index - 1)" block class="move-btn"  v-bind:class="{local: isLocal}">
+											<code-btn :code="`G91\nG1 ${axis.letter}${-moveSteps(axis.letter)[index - 1]} F${Math.round(moveFeedrate * 60)}\nG90`" no-wait @contextmenu.prevent="showMoveStepDialog(axis.letter, index - 1)" block class="move-btn"  v-bind:class="{local: isLocal}" :disabled="disabled">
 												<v-icon>keyboard_arrow_left</v-icon> {{ axis.letter + -moveSteps(axis.letter)[index - 1] }}
 											</code-btn>
 										</v-flex>
@@ -150,7 +151,7 @@
 								<v-flex v-for="index in numMoveSteps" :key="index" :class="getMoveCellClass(numMoveSteps - index)">
 									<v-layout column>
 										<v-flex v-for="axis in displayedAxes" :key="axis.letter">
-											<code-btn :code="`G91\nG1 ${axis.letter}${moveSteps(axis.letter)[numMoveSteps - index]} F${Math.round(moveFeedrate * 60)}\nG90`" no-wait @contextmenu.prevent="showMoveStepDialog(axis.letter, numMoveSteps - index)" block class="move-btn"  v-bind:class="{local: isLocal}">
+											<code-btn :code="`G91\nG1 ${axis.letter}${moveSteps(axis.letter)[numMoveSteps - index]} F${Math.round(moveFeedrate * 60)}\nG90`" no-wait @contextmenu.prevent="showMoveStepDialog(axis.letter, numMoveSteps - index)" block class="move-btn"  v-bind:class="{local: isLocal}" :disabled="disabled">
 												{{ axis.letter + '+' + moveSteps(axis.letter)[numMoveSteps - index] }} <v-icon>keyboard_arrow_right</v-icon>
 											</code-btn>
 										</v-flex>
@@ -189,13 +190,17 @@ export default {
 		...mapGetters(['isConnected', 'uiFrozen']),
 		...mapState('machine/model', ['move']),
 		...mapState('machine/settings', ['moveFeedrate']),
+		...mapState(['isLocal']),
 		...mapGetters('machine/settings', ['moveSteps', 'numMoveSteps']),
 		displayedAxes() { return this.move.axes.filter(axis => axis.visible); },
 		unhomedAxes() { return this.move.axes.filter(axis => axis.visible && !axis.homed); },
 		...mapState({
-			isLocal: state => state.isLocal,
 			name: state => state.machine.model.network.name,
 		}),
+		...mapState('machine/model', {
+			disabled: (state) => {state = state.state; return ['updating', 'off', 'halted', 'pausing', 'resuming', 'processing', 'simulating', 'busy', 'changingTool'].indexOf(state.status) >= 0}
+		}),
+		//['updating', 'off', 'halted', 'pausing', 'paused', 'resuming', 'processing', 'simulating', 'busy', 'changingTool', 'idle']
 	},
 	data() {
 		return {
@@ -235,8 +240,10 @@ export default {
 			console.log("Running Nozzle Height");
 			const files = await this.getFileList("0:/macros/_Toolheads");
 			let name = this.name.substr(8, 5);
-			let tools = files.filter(tool => tool.name.includes(name))
+			let vers = this.name.substr(this.name.lastIndexOf('v')+1);
+			let tools = files.filter(tool => tool.name.includes(name) && tool.name.includes(vers))
 			console.log(name)
+			console.log(vers)
 			console.log(tools.length ? tools : "");
 			let that = this;
 			tools.forEach(function(item) {

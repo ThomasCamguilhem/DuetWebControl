@@ -196,7 +196,7 @@ export default {
 			if (this.previewScene.getObjectByName("bbox")) {
 				this.previewScene.remove(this.previewScene.getObjectByName("bbox"));
 			}
-			var geo = new THREE.Geometry();
+			/*var geo = new THREE.Geometry();
 			// bottom bbox
 			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.min.y, gcodeReader.boundingBox.min.z, gcodeReader.boundingBox.min.x));
 			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.min.y, gcodeReader.boundingBox.min.z, gcodeReader.boundingBox.max.x));
@@ -227,7 +227,7 @@ export default {
 
 			var bbox = new THREE.LineSegments(geo, new THREE.LineBasicMaterial());
 			bbox.name = "bbox";
-			this.previewScene.add(bbox);
+			this.previewScene.add(bbox);*/
 			//this.newStatus = this.parseRows[this.parsedFileCount].find("#status");
 			if(this.DEBUG)
 			console.log("BBox redrawn");

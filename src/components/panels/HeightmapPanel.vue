@@ -31,7 +31,7 @@ canvas {
 				<v-layout row wrap fill-height>
 					<!-- TODO: Add CSV list here -->
 
-					<v-flex class="heightmap-container pa-2" xs12 sm12 md9 lg10 xl10>
+					<v-flex class="heightmap-container pa-2" xs12 sm12 md9 lg9 xl10>
 						<v-layout ref="parentElement" row fill-height>
 							<v-flex class="loading" v-show="!ready">
 								<v-layout fill-height align-center>
@@ -49,86 +49,90 @@ canvas {
 						</v-layout>
 					</v-flex>
 
-					<v-flex class="pa-2" xs12 sm12 md3 lg2 xl2>
+					<v-flex class="pa-2" xs12 sm12 md3 lg3 xl2>
 						<v-layout v-bind:class="$vuetify.breakpoint.smAndDown?'row':'column'" fill-height justifiy-space-between>
 							<v-layout column>
-						<div>
-							<div class="px-2" style="border-radius: 5px; margin: 5px auto; width: max-content" :class="statusClass()">
-								{{ statusName() }}
-							</div>
-						</div>
-						<div style="height: 230px;" :style="{'min-width': ($vuetify.breakpoint.smAndDown?'300px':''),  'margin': ($vuetify.breakpoint.smAndDown?'0 auto':'') }">
-							<v-expansion-panel :value="-1" style="margin-bottom: 15px">
-								<v-expansion-panel-content style="background: #4D4D4D">
-									<template v-slot:header style="padding: 0">
-										<span style="font-size: small">
-											{{ $t('panel.settingsNetwork.advanced' )}}
-										</span>
-									</template>
-									<v-card style="background: #0000; padding: 0 20px">
-										<v-layout column>
-								<v-flex class="pt-2">
-									{{ $t('panel.heightmap.numPoints', [$display(numPoints, 0)]) }}
-								</v-flex>
-								<v-flex>
-									{{ $t('panel.heightmap.radius', [$display(radius, 0, 'mm')]) }}
-								</v-flex>
-								<v-flex>
-									{{ $t('panel.heightmap.area', [$display(area / 100, 1, 'cm²')]) }}
-								</v-flex>
-								<v-flex>
-									{{ $t('panel.heightmap.maxDeviations', [$display(minDiff, 3), $display(maxDiff, 3, 'mm')]) }}
-								</v-flex>
-								<!--v-flex>
-								{{ $t('panel.heightmap.biasError', [$display(biasError, 3, 'mm')]) }}
-								</v-flex-->
-								<v-flex>
-									{{ $t('panel.heightmap.meanError', [$display(meanError, 3, 'mm')]) }}
-								</v-flex>
-								<v-flex>
-									{{ $t('panel.heightmap.rmsError', [$display(rmsError, 3, 'mm')]) }}
-								</v-flex>
-												</v-layout>
-											</v-card>
-										</v-expansion-panel-content>
-									</v-expansion-panel>
+								<div>
+									<div class="px-2" style="border-radius: 5px; margin: 5px auto; width: max-content" :class="statusClass()">
+										{{ statusName() }}
+									</div>
 								</div>
-							</v-layout>
-							<v-layout column>
-								<v-flex shrink>
-									{{ $t('panel.heightmap.colorScheme') }}
-								</v-flex>
-								<v-flex shrink>
-									<v-btn-toggle v-model="colorScheme">
-										<v-btn value="terrain">{{ $t('panel.heightmap.terrain') }}</v-btn>
-										<v-btn value="heat">{{ $t('panel.heightmap.heat') }}</v-btn>
-									</v-btn-toggle>
-								</v-flex>
-								<v-flex shrink>
-									<v-btn class="ml-0" :disabled="!ready" @click="topViewFct">
-										<v-icon small class="mr-1">{{topView?'3d_rotation':'vertical_align_bottom'}}</v-icon> {{ topView?$t('panel.heightmap.perspective'):$t('panel.heightmap.topView') }}
-									</v-btn>
-								</v-flex>
-								<v-flex shrink>
-									<v-btn class="ml-0" :disabled="!isConnected" :loading="loading" @click="getHeightmap()">
-										<v-icon class="mr-1">refresh</v-icon> {{ $t('panel.heightmap.reload') }}
-									</v-btn>
-								</v-flex>
-							</v-layout>
+								<div style="height: 230px;" :style="{'min-width': ($vuetify.breakpoint.smAndDown?'300px':''),  'margin': ($vuetify.breakpoint.smAndDown?'0 auto':'') }">
+									<v-expansion-panel :value="-1" style="margin-bottom: 15px">
+										<v-expansion-panel-content style="background: #4D4D4D">
+											<template v-slot:header style="padding: 0">
+												<span style="font-size: small">
+													{{ $t('panel.settingsNetwork.advanced' )}}
+												</span>
+											</template>
+											<v-card style="background: #0000; padding: 0 20px">
+												<v-layout column>
+													<v-flex class="pt-2">
+														{{ $t('panel.heightmap.probeDate', [dateToStr.date, dateToStr.hour]) }}
+													</v-flex>
+													<v-flex>
+														{{ $t('panel.heightmap.numPoints', [$display(numPoints, 0)]) }}
+													</v-flex>
+													<v-flex>
+														{{ $t('panel.heightmap.radius', [$display(radius, 0, 'mm')]) }}
+													</v-flex>
+													<v-flex>
+														{{ $t('panel.heightmap.area', [$display(area / 100, 1, 'cm²')]) }}
+													</v-flex>
+													<v-flex>
+														{{ $t('panel.heightmap.maxDeviations', [$display(minDiff, 3), $display(maxDiff, 3, 'mm')]) }}
+													</v-flex>
+													<!--v-flex>
+													{{ $t('panel.heightmap.biasError', [$display(biasError, 3, 'mm')]) }}
+												</v-flex-->
+												<v-flex>
+													{{ $t('panel.heightmap.meanError', [$display(meanError, 3, 'mm')]) }}
+												</v-flex>
+												<v-flex>
+													{{ $t('panel.heightmap.rmsError', [$display(rmsError, 3, 'mm')]) }}
+												</v-flex>
+											</v-layout>
+										</v-card>
+									</v-expansion-panel-content>
+								</v-expansion-panel>
+							</div>
 						</v-layout>
-					</v-flex>
-				</v-layout>
-			</v-container>
-		</v-card>
+						<v-layout column>
+							<v-flex shrink>
+								{{ $t('panel.heightmap.colorScheme') }}
+							</v-flex>
+							<v-flex shrink>
+								<v-btn-toggle v-model="colorScheme">
+									<v-btn value="terrain">{{ $t('panel.heightmap.terrain') }}</v-btn>
+									<v-btn value="heat">{{ $t('panel.heightmap.heat') }}</v-btn>
+									<v-btn value="diff">{{ $t('panel.heightmap.diff') }}</v-btn>
+								</v-btn-toggle>
+							</v-flex>
+							<v-flex shrink>
+								<v-btn class="ml-0" :disabled="!ready" @click="topViewFct">
+									<v-icon small class="mr-1">{{topView?'3d_rotation':'vertical_align_bottom'}}</v-icon> {{ topView?$t('panel.heightmap.perspective'):$t('panel.heightmap.topView') }}
+								</v-btn>
+							</v-flex>
+							<v-flex shrink>
+								<v-btn class="ml-0" :disabled="!isConnected" :loading="loading" @click="getHeightmap()">
+									<v-icon class="mr-1">refresh</v-icon> {{ $t('panel.heightmap.reload') }}
+								</v-btn>
+							</v-flex>
+						</v-layout>
+					</v-layout>
+				</v-flex>
+			</v-layout>
+		</v-container>
+	</v-card>
 
-		<v-tooltip top absolute v-model="tooltip.shown" :position-x="tooltip.x" :position-y="tooltip.y">
-			<span class="no-cursor">
-				X: {{ $display(tooltip.coord.x, 1, 'mm') }}<br/>
-				Y: {{ $display(tooltip.coord.y, 1, 'mm') }}<br/>
-				Z: {{ $display(tooltip.coord.z, 3, 'mm') }}
-			</span>
-		</v-tooltip>
-	</div>
+	<v-tooltip top absolute v-model="tooltip.shown" :position-x="tooltip.x" :position-y="tooltip.y">
+		<span class="no-cursor">
+			X: {{ $display(tooltip.coord.x, 1, 'mm') }}<br/>
+			Y: {{ $display(tooltip.coord.y, 1, 'mm') }}<br/>
+			Z: {{ $display(tooltip.coord.z, 3, 'mm') }}
+		</span>
+	</v-tooltip>
+</div>
 </template>
 
 <script>
@@ -143,7 +147,8 @@ import { drawLegend, setFaceColors, generateIndicators, generateMeshGeometry } f
 import CSV from '../../utils/csv.js'
 import Path from '../../utils/path.js'
 
-const scaleZ = 0.5, maxVisualizationZ = 0.25
+const scaleZ = 0.5
+let maxVisualizationZ = 0.25, maxVisualizationZB = 0.25
 const indicatorColor = 0xFFFFFF, indicatorOpacity = 0.4, indicatorOpacityHighlighted = 1.0
 
 let threeInstances = []
@@ -171,6 +176,23 @@ export default {
 	computed: {
 		...mapGetters(['isConnected']),
 		...mapState('settings', ['language', 'darkTheme']),
+		dateToStr() {
+			let data = this.buildDate
+			//console.log(data);
+			let out = { date : "", hour : ""}
+			if (data) {
+				out.date = (data.getDate() < 10 ? "0"+data.getDate() : data.getDate())
+				out.date += "/"
+				out.date += (data.getMonth() < 9 ? "0"+(data.getMonth() + 1) : (data.getMonth() + 1))
+				out.date += "/"
+				out.date +=  data.getFullYear()
+
+				out.hour = data.getHours() < 10 ? "0" + data.getHours() : data.getHours()
+				out.hour += ":"
+				out.hour += data.getMinutes() < 10 ? "0" + data.getMinutes() : data.getMinutes()
+			}
+			return out;
+		}
 	},
 	data() {
 		return {
@@ -200,6 +222,7 @@ export default {
 			topView: false,
 
 			unsubscribe: undefined,
+			buildDate: undefined,
 		}
 	},
 	methods: {
@@ -278,7 +301,10 @@ export default {
 			drawLegend(this.$refs.legend, maxVisualizationZ, this.colorScheme);
 			return { width, height };
 		},
-		showCSV(csvData) {
+		showCSV(csvData, clear=true) {
+			// RepRapFirmware height map file v2 generated at 2020-01-09 15:36, min error -0.238, max error 0.166, mean -0.067, deviation 0.076
+			if (clear)
+			this.buildDate = new Date(csvData.substring(csvData.indexOf(" at ")+4, csvData.indexOf(",")))
 			// Load the CSV. The first line is a comment that can be removed
 			const csv = new CSV(csvData.substr(csvData.indexOf("\n") + 1));
 			let radius = parseFloat(csv.get('radius'));
@@ -300,11 +326,11 @@ export default {
 			}
 
 			// Display height map
-			this.showHeightmap(points, radius);
+			this.showHeightmap(points, radius, clear);
 		},
-		showHeightmap(points, probeRadius) {
+		showHeightmap(points, probeRadius, clear=true) {
 			// Clean up first
-			if (this.three.meshGeometry) {
+			if (this.three.meshGeometry && clear) {
 				this.three.scene.remove(this.three.meshPlane);
 				this.three.meshIndicators.forEach(function(indicator) {
 					this.remove(indicator);
@@ -317,15 +343,16 @@ export default {
 			}
 
 			// Generate stats
-			let xMin, xMax, yMin, yMax;
-
-			this.radius = probeRadius;
-			this.numPoints = 0;
-			this.minDiff = undefined;
-			this.maxDiff = undefined;
-			this.meanError = 0;
-			this.biasError = 0;
-			this.rmsError = 0;
+			let xMin, xMax, yMin, yMax, zMin, zMax;
+			if (clear) {
+				this.radius = probeRadius;
+				this.numPoints = 0;
+				this.minDiff = undefined;
+				this.maxDiff = undefined;
+				this.meanError = 0;
+				this.biasError = 0;
+				this.rmsError = 0;
+			}
 
 			for (let i = 0; i < points.length; i++) {
 				const z = points[i][2];
@@ -336,34 +363,73 @@ export default {
 					if (xMax === undefined || xMax < x) { xMax = x; }
 					if (yMin === undefined || yMin > y) { yMin = y; }
 					if (yMax === undefined || yMax < y) { yMax = y; }
-
-					this.numPoints++;
-					this.meanError += Math.abs(z);
-					this.biasError += z;
-					this.rmsError += z * z;
-					if (this.minDiff === undefined || this.minDiff > z) { this.minDiff = z; }
-					if (this.maxDiff === undefined || this.maxDiff < z) { this.maxDiff = z; }
+					if (zMin === undefined || zMin > z) { zMin = z; }
+					if (zMax === undefined || zMax < z) { zMax = z; }
+					if (clear) {
+						this.numPoints++;
+						this.meanError += Math.abs(z);
+						this.biasError += z;
+						this.rmsError += z * z;
+						if (this.minDiff === undefined || this.minDiff > z) { this.minDiff = z; }
+						if (this.maxDiff === undefined || this.maxDiff < z) { this.maxDiff = z; }
+					}
 				}
 			}
-			this.area = probeRadius ? (probeRadius * probeRadius * Math.PI) : Math.abs((xMax - xMin) * (yMax - yMin));
-			this.rmsError = Math.sqrt(((this.rmsError * this.numPoints) - (this.biasError * this.biasError))) / this.numPoints;
-			this.meanError = this.meanError / this.numPoints;
-			this.biasError = this.biasError / this.numPoints;
-
+			if (clear) {
+				this.area = probeRadius ? (probeRadius * probeRadius * Math.PI) : Math.abs((xMax - xMin) * (yMax - yMin));
+				this.rmsError = Math.sqrt(((this.rmsError * this.numPoints) - (this.biasError * this.biasError))) / this.numPoints;
+				this.meanError = this.meanError / this.numPoints;
+				this.biasError = this.biasError / this.numPoints;
+				//maxVisualizationZ = Math.min(Math.max(Math.abs(zMin), zMax), 0.5)
+			} else {
+				//maxVisualizationZB = Math.min(Math.max(Math.abs(zMin), zMax), 0.5)
+			}
 			// Generate mesh geometry and apply face colors
-			this.three.meshGeometry = generateMeshGeometry(points, xMin, xMax, yMin, yMax, scaleZ);
-			setFaceColors(this.three.meshGeometry, scaleZ, this.colorScheme, maxVisualizationZ);
+			if (clear) {
+				this.three.meshGeometry = generateMeshGeometry(points, xMin, xMax, yMin, yMax, scaleZ);
+				setFaceColors(this.three.meshGeometry, scaleZ, this.colorScheme, maxVisualizationZ);
+			} else {
+				this.three.meshBGeometry = generateMeshGeometry(points, xMin, xMax, yMin, yMax, scaleZ)
+				//console.log(points.toSource(), this.three.meshBGeometry.vertices.toSource())
+				this.three.meshGeometry.vertices.forEach((vertex, index) => {
+					let vertexB = this.three.meshBGeometry.vertices[index];
+					this.three.meshBGeometry.vertices[index].z = vertex.z - vertexB.z
 
-			// Make 3D mesh and add it
-			const material = new MeshBasicMaterial({ vertexColors: VertexColors, side: DoubleSide });
-			this.three.meshPlane = new Mesh(this.three.meshGeometry, material);
-			this.three.scene.add(this.three.meshPlane);
+					if (zMin === undefined || zMin > (vertex.z - vertexB.z)/scaleZ) { zMin = (vertex.z - vertexB.z)/scaleZ; }
+					if (zMax === undefined || zMax < (vertex.z - vertexB.z)/scaleZ) { zMax = (vertex.z - vertexB.z)/scaleZ; }
+				});
+				//maxVisualizationZB = Math.min(Math.max(Math.abs(zMin), zMax), 0.5)
+				setFaceColors(this.three.meshBGeometry, scaleZ, this.colorScheme, maxVisualizationZB);
+			}
 
-			// Make indicators and add them
-			this.three.meshIndicators = generateIndicators(this.three.meshGeometry, this.numPoints, scaleZ, indicatorColor, indicatorOpacity);
-			this.three.meshIndicators.forEach(function(indicator) {
-				this.add(indicator);
-			}, this.three.scene);
+			if (clear) {
+				// Make 3D mesh and add it
+				const material = new MeshBasicMaterial({ vertexColors: VertexColors, side: DoubleSide });
+				this.three.meshPlane = new Mesh(this.three.meshGeometry, material);
+				this.three.meshPlane.name="APlane"
+				this.three.scene.add(this.three.meshPlane);
+
+				// Make indicators and add them
+				this.three.meshIndicators = generateIndicators(this.three.meshGeometry, this.numPoints, scaleZ, indicatorColor, indicatorOpacity);
+				this.three.meshIndicators.forEach(function(indicator) {
+					this.add(indicator);
+				}, this.three.scene);
+			} else {
+				// Make 3D mesh and add it
+				const material = new MeshBasicMaterial({ vertexColors: VertexColors, side: DoubleSide });
+				this.three.meshBPlane = new Mesh(this.three.meshBGeometry, material);
+				this.three.meshBPlane.name="diffPlane"
+				this.three.meshBPlane.visible=false;
+				this.three.scene.add(this.three.meshBPlane);
+
+				// Make indicators and add them
+				this.three.meshBIndicators = generateIndicators(this.three.meshBGeometry, this.numPoints, scaleZ, indicatorColor, indicatorOpacity);
+				this.three.meshBIndicators.forEach(function(indicator) {
+					indicator.visible= false;
+					this.add(indicator);
+				}, this.three.scene);
+			}
+
 
 			if (!this.three.hasHelpers) {
 				if(!probeRadius) {
@@ -387,10 +453,14 @@ export default {
 					var gridSecGeo = new Geometry();
 
 					this.prepareGridBPGeoPreview(gridPrimeGeo, gridSecGeo);
+					let line = new LineSegments(gridPrimeGeo, new LineBasicMaterial({ color:	0xafafaf}));
+					line.name = "gridHelper";
+					this.three.scene.add(line);
+					line = new LineSegments(gridSecGeo, new LineBasicMaterial({ color: 0x7f7f7f}))
+					line.name = "gridHelper";
+					this.three.scene.add(line);
 
-					this.three.scene.add(new LineSegments(gridPrimeGeo, new LineBasicMaterial({ color:	0xafafaf})));
-					this.three.scene.add(new LineSegments(gridSecGeo, new LineBasicMaterial({ color: 0x7f7f7f})));
-
+					// Create the final object to add to the scene
 					var curve = new EllipseCurve(
 						0,	0,					// ax, aY
 						0.62, 0.62,				// xRadius, yRadius
@@ -398,9 +468,9 @@ export default {
 						false,					// aClockwise
 						0								// aRotation
 					);
-
-					// Create the final object to add to the scene
-					this.three.scene.add(new Line( new BufferGeometry().setFromPoints(curve.getPoints(64)), new LineBasicMaterial( { color : 0xafafaf})));
+					line = new Line( new BufferGeometry().setFromPoints(curve.getPoints(64)), new LineBasicMaterial( { color : 0xafafaf}))
+					line.name = "gridHelper";
+					this.three.scene.add(line);
 				}
 				this.three.scene.rotation.z = Math.PI
 				//console.log(this.three.scene.rotation.z)
@@ -439,11 +509,11 @@ export default {
 			if (this.three.renderer) {
 				requestAnimationFrame(this.render);
 				/*for(let i = 0 ;	i < this.three.scene.children.length; i++) {
-					if (this.three.scene.children[i].rotation.x == 0)
-						this.three.scene.children[i].rotation.z += 0.001
-				}*/
-				this.three.renderer.render(this.three.scene, //(this.topView ? this.three.orthoCamera :
-					this.three.perspectiveCamera);
+				if (this.three.scene.children[i].rotation.x == 0)
+				this.three.scene.children[i].rotation.z += 0.001
+			}*/
+			this.three.renderer.render(this.three.scene, //(this.topView ? this.three.orthoCamera :
+				this.three.perspectiveCamera);
 			}
 		},
 		canvasMouseMove(e) {
@@ -503,7 +573,7 @@ export default {
 			this.three.orthoCamera.position.set(0, 0, 1);
 			this.three.orthoCamera.rotation.set(0, 0, Math.PI/2);
 			this.three.orthoCamera.updateProjectionMatrix();
-				this.topView = false
+			this.topView = false
 		},
 
 		async getHeightmap(filename = Path.heightmap) {
@@ -515,8 +585,10 @@ export default {
 			this.ready = false;
 			this.loading = true;
 			try {
+				const back = await this.download({ filename: filename+".bak", type: 'text', showSuccess: false, showError: false });
 				const heightmap = await this.download({ filename, type: 'text', showSuccess: false, showError: false });
 				this.showCSV(heightmap);
+				this.showCSV(back, false);
 			} catch (e) {
 				console.warn(e);
 				this.errorMessage = e.message;
@@ -532,16 +604,16 @@ export default {
 			let testPoints;
 			switch (numPoints) {
 				case 3:
-					testPoints = [[15.0, 15.0, 0.123], [15.0, 195.0, -0.243], [215.0, 105.0, 0.034]];
-					break;
+				testPoints = [[15.0, 15.0, 0.123], [15.0, 195.0, -0.243], [215.0, 105.0, 0.034]];
+				break;
 				case 4:
-					testPoints = [[15.0, 15.0, 0.015], [15.0, 185.0, -0.193], [175.0, 185.0, 0.156], [175.0, 15.0, 0.105]];
-					break;
+				testPoints = [[15.0, 15.0, 0.015], [15.0, 185.0, -0.193], [175.0, 185.0, 0.156], [175.0, 15.0, 0.105]];
+				break;
 				case 5:
-					testPoints = [[15.0, 15.0, 0.007], [15.0, 185.0, -0.121], [175.0, 185.0, -0.019], [175.0, 15.0, 0.193], [95.0, 100.0, 0.05]];
-					break;
+				testPoints = [[15.0, 15.0, 0.007], [15.0, 185.0, -0.121], [175.0, 185.0, -0.019], [175.0, 15.0, 0.193], [95.0, 100.0, 0.05]];
+				break;
 				default:
-					throw new Error("Bad number of probe points, only one of 3/4/5 is supported");
+				throw new Error("Bad number of probe points, only one of 3/4/5 is supported");
 			}
 			this.showHeightmap(testPoints);
 		},
@@ -597,10 +669,19 @@ export default {
 	},
 	watch: {
 		colorScheme(to) {
+			this.three.meshPlane.visible = (to != 'diff')
+			this.three.meshIndicators.forEach(function(indicator) {
+				indicator.visible= (to != 'diff');
+			}, this.three.scene);
+			this.three.meshBPlane.visible = (to == 'diff')
+			this.three.meshBIndicators.forEach(function(indicator) {
+				indicator.visible= (to == 'diff');
+			}, this.three.scene);
+
 			if (this.three.meshGeometry) {
-				setFaceColors(this.three.meshGeometry, scaleZ, to, maxVisualizationZ);
+				setFaceColors((to=="diff"?this.three.meshBGeometry:this.three.meshGeometry), scaleZ, to, (to=="diff"?maxVisualizationZB:maxVisualizationZ));
 			}
-			drawLegend(this.$refs.legend, maxVisualizationZ, to);
+			drawLegend(this.$refs.legend, (to=="diff"?maxVisualizationZB:maxVisualizationZ), to);
 		},
 		isConnected(to) {
 			if (to) {

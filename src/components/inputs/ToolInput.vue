@@ -8,7 +8,7 @@
 	<v-combobox v-if="!isLocal" ref="input" type="number" min="-273" max="1999" step="any" v-model.number="value" :items="items" @keydown.native="onkeydown" @keyup.enter="apply" @change="onchange" @blur="onblur" :label="label" :loading="applying" :disabled="uiFrozen || (['tuning', 'changingTool'].indexOf(state.status) !== -1)" class="tool-input" :menu-props="$vuetify.breakpoint.xsOnly ? { maxHeight: 125 } : undefined">
 	</v-combobox>
 	<div v-else class="control number">
-		<number-control v-model.number="value" ref="input" :min="0" :max="1999" :step="1" @keydown.native="onkeydown" @keyup.enter="apply" @change="onnumchange" @blur="onblur" :title="title" :loading="applying" :disabled="uiFrozen || (['tuning', 'changingTool'].indexOf(state.status) !== -1)" :precision="precision" v-if="shown">
+		<number-control v-model.number="value" ref="input" :min="0" :max="1999" :step="1" @keydown.native="onkeydown" @keyup.enter="apply" @change="onnumchange" @blur="onblur" :title="title" :prompt="$t('dialog.temperature.title')" :loading="applying" :disabled="uiFrozen || (['tuning', 'changingTool'].indexOf(state.status) !== -1)" :precision="precision" v-if="shown">
 		</number-control>
 		<span v-else>
 			{{ (tool ? (active?tool.active.toLocaleString():tool.standby.toLocaleString()) : (bed? (active?bed.active.toLocaleString():bed.standby.toLocaleString()): chamber.active.toLocaleString())) + " C"}}
@@ -47,8 +47,10 @@ export default {
 		},
 		title()
 		{
-			return this.tool ? "Enter T" + this.tool.number + " " + (this.active ? "Active": "Standby" ) + " temperature" :
-						( this.bed ? "Enter the Bed " + (this.active ? "Active": "Standby" ) + " temperature" : "Enter the Chamber target temperature")
+			return this.$t('dialog.temperature.prompt', [
+				this.tool ? 'T' + this.tool.number :
+					(this.bed ? this.$t('panel.tools.bed', ['']) : this.$t('panel.tools.chamber', [''])),
+					(this.active ? this.$t('panel.tools.active'): this.$t('panel.tools.standby'))])
 		},
 	},
 	data() {

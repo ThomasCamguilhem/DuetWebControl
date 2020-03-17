@@ -90,13 +90,13 @@
 
 <template>
 <div>
-	<v-card v-bind:class="{local: isLocal}" class="card">
+	<v-card :class="{local: isLocal}" class="card">
 		<v-card-title v-if="!isLocal">
 			<v-icon small class="mr-1">play_arrow</v-icon> {{ $t('list.gcode.caption') }}
 			<v-spacer></v-spacer>
 			<span v-show="isConnected" style="font-family: GTAmericaExpandedThin, sans-serif; text-transform: none; font-size: small;">{{ directory.replace('0:/gcodes' + (this.getTool.toUpperCase().includes('DEBUG') ? "" : "/" + this.getTool.substr(0,5)), $t('list.gcode.root')) }}</span>
 		</v-card-title>
-		<v-card-title v-else>
+		<v-card-title v-else :class="{local: isLocal}">
 			<v-icon small class="mr-1">play_arrow</v-icon> {{ $t('list.gcode.caption') }}
 			<v-spacer></v-spacer>
 			<v-btn @click="showJob">

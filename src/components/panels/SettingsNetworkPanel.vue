@@ -36,13 +36,13 @@
 									{{ $t('panel.settingsNetwork.dns' )}}
 									<ul>
 										<li v-for="(addr, index) in dns" v-bind:key="index">
-											<v-text-field :id="'dns_'+index" v-model.lazy="dns[index]" :ref="'dns-'+index" type="String" :disabled="index == 0 || !edit || !advanced" @focus="focus('dns', index)" @blur="blur('dns',index)"></v-text-field>
-										</li>
-										<li>
-											<v-btn color="grey darken-3" @click=" rmDns" :disabled="!edit || !advanced" ><v-icon>remove</v-icon>{{ $t('list.baseFileList.delete')}}</v-btn>
-											<v-btn color="grey darken-3" @click="addDns" :disabled="!edit || !advanced" ><v-icon>add</v-icon>{{ $t('button.add.caption')}}</v-btn>
+											<v-text-field :id="'dns_'+index" v-model.lazy="dns[index]" :ref="'dns-'+index" type="String" :disabled="!edit || !advanced" @focus="focus('dns', index)" @blur="blur('dns',index)"></v-text-field>
 										</li>
 									</ul>
+									<v-flex style="width: max-content; margin: 0 auto">
+										<v-btn color="grey darken-3" @click=" rmDns" :disabled="!edit || !advanced" ><v-icon>remove</v-icon>{{ $t('list.baseFileList.delete')}}</v-btn>
+										<v-btn color="grey darken-3" @click="addDns" :disabled="!edit || !advanced" ><v-icon>add</v-icon>{{ $t('button.add.caption')}}</v-btn>
+									</v-flex>
 								</v-flex>
 							</v-card-text>
 						</v-card>

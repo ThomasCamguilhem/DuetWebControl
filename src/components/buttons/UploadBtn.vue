@@ -225,29 +225,26 @@ export default {
 						if(this.target === 'gcodes')
 						{
 							if (content.size > 4*1024*1024)
-							await this.upload({ filename, content });
+								await this.upload({ filename, content });
 							else
-							this.upload({ filename, content });
+								this.upload({ filename, content });
 							filename = filename.substring(10,filename.lastIndexOf("."));
 							//console.log(content);
 							console.log(filename);
 							if(content.size <= 2*1024*1024) {
-								console.log(this.gcodeReader.lectDonnees(content, filename, this));
-							} else if(content.size < 4*1024*1024){
-								this.$makeNotification('info',
-								filename.substring(filename.lastIndexOf('/')+1) + " is too big to generate Preview",
-								"This file is too big to be able to generate a preview fast enough",
-								5000);
+								document.getElementById('threeDisplay').style.display = ''
+								this.gcodeReader.lectDonnees(content, filename, this)
 							}
 						} else {
 							await this.upload({ filename, content });
 						}
 						if (content.size > 4*1024*1024) {
 							this.$makeNotification('info',
-							filename.substring(filename.lastIndexOf('/')+1) + " has been added to queue",
-							"This file is quite big this may take up to " +
-							this.$displayTime(Math.floor(content.size/(500*1024)/10)*10)+" to be fully uploaded",
-							Math.max(Math.floor(content.size/(600*1024)), 10)*1000);
+								this.$t('notification.upload.queueTitle',
+									[filename.substring(filename.lastIndexOf('/')+1)]),
+								this.$t('notification.upload.queued',
+									[this.$displayTime(Math.floor(content.size/(500*1024)/10)*10)]),
+								Math.max(Math.floor(content.size/(600*1024)), 10)*1000);
 							setTimeout(function(caller){caller.$emit('refreshlist');}, Math.max(Math.floor(content.size/(600*1024)), 10)*1000, this);
 						}
 					}

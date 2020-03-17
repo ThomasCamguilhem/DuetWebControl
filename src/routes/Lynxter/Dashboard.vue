@@ -1,6 +1,6 @@
 <template>
 	<v-layout row wrap >
-		<v-flex v-bind:class="{'lg9': !isLocal, 'lg12': isLocal}" xs12 sm12 md8 lg12 xl12>
+		<v-flex xs12 sm12 md8 lg9 xl9>
 			<v-layout v-bind:class="{'row': $vuetify.breakpoint.mdAndUp, 'column': $vuetify.breakpoint.smAndDown}">
 				<v-flex xs12 sm12 md6 lg6 v-if="isLocal && $vuetify.breakpoint.mdAndUp">
 					<status-panel></status-panel>
@@ -22,7 +22,7 @@
 
 				<v-flex>
 					<v-layout row>
-						<v-flex v-if="!isLocal" sm12 md9 lg9 xl10>
+						<v-flex v-if="!isLocal" sm12 md12 lg12 xl12>
 							<extrude-panel></extrude-panel>
 						</v-flex>
 

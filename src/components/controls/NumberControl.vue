@@ -169,8 +169,8 @@ export default {
 		},
 		prompt: {
 			type: String,
-			default: "Enter the target temperature",
-			//required: true,
+			//default: ,
+			required: true,
 		}
 	},
 

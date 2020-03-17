@@ -1,11 +1,16 @@
+<style>
+	.local {
+		font-size: large !important;
+	}
+</style>
 <template>
 	<v-card>
-		<v-card-title>
+		<v-card-title :class="{local: isLocal}">
 			<v-icon small class="mr-1">watch_later</v-icon> {{ $t('panel.jobEstimations.caption') }}
 		</v-card-title>
 
 		<v-card-text class="pt-0 text-xs-center">
-			<v-layout row wrap>
+			<v-layout :class="(isLocal?'column':'row')" wrap>
 				<v-flex order-sm2>
 					<v-layout :class="isLocal?'row':'column'">
 						<v-flex tag="strong">
@@ -46,7 +51,7 @@
 						</v-flex>
 					</v-layout>
 				</v-flex>
-				<v-flex v-show="job.file.simulatedTime && !state.isSimulating">
+				<v-flex v-show="job.file.simulatedTime && !state.isSimulating" class="order-sm2">
 					<v-layout column>
 						<v-flex tag="strong">
 							{{ $t('panel.jobEstimations.simulation') }}
@@ -68,9 +73,7 @@ import { mapState, mapGetters } from 'vuex'
 
 export default {
 	computed: {
-		...mapState({
-			isLocal: state => state.isLocal,
-		}),
+		...mapState(['isLocal']),
 		...mapState('machine/model', ['job', 'state']),
 		...mapGetters('machine/model', ['isPrinting', 'isSimulating'])
 	}

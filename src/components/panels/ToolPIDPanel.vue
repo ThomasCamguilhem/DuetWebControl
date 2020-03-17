@@ -33,14 +33,14 @@
 			</template>
 			<v-card>
 				<v-card-text class="panel-body">
-					<v-flex style="display: inline-flex; width: 100%;">
+					<v-flex v-if="false" style="display: inline-flex; width: 100%;">
 						<span class="input-group-text" id="basic-addon1" style="font-size: 18px; margin-top: 16px; margin-right: 20px;"> {{ $t('panel.toolPID.tool') }} : </span>
 						<v-select v-model="select" id="hname" :items="myTools" :rules="[]" required style="width: 80%" @change="loadToolMatrix">
 						</v-select>
 					</v-flex>
 					<br/>
 					<v-layout row wrap>
-						<v-flex v-for="(tool, index) in toolHeads.filter((tool) => tool.h < 7)" :key="tool.h" xl4 lg4 md4 sm6 xs12>
+						<v-flex v-for="(tool, index) in toolHeads.filter((tool) => tool.h && tool.h < 7)" :key="tool.h" xl3 lg4 md4 sm6 xs12>
 							<v-layout column style="border-right: 1px solid #333; border-bottom: 1px solid #222; margin: 5px; text-align: center; background: #505050;" v-if="!tool.hide">
 								<v-layout style="font-size: larger;" row>
 									<span v-html="$t('panel.toolPID.pid', [''])"></span>&nbsp;<strong @click="targetTool" :id="tool.h"> T{{tool.h-1}}</strong>
@@ -73,14 +73,14 @@
 									</v-layout>
 								</v-layout>
 								<v-expansion-panel :value="-1" style="margin-bottom: 15px">
-									<v-expansion-panel-content style="background: #ffffff0f">
+									<v-expansion-panel-content style="background: #5a5a5a">
 										<template v-slot:header>{{ $t('panel.settingsNetwork.advanced' )}}</template>
-										<v-card style="background: #ffffff0f">
+										<v-card style="background: #5a5a5a">
 											<v-card-text class="panel-body">
 												<v-layout row>
-													<span v-html="$t('panel.toolPID.pwm')"></span>&nbsp; <input v-if="!isLocal" class="tool_offset" autocomplete="off" type="number" v-model.number="tool.s" step="1" att="s" :hnum="tool.h" @blur="toolOffsetBlurEvent" @keyup.enter="toolOffsetBlurEvent"/>&nbsp;{{ isLocal? '' : '%' }}
+													<span v-html="$t('panel.toolPID.pwm')"></span>&nbsp; <input v-if="!isLocal" class="tool_offset" autocomplete="off" type="number" v-model.number="tool['s*100']" step="1" att="s" :hnum="tool.h" @blur="toolOffsetBlurEvent" @keyup.enter="toolOffsetBlurEvent"/>&nbsp;{{ isLocal? '' : '%' }}
 												</v-layout>
-												<number-control v-if="isLocal" v-model.number="tool.s" ref="input" :min="0" :max="100" :step="1" @keydown.native="onkeydown" @keyup.enter="toolOffsetEvent($event, index, tool)" @change="toolOffsetEvent($event, index, tool, 's')" @blur="toolOffsetEvent($event, index, tool)" :title="'Tool ' + tool.h + ' PWM'" prompt="Please enter calibration PWM" :loading="false" :disabled="heat.heaters[tool.h].state >= 3"></number-control>
+												<number-control v-if="isLocal" v-model.number="tool['s*100']" ref="input" :min="0" :max="100" :step="1" @keydown.native="onkeydown" @keyup.enter="toolOffsetEvent($event, index, tool)" @change="toolOffsetEvent($event, index, tool, 's')" @blur="toolOffsetEvent($event, index, tool)" :title="'Tool ' + tool.h + ' PWM'" prompt="Please enter calibration PWM" :loading="false" :disabled="heat.heaters[tool.h].state >= 3"></number-control>
 												<v-layout row v-if="!isLocal">
 													<v-tooltip bottom>
 														<template v-slot:activator="{ on }">
@@ -107,20 +107,18 @@
 									</v-expansion-panel-content>
 								</v-expansion-panel>
 								<v-layout column>
-									<v-btn :hnum="tool.h" @click="tunePid" color="grey darken-2" :disabled="heat.heaters[tool.h].state >= 3">
+									<v-btn :hnum="tool.h" @click="tunePid" :disabled="heat.heaters[tool.h].state >= 3">
 										<v-icon></v-icon>
-										<span class="content">Run PID tuning</span>
+										<span class="content">{{ $t('panel.toolPID.run') }}</span>
 									</v-btn>
-									<v-btn :hnum="tool.h" @click="savePid" color="grey darken-2" :disabled="heat.heaters[tool.h].state >= 3">
+									<v-btn :hnum="tool.h" @click="savePid" :disabled="heat.heaters[tool.h].state >= 3">
 										<v-icon></v-icon>
-										<span class="content">Save results</span>
+										<span class="content">{{ $t('panel.toolPID.save') }}</span>
 									</v-btn>
 								</v-layout>
 							</v-layout>
 						</v-flex>
-					</v-layout>
-					<v-layout row wrap >
-						<v-flex xl4 lg4 md4 sm6 xs12 v-if="bed != {} && heat.heaters[bed.h]">
+						<v-flex xl3 lg4 md4 sm6 xs12 v-if="bed != {} && heat.heaters[bed.h]">
 							<v-layout column style="border-right: 1px solid #333; border-bottom: 1px solid #222; margin: 5px; text-align: center; background: #505050;" v-if="!bed.hide">
 								<v-layout style="font-size: larger;" row>
 									<span v-html="$t('panel.toolPID.pid', [''])"></span>&nbsp;<strong> Bed</strong>
@@ -153,14 +151,14 @@
 									</v-layout>
 								</v-layout>
 								<v-expansion-panel :value="-1" style="margin-bottom: 15px">
-									<v-expansion-panel-content style="background: #ffffff0f">
+									<v-expansion-panel-content style="background: #5a5a5a">
 										<template v-slot:header>{{ $t('panel.settingsNetwork.advanced' )}}</template>
-										<v-card style="background: #ffffff0f">
+										<v-card style="background: #5a5a5a">
 											<v-card-text class="panel-body">
 												<v-layout row>
-													<span v-html="$t('panel.toolPID.pwm')"></span>&nbsp; <input v-if="!isLocal" class="tool_offset" autocomplete="off" type="number" v-model.number="bed.s" step="1" att="s" :hnum="0" @blur="toolOffsetBlurEvent" @keyup.enter="toolOffsetBlurEvent"/>&nbsp;{{ isLocal? '' : '%' }}
+													<span v-html="$t('panel.toolPID.pwm')"></span>&nbsp; <input v-if="!isLocal" class="tool_offset" autocomplete="off" type="number" v-model.number="bed['s*100']" step="1" att="s" :hnum="0" @blur="toolOffsetBlurEvent" @keyup.enter="toolOffsetBlurEvent"/>&nbsp;{{ isLocal? '' : '%' }}
 												</v-layout>
-												<number-control v-if="isLocal" v-model.number="bed.s" ref="input" :min="0" :max="100" :step="1" @keydown.native="onkeydown" @keyup.enter="toolOffsetEvent($event, 0, bed)" @change="toolOffsetEvent($event, 0, bed, 's')" @blur="toolOffsetEvent($event, 0, bed)" :title="'Tool ' + bed.h + ' PWM'" prompt="Please enter calibration PWM" :loading="false" :disabled="heat.heaters[bed.h].state >= 3"></number-control>
+												<number-control v-if="isLocal" v-model.number="bed['s*100']" ref="input" :min="0" :max="100" :step="1" @keydown.native="onkeydown" @keyup.enter="toolOffsetEvent($event, 0, bed)" @change="toolOffsetEvent($event, 0, bed, 's')" @blur="toolOffsetEvent($event, 0, bed)" :title="'Tool ' + bed.h + ' PWM'" prompt="Please enter calibration PWM" :loading="false" :disabled="heat.heaters[bed.h].state >= 3"></number-control>
 												<v-layout row v-if="!isLocal">
 													<v-tooltip bottom>
 														<template v-slot:activator="{ on }">
@@ -187,18 +185,18 @@
 									</v-expansion-panel-content>
 								</v-expansion-panel>
 								<v-layout column>
-									<v-btn :hnum="0" @click="tunePid" color="grey darken-2" :disabled="heat.heaters[bed.h].state >= 3">
+									<v-btn :hnum="0" @click="tunePid" :disabled="heat.heaters[bed.h].state >= 3">
 										<v-icon></v-icon>
-										<span class="content">Run PID tuning</span>
+										<span class="content">{{ $t('panel.toolPID.run') }}</span>
 									</v-btn>
-									<v-btn :hnum="0" @click="savePid" color="grey darken-2" :disabled="heat.heaters[bed.h].state >= 3">
+									<v-btn :hnum="0" @click="savePid" :disabled="heat.heaters[bed.h].state >= 3">
 										<v-icon></v-icon>
-										<span class="content">Save results</span>
+										<span class="content">{{ $t('panel.toolPID.save') }}</span>
 									</v-btn>
 								</v-layout>
 							</v-layout>
 						</v-flex>
-						<v-flex xl4 lg4 md4 sm6 xs12 v-if="chamber != {} && heat.heaters[chamber.h]">
+						<v-flex xl3 lg4 md4 sm6 xs12 v-if="chamber != {} && heat.heaters[chamber.h]">
 							<v-layout column style="border-right: 1px solid #333; border-bottom: 1px solid #222; margin: 5px; text-align: center; background: #505050;" v-if="!chamber.hide">
 								<v-layout style="font-size: larger;" row>
 									<span v-html="$t('panel.toolPID.pid', [''])"></span>&nbsp;<strong> Chamber </strong>
@@ -230,48 +228,14 @@
 										</v-tooltip><br/>
 									</v-layout>
 								</v-layout>
-								<v-expansion-panel :value="-1" style="margin-bottom: 15px">
-									<v-expansion-panel-content style="background: #ffffff0f">
-										<template v-slot:header>{{ $t('panel.settingsNetwork.advanced' )}}</template>
-										<v-card style="background: #ffffff0f">
-											<v-card-text class="panel-body">
-												<v-layout row>
-													<span v-html="$t('panel.toolPID.pwm')"></span>&nbsp; <input v-if="!isLocal" class="tool_offset" autocomplete="off" type="number" v-model.number="chamber.s" step="1" att="s" :hnum="4" @blur="toolOffsetBlurEvent" @keyup.enter="toolOffsetBlurEvent"/>&nbsp;{{ isLocal? '' : '%' }}
-												</v-layout>
-												<number-control v-if="isLocal" v-model.number="chamber.s" ref="input" :min="0" :max="100" :step="1" @keydown.native="onkeydown" @keyup.enter="toolOffsetEvent($event, 4, chamber)" @change="toolOffsetEvent($event, 4, chamber, 's')" @blur="toolOffsetEvent($event, 4, chamber)" :title="'Tool ' + chamber.h + ' PWM'" prompt="Please enter calibration PWM" :loading="false" :disabled="heat.heaters[chamber.h].state >= 3"></number-control>
-												<v-layout row v-if="!isLocal">
-													<v-tooltip bottom>
-														<template v-slot:activator="{ on }">
-															<v-btn class="btn_tilt" att="s" :hnum="4" dir="d" v-on="on" @click="offsetEvent" v-bind:class="{'v-btn--disabled': heat.heaters[chamber.h].state >= 3}">
-																<v-icon> arrow_drop_down </v-icon>
-																<span class="content">-1%</span>
-															</v-btn>
-														</template>
-														<span> Offsets the chamber head by a tiny amount in the X direction (G10 Px Xyy) </span>
-													</v-tooltip>
-													<v-tooltip bottom>
-														<template v-slot:activator="{ on }">
-															<v-btn class="btn_tilt" att="s" :hnum="4" dir="u" v-on="on" @click="offsetEvent" v-bind:class="{'v-btn--disabled': heat.heaters[chamber.h].state >= 3}">
-																<v-icon style="transform:rotate(180deg)"> arrow_drop_down </v-icon>
-																<span class="content">+1%</span>
-															</v-btn>
-														</template>
-														<span> Offsets the chamber head by a tiny amount in the X direction (G10 Px Xyy) </span>
-													</v-tooltip><br/>
-												</v-layout>
-												{{ heat.heaters[chamber.h].current }}°C
-											</v-card-text>
-										</v-card>
-									</v-expansion-panel-content>
-								</v-expansion-panel>
 								<v-layout column>
-									<v-btn :hnum="4" @click="tunePid" color="grey darken-2" :disabled="heat.heaters[chamber.h].state >= 3">
+									<v-btn :hnum="4" @click="tunePid" :disabled="heat.heaters[chamber.h].state >= 3">
 										<v-icon></v-icon>
-										<span class="content">Run PID tuning</span>
+										<span class="content">{{ $t('panel.toolPID.run') }}</span>
 									</v-btn>
-									<v-btn :hnum="4" @click="savePid" color="grey darken-2" :disabled="heat.heaters[chamber.h].state >= 3">
+									<v-btn :hnum="4" @click="savePid" :disabled="heat.heaters[chamber.h].state >= 3">
 										<v-icon></v-icon>
-										<span class="content">Save results</span>
+										<span class="content">{{ $t('panel.toolPID.save') }}</span>
 									</v-btn>
 								</v-layout>
 							</v-layout>
@@ -481,7 +445,8 @@ export default {
 						toolHeads[toolNum].v = parseFloat(line[j].substring(1)).toFixed(2);
 					} else if(line[j].includes("S")) { // PWM frequency Between 0 and 1
 						//console.log("Max frequency of heater " + toolHeads[toolNum].h + " = " + parseFloat(line[j].substring(1)));
-						toolHeads[toolNum].s = parseFloat(line[j].substring(1))*100;
+						toolHeads[toolNum].s = parseFloat(line[j].substring(1));
+						toolHeads[toolNum]['s*100'] = Math.round(toolHeads[toolNum].s*100)
 					}
 				}
 			}
@@ -666,7 +631,7 @@ export default {
 				//console.log(attr)
 				let oldVal, newVal;
 				if (attr.hnum.value > 0 && attr.hnum.value < 4) {
-					oldVal = parseFloat(this.toolHeads[attr.hnum.value][attr.att.value])
+					oldVal = parseFloat(this.toolHeads[attr.hnum.value-1][attr.att.value])
 				} else {
 					if (attr.hnum.value == 0) {
 						oldVal = parseFloat(this.bed[attr.att.value])
@@ -677,12 +642,27 @@ export default {
 				newVal = oldVal + (attr.att.value == 't' ? value : value/100)
 				//console.log(oldVal, newVal)
 				if (attr.hnum.value > 0 && attr.hnum.value < 4) {
-					this.toolHeads[attr.hnum.value][attr.att.value] = (attr.att.value == 't' ? newVal : newVal.toFixed(2));
+					this.toolHeads[attr.hnum.value-1][attr.att.value] = (attr.att.value == 't' ? newVal : newVal.toFixed(2));
+
+					if (attr.att.value == 's'){
+						this.toolHeads[attr.hnum.value-1]['s*100'] = newVal*100;
+						if (attr.hnum.value == 0)
+						{
+								this.bed.s = (that.value/100).toFixed(2);
+								this.bed['s*100'] = that.value
+						}
+					}
 				} else {
 					if (attr.hnum.value == 0) {
 						this.bed[attr.att.value] = (attr.att.value == 't' ? newVal : newVal.toFixed(2));
+						if (attr.att.value == 's'){
+							this.bed['s*100'] = newVal*100;
+						}
 					} else if (attr.hnum.value == 4) {
 						this.chamber[attr.att.value] = (attr.att.value == 't' ? newVal : newVal.toFixed(2));
+						if (attr.att.value == 's'){
+							this.chamber['s*100'] = newVal*100;
+						}
 					}
 				}
 				that.classList.remove("v-btn--disabled")
@@ -691,21 +671,39 @@ export default {
 		toolOffsetBlurEvent: async function(e) {
 			e.preventDefault();
 			let that = e.target;
-			//console.log("inputField blured")
-			//console.log(e.target)
+			console.log("inputField blured")
+			console.log(e.target)
 			while (that.nodeName.toLowerCase() !== "input") {
 				that = that.parentElement;
 			}
 			let attr = that.attributes;
-			//console.log(that)
-			this.toolHeads[attr.hnum.value][attr.att.value] = (attr.att.value == 't' ? that.value : (that.value/100).toFixed(2))
+			if (attr.att.value == 's'){
+				this.toolHeads[attr.hnum.value-1].s = (that.value/100).toFixed(2);
+				this.toolHeads[attr.hnum.value-1]['s*100'] = that.value;
+				if (attr.hnum.value == 0)
+				{
+						this.bed.s = (that.value/100).toFixed(2);
+						this.bed['s*100'] = that.value
+				}
+			}
+			console.log(attr.att.value == 't' ? that.value : (that.value/100))
+			this.toolHeads[attr.hnum.value-1][attr.att.value] = (attr.att.value == 't' ? that.value : (that.value/100))
 
 		},
 		toolOffsetEvent: function(off, index, tool, axis) {
 			console.log(off, index, tool, axis)
 			clearTimeout(this.pidToolCalib);
-			console.log(off,tool)
-			this.toolHeads[index][axis] = axis=="s" ? off / 100 : off
+			console.log(off, tool)
+			if (this.toolHeads[index]) {
+				this.toolHeads[index][axis] = axis=="s" ? off / 100 : off
+			}
+			tool[axis] = axis=="s" ? off / 100 : off
+			if (axis == 's'){
+				if (this.toolHeads[index]) {
+					this.toolHeads[index]['s*100'] = off;
+				}
+				tool['s*100'] = off;
+			}
 			console.log(this.toolHeads)
 			//this.pidToolCalib = setTimeout(this.sendToolMatrix, 1000, index)
 		},
@@ -738,9 +736,9 @@ export default {
 					await this.sendCode({code: "T" + (parseInt(tool.h)-1), log: false });
 					this.curTool = parseInt(tool.h)-1;
 				}
-				console.log('M303 H' + tool.h + ' P' + (tool.s/100).toFixed(2) + ' S' + tool.t)
+				console.log('M303 H' + tool.h + ' P' + (typeof(tool.s)=="string"?(tool.s):(tool.s).toFixed(2)) + ' S' + tool.t)
 				if (this.chamber.h != attr.hnum.value) {
-					await this.sendCode({code: "M303 H" + tool.h + " P" + (tool.s/100).toFixed(2) + " S" + tool.t, log: false});
+					await this.sendCode({code: "M303 H" + tool.h + " P" + tool.s + " S" + tool.t, log: false});
 				} else {
 					this.tuneManually()
 					this.chamberNotif = log('info', 'Tuning chamber', "Auto tune phase 0, waiting for temperature to stabilize");
@@ -869,9 +867,9 @@ export default {
 					this.pidTuning.tuningTempReadings[0] = this.pidTuning.tuningStartTemp = temperature;
 					this.pidTuning.timeSetHeating = this.pidTuning.tuningPhaseStartTime = this.pidTuning.millis();
 					//if (heater.num == 0)
-					this.sendCode("M140 S120")										// turn on heater at specified power
+					this.sendCode("M143 H0 S200\nM140 S120")										// turn on heater at specified power
 					//else if (heater.num == 4)
-					this.sendCode("M141 S80")										// turn on heater at specified power
+					this.sendCode("M143 H4 S160\nM141 S100")										// turn on heater at specified power
 					this.pidTuning.tuningReadingInterval = this.pidTuning.HeatSampleIntervalMillis;			// reset sampling interval
 					this.pidTuning.mode = this.pidTuning.HeaterMode.tuning1;
 					this.chamberNotif = log('info', 'Tuning chamber', "Auto tune phase 1, heater on");
@@ -916,7 +914,7 @@ export default {
 					this.pidTuning.tuningVoltageAccumulator += vin;
 					++this.pidTuning.voltageSamplesTaken;
 					//console.log(temperature);
-					if (temperature > this.pidTuning.tuningTargetTemp)							// if reached target
+					if (temperature > this.chamber.t)							// if reached target
 					{
 						this.pidTuning.tuningHeatingTime = heatingTime;
 

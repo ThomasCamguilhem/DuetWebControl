@@ -1,6 +1,6 @@
 <template>
 	<v-layout row wrap style="background: #303030">
-		<v-flex v-bind:class="{'lg9': !isLocal, 'lg12': isLocal}" xs12 sm12 md8 xl9>
+		<v-flex xs12 sm12 md8 lg9 xl9>
 			<!-- v-bind:class="{'row': $vuetify.breakpoint.mdAndUp, 'column': $vuetify.breakpoint.smAndDown}"-->
 			<v-flex>
 				<v-layout row>

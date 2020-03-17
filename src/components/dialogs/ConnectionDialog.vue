@@ -135,7 +135,7 @@ export default {
 			if (this.isLoggingOut) {
 				return this.$t('dialog.connection.loggingout');
 			} if (this.isLoadingTool) {
-				return "Loading Tool please wait";
+				return this.$t('dialog.connection.loadingtool');
 			}
 			return this.$t('dialog.connection.standBy');
 		},

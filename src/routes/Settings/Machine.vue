@@ -2,9 +2,9 @@
 	<v-layout row wrap>
 		<v-flex md5 lg4>
 			<v-layout row wrap>
-			<v-flex xs12 v-if="isLocal">
-				<settings-about-panel></settings-about-panel>
-			</v-flex>
+				<v-flex xs12 v-if="isLocal">
+					<settings-about-panel></settings-about-panel>
+				</v-flex>
 				<v-flex :class="isLocal?'sm12':'sm6'" md12>
 					<settings-electronics-panel></settings-electronics-panel>
 				</v-flex>
@@ -41,8 +41,8 @@ export default {
 	computed: {
 		...mapState({
 			isLocal: state => state.isLocal,
-			}),
-		}
+		}),
 	}
-	//alert(new Date());
+}
+//alert(new Date());
 </script>

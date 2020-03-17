@@ -1,6 +1,9 @@
 let THREE = require('three');
 let Scene = require('./threeScene.js');
 let LineReader = require('./LineReader.js');
+
+import { displaySpeed } from '../plugins/display.js'
+import i18n from '../i18n'
 //const exportSTL = require('threejs-export-stl');
 //import JSZip from 'jszip'
 //let $ = require('jquery');
@@ -108,7 +111,8 @@ export default {
 						for (let key in this.scene.preview.pointCloud) {
 								if (this.slicer == undefined || key == "Unknown" || key != "length") {
 										for (let gcodeLayer in this.scene.preview.pointCloud[key]) {
-												self.scene.preview.previewScene.remove(self.scene.preview.previewScene.getObjectByName(key + "_" + gcodeLayer));
+												self.scene.preview.previewScene.remove(
+													self.scene.preview.previewScene.getObjectByName(key + "_" + gcodeLayer));
 										}
 								}
 						}
@@ -183,22 +187,30 @@ export default {
 										totalCount++;
 								}
 								self.instructionPos = self.lineReader.GetReadPos();
-								if (Math.ceil((self.instructionPos/self.fileSize)*100) > self.lastPrct)
+								if (Math.ceil((self.instructionPos/self.fileSize)*1000) > self.lastPrct)
 								{
-									//var progress = Math.ceil((self.instructionPos/self.fileSize)*100);
-									//parseRows[parsedFileCount].find(".progress-bar").css("width", progress + "%");
-									//parseRows[parsedFileCount].find(".progress-bar > span").text(progress + " %");
+									var progress = Math.min(100, Math.max(0, Math.floor((self.instructionPos/self.fileSize)*1000)/10));
+									document.getElementById("progress").style.width = progress + "%"
+									//document.getElementById("progress").innerHTML = progress + (Math.floor(progress) != Math.ceil(progress) ? "" : ".0") + "&nbsp;%";
 									//console.log(progress + " %")
+									//self.toast.onProgress({loaded: self.instructionPos, total: self.fileSize})
 
-									self.toast.onProgress({loaded: self.instructionPos, total: self.fileSize})
+									self.lastPrct = Math.ceil((self.instructionPos/self.fileSize)*1000);
 
-									self.lastPrct = Math.ceil((self.instructionPos/self.fileSize)*100);
-									//parseRows[parsedFileCount].find("#eta")[0].innerHTML = "eta: " + this.toHMS(Math.round(ERT/1000), true);
 
-			//var elt = ((new Date() - start)/(self.instructionPos/self.fileSize));
-			//var ert = elt * (1-(self.instructionPos/self.fileSize));
+									let elt = ((new Date() - start)/(self.instructionPos/self.fileSize));
+									let ert = elt * (1-(self.instructionPos/self.fileSize));
+									document.getElementById("pleft").innerHTML = i18n.t('notification.parse.eta', [self.toHMS(Math.round(ert/1000), true)]);
+
+									let uploadSpeed = self.instructionPos / (((new Date()) - start) / 1000)
+									document.getElementById("pspeed").innerHTML = i18n.t('notification.parse.speed',
+										[displaySpeed(uploadSpeed), " ( " + Math.round(totalCount / (((new Date()) - start) / 1000)) +" l/s )"]);
+
 									//console.log( "eta: " + self.toHMS(Math.round(ert/1000), true))
-									setTimeout(next, self.fileSize > 1024 * 1024 ? (self.fileSize > 16 * 1024 * 1024 ? 1000 : 100) : 0);
+									if (self.fileSize > 2 * 1024 * 1024)
+										setTimeout(next, self.fileSize > 16 * 1024 * 1024 ? 1000 : 100);
+									else
+										next()
 								} else {
 									//if (totalCount < 210)
 									next();
@@ -219,9 +231,9 @@ export default {
 
 						self.lineReader.on('end', function() {
 								console.log("Read complete!\n" + totalCount + " lines parsed\n took " + self.toHMS(Math.round((new Date() - start) / 1000), true));
-								self.toast.domElement.firstChild.childNodes[1].firstChild.innerText = "Generating preview"
-								self.toast.domElement.firstChild.childNodes[1].lastChild.innerText = "Please stand by while the preview is being generated"
-								let notif = makeNotification('info', 'Generating preview', "Please wait while we generate the preview for the gcode uploaded", null);
+								//self.toast.domElement.firstChild.childNodes[1].firstChild.innerText = "Generating preview"
+								//self.toast.domElement.firstChild.childNodes[1].lastChild.innerText = "Please stand by while the preview is being generated"
+								//let notif = makeNotification('info', 'Generating preview', "Please wait while we generate the preview for the gcode uploaded", null);
 								self.scene.hasGeoToRender = true;
 								self.scene.preview.pointCloud["MOVE"] = self.moves;
 								self.scene.preview.pointCloud.length++;
@@ -263,12 +275,22 @@ export default {
 								self.scene.preview.pointCloud = {};
 								//console.log(self.toast);
 
-								self.toast.hide();
-								notif.hide();
+								//self.toast.hide();
+								//notif.hide();
+								document.getElementById("uploadDiv").style.display = "none";
 						});
+						document.getElementById("uploadDiv").style.display = ""
+						document.getElementById("progress").style.width = ""
+						document.getElementById("fileProgress").style.width = ""
+						document.getElementById("fname").innerHTML = i18n.t('notification.parse.title',
+							[file.name.substring(file.name.lastIndexOf('/')+1)]);
+							this.scene.preview.previewCamera.position.set(-800, 550, 0);
+							this.scene.preview.previewControls.target.set(0, 250, 0);
+							this.scene.preview.previewControls.update();
+							this.scene.preview.previewRenderer.render(this.scene.preview.previewScene, this.scene.preview.previewCamera);
 						return new Promise(resolve => {
 							self.lineReader.read(self.fileInput);
-							self.toast = makeFileTransferNotification('parse', '0:/gcodes/', {cancel:function(){if(self.DEBUG) console.log("canceled")}}, null, null);
+							//self.toast = makeFileTransferNotification('parse', '0:/gcodes/', {cancel:function(){if(self.DEBUG) console.log("canceled")}}, null, null);
 							resolve('')
 						});
 						//console.log(self.onProgress)
@@ -405,7 +427,7 @@ export default {
 
 															//console.log(this.boundingBox.toSource());
 															if ((this.boundingBox.max.x > this.boundingBox.min.x) || (this.boundingBox.max.y > this.boundingBox.min.y) || (this.boundingBox.max.z > this.boundingBox.min.y)) {
-																if (!this.scene.preview.previewScene.getObjectByName("bbox")) {
+																/*if (!this.scene.preview.previewScene.getObjectByName("bbox")) {
 																		this.centerX = (this.boundingBox.max.x + this.boundingBox.min.x) / 2;
 																		this.centerY = (this.boundingBox.max.y + this.boundingBox.min.y) / 2;
 																		this.width = this.boundingBox.max.x - this.boundingBox.min.x;
@@ -454,9 +476,9 @@ export default {
 																*/
 																this.centerX = (this.boundingBox.max.x + this.boundingBox.min.x) / 2;
 																this.centerY = (this.boundingBox.max.y + this.boundingBox.min.y) / 2;
-																this.scene.preview.previewCamera.position.set(this.centerY, 0, this.centerX);
 																this.width	=	this.boundingBox.max.x - this.boundingBox.min.x;
 																this.length = this.boundingBox.max.y - this.boundingBox.min.y;
+																this.scene.preview.previewCamera.position.set(this.centerY, 0, this.centerX);
 																this.scene.preview.previewControls.target.x = this.centerY + 0.1;
 																this.scene.preview.previewControls.target.z = this.centerX;
 																if (this.boundingBox.max.z < this.lastPos.z) {
@@ -921,9 +943,9 @@ export default {
 										this.lastPos.t = -1;
 										break;
 
-								case "T1":
+								case "T0":
 										if (this.DEBUG) {
-												console.log("Tool 1 selected");
+												console.log("Tool 0 selected");
 												console.log(this.extruders[0]);
 										}
 										this.extWidth = (this.extruders[0] !== undefined?this.extruders[0].width:0.4);
@@ -932,9 +954,9 @@ export default {
 										this.lastPos.t = 0;
 										break;
 
-								case "T2":
+								case "T1":
 										if (this.DEBUG) {
-												console.log("Tool 2 selected");
+												console.log("Tool 1 selected");
 												console.log(this.extruders[1]);
 										}
 										this.extWidth = (this.extruders[1] !== undefined?this.extruders[1].width:0.4);
@@ -943,9 +965,9 @@ export default {
 										this.lastPos.t = 1;
 										break;
 
-								case "T3":
+								case "T2":
 										if (this.DEBUG) {
-												console.log("Tool 3 selected");
+												console.log("Tool 2 selected");
 												console.log(this.extruders[2]);
 										}
 										this.extWidth = (this.extruders[2] !== undefined?this.extruders[2].width:0.4);
@@ -954,25 +976,25 @@ export default {
 										this.lastPos.t = 2;
 										break;
 
-								case "T4":
+								case "T3":
 										if (this.DEBUG) {
-												console.log("Tool 4 selected");
+												console.log("Tool 3 selected");
 												console.log(this.extruders[3]);
 										}
 										this.extWidth = (this.extruders[3] !== undefined?this.extruders[3].width:0.4);
 										this.lastPos.t = 3;
 										break;
 
-								case "T5":
+								case "T4":
 										if (this.DEBUG) {
-												console.log("Tool 5 selected");
+												console.log("Tool 4 selected");
 												console.log(this.extruders[4]);
 										}
 										this.extWidth = (this.extruders[4] !== undefined?this.extruders[4].width:0.4);
 										this.lastPos.t = 4;
 										break;
 
-								case "T6":
+								case "T5":
 										if (this.DEBUG) {
 												console.log("Tool 6 selected");
 												console.log(this.extruders[5]);
@@ -1023,8 +1045,10 @@ export default {
 										break;
 
 								default:
-										console.log("unknown command: " + args.cmd);
-										console.log(args);
+										if (this.DEBUG) {
+											console.log("unknown command: " + args.cmd);
+											console.log(args);
+										}
 										break;
 						}
 				},

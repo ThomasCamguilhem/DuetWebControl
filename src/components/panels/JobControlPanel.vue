@@ -29,12 +29,14 @@
 
 import { mapState, mapGetters, mapMutations, mapActions} from 'vuex'
 
+import { extractFileName } from '../../utils/path.js'
+
 export default {
 	data() {
 		return {
 			confirmCancelDialog: {
-				question: '',
-				prompt: "Are you sure you want to cancel the print",
+				question: this.$t('dialog.cancel.title'),
+				prompt: this.$t('dialog.cancel.prompt',['']),
 				shown: false
 			},
 		}
@@ -84,6 +86,9 @@ export default {
 				return this.$t('panel.jobControl.repeatPrint');
 			}
 			return this.$t('panel.jobControl.repeatJob');
+		},
+		printFile() {
+			return this.job.file.fileName ? extractFileName(this.job.file.fileName) : undefined;
 		}
 	},
 	methods: {
@@ -91,7 +96,8 @@ export default {
 		...mapActions('machine', ['sendCode']),
 		confirmCancel: function() {
 			console.log(this.confirmCancelDialog);
-			this.confirmCancelDialog.question = this.cancelText;
+			//this.confirmCancelDialog.question = this.cancelText;
+			this.confirmCancelDialog.prompt =this.$t('dialog.cancel.prompt', [this.printFile?this.printFile:" l'impression"]);
 			this.$nextTick(() => this.confirmCancelDialog.shown = true);
 		}
 	}

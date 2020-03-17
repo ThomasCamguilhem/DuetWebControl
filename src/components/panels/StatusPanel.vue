@@ -35,8 +35,8 @@ a:not(:hover) {
 </style>
 
 <template>
-	<v-card v-bind:class="{local: isLocal}">
-		<v-card-title class="py-2">
+	<v-card :class="{local: isLocal}">
+		<v-card-title class="py-2" :class="{local: isLocal}">
 			<v-icon small class="mr-1">info</v-icon> {{ $t('panel.status.caption') }}
 
 			<v-spacer></v-spacer>

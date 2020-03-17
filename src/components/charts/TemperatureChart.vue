@@ -14,11 +14,15 @@
 .content > canvas {
 	position: absolute;
 }
+
+.local {
+	font-size: large;
+}
 </style>
 
 <template>
 	<v-card class="card">
-		<v-card-title class="pt-2 pb-0">
+		<v-card-title class="pt-2 pb-0" :class="{local: isLocal}">
 			<v-icon class="mr-1">show_chart</v-icon> {{ $t('chart.temperature.caption') }}
 
 			<v-spacer></v-spacer>

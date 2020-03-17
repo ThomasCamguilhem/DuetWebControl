@@ -73,7 +73,7 @@
 				/**
 				 * Split the text into an array of lines
 				 */
-				self._internals.lines = self._internals.chunk.match(/[^\r\n]+/g)
+				self._internals.lines = self._internals.chunk.split(/\n/g)
 
 				/**
 				 * If there is still more data to read, save the last line, as it may be
@@ -224,7 +224,9 @@
 			 * in the wrong scope when the user calls it
 			 */
 			if (this._internals.canRead) {
-				let line = this._internals.lines.shift();
+        let line = this._internals.lines.join('\n');
+				this._internals.lines = [];
+				//let line = this._internals.lines.shift();
         let decoded = line;
         try {
           /**
