@@ -11,7 +11,7 @@
 		<number-control v-model.number="value" ref="input" :min="0" :max="1999" :step="1" @keydown.native="onkeydown" @keyup.enter="apply" @change="onnumchange" @blur="onblur" :title="title" :prompt="$t('dialog.temperature.title')" :loading="applying" :disabled="uiFrozen || (['tuning', 'changingTool'].indexOf(state.status) !== -1)" :precision="precision" v-if="shown">
 		</number-control>
 		<span v-else>
-			{{ (tool ? (active?tool.active.toLocaleString():tool.standby.toLocaleString()) : (bed? (active?bed.active.toLocaleString():bed.standby.toLocaleString()): chamber.active.toLocaleString())) + " C"}}
+			{{ (tool ? (active?tool.active[heaterIndex]:tool.standby[heaterIndex]) : (bed? (active?bed.active[heaterIndex]:bed.standby[heaterIndex]): chamber.active[heaterIndex])) + " C"}}
 		</span>
 	</div>
 </template>

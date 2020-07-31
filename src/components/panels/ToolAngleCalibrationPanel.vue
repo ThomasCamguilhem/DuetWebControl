@@ -57,7 +57,7 @@ p {
 						{{$t('panel.toolAngle.auto')}}
 					</v-btn>
 
-					<div v-if="chart  || true" style="height: 200px">
+					<div :style="{height: chart ? '200px' : '0px' }">
 						<canvas ref="chart"></canvas>
 					</div>
 					<v-expansion-panel :value="-1" class="z_probe_offset" style="margin-top: 10px">
@@ -227,9 +227,9 @@ export default {
 						//console.log(file.toSource());
 						toolName = file.directory.substring(file.directory.lastIndexOf("/")+1);
 						if (toolName.match(/\.([a-zA-Z])+$/))
-							toolName = toolName.substring(0, toolName.lastIndexOf("."));
+						toolName = toolName.substring(0, toolName.lastIndexOf("."));
 						if(that.toolPath[toolName] === undefined)
-							that.toolPath[toolName] = {};
+						that.toolPath[toolName] = {};
 						if(that.toolPath[toolName].matrix === undefined) {
 							that.toolHeads.push(toolName);
 						}
@@ -407,6 +407,8 @@ export default {
 				}
 			});
 
+			console.log(this.chart)
+
 			this.applyDarkTheme(this.darkTheme);
 
 			console.log(this.filePath)
@@ -473,7 +475,7 @@ export default {
 						//console.log(this.chart.data.datasets[0]);
 						this.chart.update();
 					}
-				} while (angle < Math.min(180, tAngle+10) && offZ < (0.95*minZ.offset));
+				} while (angle < Math.min(180, tAngle+10));
 				this.chart.data.datasets[0].data.push({x: angle, y: NaN})
 				console.log(minZ);
 				await that.sendCode({code: "G4 S10", log: false})

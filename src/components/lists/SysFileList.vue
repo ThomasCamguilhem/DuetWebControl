@@ -17,7 +17,7 @@
 			<v-btn class="hidden-md-and-up" color="grey darken-3" :loading="loading" :disabled="uiFrozen" @click="refresh">
 				<v-icon class="mr-1">refresh</v-icon>
 			</v-btn>
-			<upload-btn class="hidden-sm-and-down" :directory="directory" target="sys" color="primary darken-1"  v-on:refreshlist="refresh"></upload-btn>
+			<upload-btn class="hidden-sm-and-down" :directory="directory" target="sys" color="primary darken-1"  v-on:refreshlist="refresh" v-on:uploadComplete="refresh"></upload-btn>
 			<upload-zip-btn class="hidden-sm-and-down" :directory="directory" target="update" color="primary darken-1"></upload-zip-btn>
 		</v-toolbar>
 
@@ -39,7 +39,7 @@
 			<v-btn color="secondary" :loading="loading" :disabled="uiFrozen" @click="refresh">
 				<v-icon class="mr-1">refresh</v-icon> {{ $t('button.refresh.caption') }}
 			</v-btn>
-			<upload-btn :directory="directory" target="sys" color="primary"></upload-btn>
+			<upload-btn :directory="directory" target="sys" color="primary" v-on:uploadComplete="refresh"></upload-btn>
 		</v-layout>
 
 		<new-directory-dialog :shown.sync="showNewDirectory" :directory="directory"></new-directory-dialog>

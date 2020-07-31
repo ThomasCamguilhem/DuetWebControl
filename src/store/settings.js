@@ -29,8 +29,20 @@ export default {
 			embedded: false,							// use iframe to embed webcam stream
 			rotation: 0,
 			flip: 'none',
-			resolution: '0x0',
-			framerate: 0,
+			resolution: '360x240',
+			framerate: 30,
+		},
+		timelapse: {
+			url: '',
+			onInterval: false,
+			updateInterval: 5,
+			onLayer: false,
+			resolution: '360x240',
+			framerate: {
+				min: 5,
+				max: 60
+			},
+			targetDuration: 5,
 		}
 	},
 	mutations: {

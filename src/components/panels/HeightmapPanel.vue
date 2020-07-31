@@ -52,87 +52,88 @@ canvas {
 					<v-flex class="pa-2" xs12 sm12 md3 lg3 xl2>
 						<v-layout v-bind:class="$vuetify.breakpoint.smAndDown?'row':'column'" fill-height justifiy-space-between>
 							<v-layout column>
-								<div>
-									<div class="px-2" style="border-radius: 5px; margin: 5px auto; width: max-content" :class="statusClass()">
-										{{ statusName() }}
+								<v-flex shrink>
+									{{ $t('panel.heightmap.colorScheme') }}
+								</v-flex>
+								<v-flex shrink>
+									<v-btn-toggle v-model="colorScheme">
+										<v-btn value="terrain">{{ $t('panel.heightmap.terrain') }}</v-btn>
+										<v-btn value="heat">{{ $t('panel.heightmap.heat') }}</v-btn>
+										<v-btn value="diff">{{ $t('panel.heightmap.diff') }}</v-btn>
+									</v-btn-toggle>
+								</v-flex>
+								<v-flex shrink>
+									<v-btn class="ml-0" :disabled="!ready" @click="topViewFct">
+										<v-icon small class="mr-1">{{topView?'3d_rotation':'vertical_align_bottom'}}</v-icon> {{ topView?$t('panel.heightmap.perspective'):$t('panel.heightmap.topView') }}
+									</v-btn>
+								</v-flex>
+								<v-flex shrink>
+									<v-btn class="ml-0" :disabled="!isConnected" :loading="loading" @click="getHeightmap(heightmapPath.lastIndexOf('/') >= 0 ? heightmapPath : Path.heightmap)">
+										<v-icon class="mr-1">refresh</v-icon> {{ $t('panel.heightmap.reload') }}
+									</v-btn>
+								</v-flex>
+							</v-layout>
+								<v-layout column>
+									<div>
+										<div class="px-2" style="border-radius: 5px; margin: 5px auto; width: max-content" :class="statusClass()">
+											{{ statusName() }}
+										</div>
 									</div>
-								</div>
-								<div style="height: 230px;" :style="{'min-width': ($vuetify.breakpoint.smAndDown?'300px':''),  'margin': ($vuetify.breakpoint.smAndDown?'0 auto':'') }">
-									<v-expansion-panel :value="-1" style="margin-bottom: 15px">
-										<v-expansion-panel-content style="background: #4D4D4D">
-											<template v-slot:header style="padding: 0">
-												<span style="font-size: small">
-													{{ $t('panel.settingsNetwork.advanced' )}}
-												</span>
-											</template>
-											<v-card style="background: #0000; padding: 0 20px">
-												<v-layout column>
-													<v-flex class="pt-2">
-														{{ $t('panel.heightmap.probeDate', [dateToStr.date, dateToStr.hour]) }}
-													</v-flex>
-													<v-flex>
-														{{ $t('panel.heightmap.numPoints', [$display(numPoints, 0)]) }}
-													</v-flex>
-													<v-flex>
-														{{ $t('panel.heightmap.radius', [$display(radius, 0, 'mm')]) }}
-													</v-flex>
-													<v-flex>
-														{{ $t('panel.heightmap.area', [$display(area / 100, 1, 'cm²')]) }}
-													</v-flex>
-													<v-flex>
-														{{ $t('panel.heightmap.maxDeviations', [$display(minDiff, 3), $display(maxDiff, 3, 'mm')]) }}
-													</v-flex>
-													<!--v-flex>
-													{{ $t('panel.heightmap.biasError', [$display(biasError, 3, 'mm')]) }}
-												</v-flex-->
-												<v-flex>
-													{{ $t('panel.heightmap.meanError', [$display(meanError, 3, 'mm')]) }}
-												</v-flex>
-												<v-flex>
-													{{ $t('panel.heightmap.rmsError', [$display(rmsError, 3, 'mm')]) }}
-												</v-flex>
-											</v-layout>
-										</v-card>
-									</v-expansion-panel-content>
-								</v-expansion-panel>
-							</div>
+									<div style="height: 250px;" :style="{'min-width': ($vuetify.breakpoint.smAndDown?'300px':''),  'margin': ($vuetify.breakpoint.smAndDown?'0 auto':'') }">
+										<v-expansion-panel :value="-1" style="margin-bottom: 15px">
+											<v-expansion-panel-content style="background: #4D4D4D">
+												<template v-slot:header style="padding: 0">
+													<span style="font-size: small">
+														{{ $t('panel.settingsNetwork.advanced' )}}
+													</span>
+												</template>
+												<v-card style="background: #0000; padding: 0 20px">
+													<v-layout column>
+														<v-flex class="pt-2">
+															{{ $t('panel.heightmap.mapName', [heightmapPath.lastIndexOf('/') >= 0 ? heightmapPath.substr(heightmapPath.lastIndexOf('/') +1 ) : heightmapPath]) }}
+														</v-flex>
+														<v-spacer></v-spacer>
+														<v-flex class="pt-2">
+															{{ $t('panel.heightmap.probeDate', [dateToStr.date, dateToStr.hour]) }}
+														</v-flex>
+														<v-flex>
+															{{ $t('panel.heightmap.numPoints', [$display(numPoints, 0)]) }}
+														</v-flex>
+														<v-flex>
+															{{ $t('panel.heightmap.radius', [$display(radius, 0, 'mm')]) }}
+														</v-flex>
+														<v-flex>
+															{{ $t('panel.heightmap.area', [$display(area / 100, 1, 'cm²')]) }}
+														</v-flex>
+														<v-flex>
+															{{ $t('panel.heightmap.maxDeviations', [$display(minDiff, 3), $display(maxDiff, 3, 'mm')]) }}
+														</v-flex>
+														<v-flex>
+															{{ $t('panel.heightmap.meanError', [$display(meanError, 3, 'mm')]) }}
+														</v-flex>
+														<v-flex>
+															{{ $t('panel.heightmap.rmsError', [$display(rmsError, 3, 'mm')]) }}
+														</v-flex>
+													</v-layout>
+												</v-card>
+											</v-expansion-panel-content>
+										</v-expansion-panel>
+									</div>
+								</v-layout>
 						</v-layout>
-						<v-layout column>
-							<v-flex shrink>
-								{{ $t('panel.heightmap.colorScheme') }}
-							</v-flex>
-							<v-flex shrink>
-								<v-btn-toggle v-model="colorScheme">
-									<v-btn value="terrain">{{ $t('panel.heightmap.terrain') }}</v-btn>
-									<v-btn value="heat">{{ $t('panel.heightmap.heat') }}</v-btn>
-									<v-btn value="diff">{{ $t('panel.heightmap.diff') }}</v-btn>
-								</v-btn-toggle>
-							</v-flex>
-							<v-flex shrink>
-								<v-btn class="ml-0" :disabled="!ready" @click="topViewFct">
-									<v-icon small class="mr-1">{{topView?'3d_rotation':'vertical_align_bottom'}}</v-icon> {{ topView?$t('panel.heightmap.perspective'):$t('panel.heightmap.topView') }}
-								</v-btn>
-							</v-flex>
-							<v-flex shrink>
-								<v-btn class="ml-0" :disabled="!isConnected" :loading="loading" @click="getHeightmap()">
-									<v-icon class="mr-1">refresh</v-icon> {{ $t('panel.heightmap.reload') }}
-								</v-btn>
-							</v-flex>
-						</v-layout>
-					</v-layout>
-				</v-flex>
-			</v-layout>
-		</v-container>
-	</v-card>
+					</v-flex>
+				</v-layout>
+			</v-container>
+		</v-card>
 
-	<v-tooltip top absolute v-model="tooltip.shown" :position-x="tooltip.x" :position-y="tooltip.y">
-		<span class="no-cursor">
-			X: {{ $display(tooltip.coord.x, 1, 'mm') }}<br/>
-			Y: {{ $display(tooltip.coord.y, 1, 'mm') }}<br/>
-			Z: {{ $display(tooltip.coord.z, 3, 'mm') }}
-		</span>
-	</v-tooltip>
-</div>
+		<v-tooltip top absolute v-model="tooltip.shown" :position-x="tooltip.x" :position-y="tooltip.y">
+			<span class="no-cursor">
+				X: {{ $display(tooltip.coord.x, 1, 'mm') }}<br/>
+				Y: {{ $display(tooltip.coord.y, 1, 'mm') }}<br/>
+				Z: {{ $display(tooltip.coord.z, 3, 'mm') }}
+			</span>
+		</v-tooltip>
+	</div>
 </template>
 
 <script>
@@ -176,6 +177,18 @@ export default {
 	computed: {
 		...mapGetters(['isConnected']),
 		...mapState('settings', ['language', 'darkTheme']),
+		...mapState('machine/model', {
+			heightmapPath: (state) => {
+				state = state.state;
+				return (state.heightmap == undefined ?
+					Path.heightmap :
+					(state.heightmap.indexOf('/') >= 0 ?
+						state.heightmap :
+						Path.heightmap.substr(0, Path.heightmap.lastIndexOf('/') + 1) + state.heightmap
+					)
+				)
+			}
+		}),
 		dateToStr() {
 			let data = this.buildDate
 			//console.log(data);
@@ -261,7 +274,7 @@ export default {
 			// Register this instance in order to deal with size changes
 			threeInstances.push(this);
 			if (this.isConnected) {
-				this.getHeightmap();
+				this.getHeightmap(this.heightmapPath.lastIndexOf('/') >= 0 ? this.heightmapPath : Path.heightmap);
 			}
 		},
 		resize() {
@@ -326,9 +339,9 @@ export default {
 			}
 
 			// Display height map
-			this.showHeightmap(points, radius, clear);
+			this.showHeightmap(points, radius, clear, xSpacing);
 		},
-		showHeightmap(points, probeRadius, clear=true) {
+		showHeightmap(points, probeRadius, clear=true, xSpacing=20) {
 			// Clean up first
 			if (this.three.meshGeometry && clear) {
 				this.three.scene.remove(this.three.meshPlane);
@@ -452,7 +465,9 @@ export default {
 					var gridPrimeGeo = new Geometry();
 					var gridSecGeo = new Geometry();
 
-					this.prepareGridBPGeoPreview(gridPrimeGeo, gridSecGeo);
+					let gridScale = 0.5 * ( 200 / xMax )
+					let stepScale = gridScale/(0.25*(200/xSpacing))
+					this.prepareGridBPGeoPreview(gridPrimeGeo, gridSecGeo, gridScale, stepScale);
 					let line = new LineSegments(gridPrimeGeo, new LineBasicMaterial({ color:	0xafafaf}));
 					line.name = "gridHelper";
 					this.three.scene.add(line);
@@ -460,10 +475,11 @@ export default {
 					line.name = "gridHelper";
 					this.three.scene.add(line);
 
+					console.log('Scale: ' + gridScale + '\n Step: ' + stepScale)
 					// Create the final object to add to the scene
 					var curve = new EllipseCurve(
 						0,	0,					// ax, aY
-						0.62, 0.62,				// xRadius, yRadius
+						gridScale, gridScale,				// xRadius, yRadius
 						0,	2 * Math.PI,// aStartAngle, aEndAngle
 						false,					// aClockwise
 						0								// aRotation
@@ -484,17 +500,23 @@ export default {
 			this.render();
 			//console.log(this.three.scene)
 		},
-		prepareGridBPGeoPreview(gridPrime, gridSec) {
-			let limitY = 0.62;
-			let stepY = (2*limitY)/5;
+		prepareGridBPGeoPreview(gridPrime, gridSec, gridScale, stepScale) {
+			let limitY = gridScale;
+			let stepY = stepScale//(2*limitY)/5;
 			let stepX = (stepY/4)
-			for (var posY = -limitY; posY < limitY; posY += stepY) {
+			for (var posY = 0; posY < limitY; posY += stepY) {
 				var miniX = -limitY * Math.sqrt(1 - ((posY/limitY) * (posY/limitY)));
 				var maxiX =	limitY * Math.sqrt(1 - ((posY/limitY) * (posY/limitY)));
 				gridPrime.vertices.push(new Vector3(miniX, posY, 0));
 				gridPrime.vertices.push(new Vector3(maxiX, posY, 0));
 				gridPrime.vertices.push(new Vector3(posY, miniX, 0));
 				gridPrime.vertices.push(new Vector3(posY, maxiX, 0));
+				miniX = -limitY * Math.sqrt(1 - ((-posY/limitY) * (-posY/limitY)));
+				maxiX =	limitY * Math.sqrt(1 - ((-posY/limitY) * (-posY/limitY)));
+				gridPrime.vertices.push(new Vector3(miniX,-posY, 0));
+				gridPrime.vertices.push(new Vector3(maxiX,-posY, 0));
+				gridPrime.vertices.push(new Vector3(-posY, miniX, 0));
+				gridPrime.vertices.push(new Vector3(-posY, maxiX, 0));
 				for (var posX = posY + stepX; posX < posY + stepY; posX += stepX) {
 					miniX = -limitY * Math.sqrt(1 - ((posX/limitY) * (posX/limitY)));
 					maxiX =	limitY * Math.sqrt(1 - ((posX/limitY) * (posX/limitY)));
@@ -502,6 +524,12 @@ export default {
 					gridSec.vertices.push(new Vector3(maxiX, posX, 0));
 					gridSec.vertices.push(new Vector3(posX, miniX, 0));
 					gridSec.vertices.push(new Vector3(posX, maxiX, 0));
+					miniX = -limitY * Math.sqrt(1 - ((-posX/limitY) * (-posX/limitY)));
+					maxiX =	limitY * Math.sqrt(1 - ((-posX/limitY) * (-posX/limitY)));
+					gridSec.vertices.push(new Vector3(miniX, -posX, 0));
+					gridSec.vertices.push(new Vector3(maxiX, -posX, 0));
+					gridSec.vertices.push(new Vector3(-posX, miniX, 0));
+					gridSec.vertices.push(new Vector3(-posX, maxiX, 0));
 				}
 			}
 		},
@@ -512,8 +540,8 @@ export default {
 				if (this.three.scene.children[i].rotation.x == 0)
 				this.three.scene.children[i].rotation.z += 0.001
 			}*/
-			this.three.renderer.render(this.three.scene, //(this.topView ? this.three.orthoCamera :
-				this.three.perspectiveCamera);
+			this.three.renderer.render(this.three.scene, //(this.topView ?
+				/* this.three.orthoCamera : */ this.three.perspectiveCamera);
 			}
 		},
 		canvasMouseMove(e) {
@@ -654,7 +682,7 @@ export default {
 				getHeightmap();
 			}
 		});
-
+		console.log("Heightmap: " + this.heightmapPath)
 		// FIXME give the grid some time to resize everything...
 		setTimeout(this.init, 100);
 	},

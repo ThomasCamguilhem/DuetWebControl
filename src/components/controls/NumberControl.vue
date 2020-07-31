@@ -276,30 +276,28 @@ export default {
 			},
 			_updateValue(newVal) {
 				//const oldVal = this.currentValue
-				/*if (oldVal === newVal || typeof this.value !== 'number') {
-				return
-			}*/
-			if (newVal <= this.min) {
-				newVal = this.min
-				this.decrementDisabled = true;
-				this.mouseUp();
+				
+				if (newVal <= this.min) {
+					newVal = this.min
+					this.decrementDisabled = true;
+					this.mouseUp();
+				}
+				if (newVal >= this.max) {
+					newVal = this.max;
+					this.incrementDisabled = true;
+					this.mouseUp();
+				}
+				this.currentValue = newVal;
 			}
-			if (newVal >= this.max) {
-				newVal = this.max;
-				this.incrementDisabled = true;
-				this.mouseUp();
-			}
-			this.currentValue = newVal;
-		}
-	},
+		},
 
-	mounted() {
-		(this.value != this.currentValue ? this.currentValue = this.value : undefined)
-		if (this.value <= this.min) {
-			this.decrementDisabled = true
-		} else {
-			this.decrementDisabled = false
+		mounted() {
+			(this.value != this.currentValue ? this.currentValue = this.value : undefined)
+			if (this.value <= this.min) {
+				this.decrementDisabled = true
+			} else {
+				this.decrementDisabled = false
+			}
 		}
 	}
-}
-</script>
+	</script>

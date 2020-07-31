@@ -54,10 +54,12 @@
 				{{$t('dialog.confirmShutdown.title')}}
 			</v-btn>
 			<v-spacer></v-spacer>
-			<div v-if="ifaces && ifaces.length > 0" style="font-size: large">
+			<div v-if="ifaces && ifaces.length > 0" style="font-size: large;position: fixed;margin: 0px 50%;z-index: 1;width: 150px;left: -75px;top: 0px;">
 				<div style="border-radius: 50%; display: inline-flex; margin-left: 0; vertical-align: middle; width: 15px; height: 15px" id="state"
-				v-bind:style="stateColor"></div>&nbsp;
-				{{ ifaces.ip /*(ifaces.filter( iface => iface.ifname == "enp2s0" ).length > 0 ? (ifaces.filter( iface => iface.ifname == "enp1s0" ).length > 0 ? ifaces.filter( iface => iface.ifname == "enp1s0" )[0].addr_info.filter( addr => addr.family == 'inet' )[0].local : 'Disconected') : 'Booting')*/ }}
+				v-bind:style="stateColor"></div>
+				<div style="width: 130px;display: inline-block;text-align: center;">
+					{{ ifaces.ip /*(ifaces.filter( iface => iface.ifname == "enp2s0" ).length > 0 ? (ifaces.filter( iface => iface.ifname == "enp1s0" ).length > 0 ? ifaces.filter( iface => iface.ifname == "enp1s0" )[0].addr_info.filter( addr => addr.family == 'inet' )[0].local : 'Disconected') : 'Booting')*/ }}
+				</div>
 			</div>
 			<v-spacer></v-spacer>
 			<emergency-btn class="hidden-xs-only"></emergency-btn>
@@ -66,7 +68,7 @@
 		<h2 class="display-1" style="text-align: center; background: #616161; font-family:'GTAmericaExpandedRegular', sans-serif !important; text-transform: uppercase;letter-spacing: 0.1rem !important; margin: 50px 0 50px;">
 			{{ selectedMachine === '[default]' ? $t('dialog.connect.title') : (waited || true ? $t('loadTool.toolhead') : '')}}
 		</h2>
-		<v-card v-if="selectedMachine === '[default]' && waited">
+		<v-card v-if="selectedMachine === '[default]' && waited && !waited">
 			<v-form ref="form" @submit.prevent="submit">
 				<v-card-title>
 					{{ $t('dialog.connect.prompt') }}
@@ -78,7 +80,6 @@
 
 				<v-card-actions>
 					<v-spacer></v-spacer>
-					<!--v-btn v-show="!mustConnect" color="primary darken-1" flat @click="hideConnectDialog">{{ $t('generic.cancel') }}</v-btn-->
 					<v-btn color="primary darken-1" flat type="submit">{{ $t('dialog.connect.connect') }}</v-btn>
 				</v-card-actions>
 			</v-form>
@@ -86,12 +87,35 @@
 		<template v-if="!waited">
 			<v-progress-linear indeterminate></v-progress-linear>
 		</template>
+		<template v-if="waited && lastConfig != {} && lastConfig.thead">
+			<v-tooltip bottom>
+				<template v-slot:activator="{ on }">
+					<v-btn color="grey darken-3" :loading="loading" @click="loadLastConfig()" shrink v-on="on">
+						<v-icon class="mr-1">refresh</v-icon> Load last configuration
+					</v-btn>
+				</template>
+				<span>
+					Tool: {{ lastConfig.thead.name }}<br/>
+					Materials : {{ lastConfig.material.filter(val => val).map((val,index) => val ? " E" + index + ": " + val : "").toString() }}<br/>
+					Nozzles : {{ lastConfig.nozzle.map((val,index) => " E" + index+": "+val).toString() }}<br/>
+					Geometric : {{ lastConfig.geo.name }}<br/>
+					Mesh : {{ lastConfig.mesh.name }}<br/>
+				</span>
+			</v-tooltip>
+		</template>
+		<v-list v-if="selectedMachine !== '[default]' && waited && tools.length > 0 && !loading">
+			<v-list-tile v-for="(geometry, index) in geometries" :key="index" @click="geoClick(geometry)" :class="{'toolLocal': isLocal}">
+				{{ geometry.name }}
+			</v-list-tile>
+		</v-list>
 		<v-tabs v-if="selectedMachine !== '[default]' && waited && tools.length > 0" grow>
 			<v-tabs-slider color="primary"></v-tabs-slider>
 			<!--v-tab style="width: 0 !important; display: none"></v-tab-->
 			<v-tab v-for="(material, key) in tools.filter(mater => mater.tech != 'CAL'  && mater.selected)" :key="key">
-				<img :src="material.ico" :alt="key" width="100px" height="100px">
-				<br/>{{ material.tech }}
+				<div style="width: 100px; height: 100px; margin: 0 auto">
+					<img :src="material.ico" alt="" width="100px" height="100px">
+				</div>
+				{{ material.tech }}
 			</v-tab>
 			<v-tab-item v-for="(material, key) in tools.filter(mater => mater.tech != 'CAL' && mater.selected)" :key="key">
 				<v-list v-if="!loading">
@@ -106,6 +130,11 @@
 				<v-icon class="mr-1">build</v-icon> {{ $t('loadTool.calibrationTool') }}
 			</v-btn>
 		</v-layout>
+		<v-list v-if="selectedMachine !== '[default]' && waited && tools.length > 0 && !loading">
+			<v-list-tile v-for="(mesh, index) in meshes" :key="index" @click="meshClick(mesh)" :class="{'toolLocal': isLocal}">
+				{{ mesh.name }}
+			</v-list-tile>
+		</v-list>
 		<v-btn @click="sheet = !sheet" style="position: fixed; margin: 0 50%; z-index: 1; border-top-left-radius: 88px; border-top-right-radius: 88px; width:88px; heigth:44px; left: -44px" :style="{bottom: (sheet ? '120px' : '0px')}">
 			<v-icon style="transition: 0.4s" :style="{transform: sheet ? 'rotate(180deg)' : 'rotate(0deg)'}">keyboard_arrow_up</v-icon>
 		</v-btn>
@@ -148,11 +177,12 @@ import { mapState, mapGetters, mapActions } from 'vuex'
 
 import { DisconnectedError } from '../../utils/errors.js'
 import Path from '../../utils/path.js'
-//import axios from 'axios'
+import axios from 'axios'
 
 export default {
 	data() {
 		return {
+			axios: undefined,
 			shown: false,
 			hostname: '',
 			password: '',
@@ -166,6 +196,8 @@ export default {
 			noTool: undefined,
 			tools: {
 			},
+			geometries: {},
+			meshes: {},
 			confirmShutdownDialog: {
 				title: this.$t('dialog.confirmShutdown.title'),
 				prompt: this.$t('dialog.confirmShutdown.prompt'),
@@ -181,6 +213,8 @@ export default {
 			inset: false,
 			hideOverlay: true,
 			showToolDialog: false,
+			lastConfig: {},
+			lastCode: '',
 		}
 	},
 	computed: {
@@ -194,7 +228,7 @@ export default {
 		}),
 		mustConnect() { return !this.isLocal && !this.isConnected; },
 		stateColor() {
-			console.log(this.ifaces);
+			//console.log(this.ifaces);
 
 			function GetNavigatorInfo() {
 				var ua= navigator.userAgent, tem,
@@ -228,19 +262,19 @@ export default {
 			this.ifaces.filter(iface => iface.ifname == 'enp1s0')[0].operstate == 'UP' &&
 			this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0] &&
 			this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0].operstate == 'UP' ) {
-				console.log('green');
+				//console.log('green');
 				return 'background: green;'
 			} else if( this.ifaces.filter(iface => iface.ifname == 'enp1s0')[0] &&
 			this.ifaces.filter(iface => iface.ifname == 'enp1s0')[0].operstate == 'UP' ||
 			this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0] &&
 			this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0].operstate == 'UP' ) {
-				console.log('orange')
+				//console.log('orange')
 				return CanonicalGradientSupported() ? 'background: conic-gradient(yellow, orange 10% 90%, yellow);':'background: orange;'
 			} else if (this.ifaces.filter(iface => iface.ifname == 'enp1s0')[0] &&
 			this.ifaces.filter(iface => iface.ifname == 'enp1s0')[0].operstate == 'DOWN' ||
 			this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0] &&
 			this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0].operstate == 'DOWN' ) {
-				console.log('red')
+				//console.log('red')
 				return CanonicalGradientSupported() ? 'background: conic-gradient(red, darkred 10% 40%, red, darkred 60% 90%, red);animation-duration: 2s' : 'background: red;'
 			} else {
 				return 'background: GRAY'
@@ -263,14 +297,44 @@ export default {
 			this.loading = true;
 			try {
 				this.tools = [];
-				this.download({filename: Path.macros+"/selectedTools.json", showSuccess: false, showProgress: false}).then((result) => {
+				await this.download({filename: Path.sys + "/selectedTools.json", showSuccess: false, showProgress: false}).then((result) => {
 					//const json = JSON.parse(result)
 					this.tools = result
 					if (this.tools.length > 0) {
 						this.calibrationTool = this.tools.filter(tool => tool.tech == "CAL")[0].tools[0];
+						console.log(this.calibrationTool)
 					}
 					//this.$forceUpdate();
 				})
+				//clearTimeout(this.timeout);
+				this.timeout = setTimeout(() => {this.waited = true}, 1000);
+			} catch (e) {
+				if (!(e instanceof DisconnectedError)) {
+					console.warn(e);
+					//this.$log('error', this.$t('error.toolsLoadFailed'), e.message);
+				}
+				this.hide();
+			}
+			//console.log(this.tools);
+
+			this.loading = false;
+		},
+		async loadCalib() {
+			if (this.loading) {
+				return;
+			}
+			//console.log(this.tools)
+			//Object.keys(this.tools).forEach(material => this.tools[material] = [])
+			this.geometries = {};
+			this.meshes = {};
+			this.loading = true;
+			try {
+				this.geometries = [];
+				this.meshes = [];
+				let files = await this.getFileList(this.calibrationTool.path.substr(0, this.calibrationTool.path.lastIndexOf('/')+1)+'Custom surfaces')
+				console.log(files)
+				this.geometries = files.filter(item => item.name.startsWith('geometry'))
+				this.meshes = files.filter(item => item.name.startsWith('heightmap'))
 				//clearTimeout(this.timeout);
 				this.timeout = setTimeout(() => {this.waited = true}, 1000);
 			} catch (e) {
@@ -308,26 +372,85 @@ export default {
 				myTool = myTool.substring(this.load?6:8);
 				//console.log(myTool)
 			}
+
+			if (this.lastConfig != {} && this.lastConfig.thead) {
+				if (typeof(this.lastConfig.thead) != {}){
+					this.lastConfig.thead = {}
+				}
+
+				this.lastConfig.thead.name = myTool
+				this.lastConfig.thead.path = tool.path;
+				let tmpMaterial = []
+				for (let i = 0; tool.io && i < parseInt(tool.io[0]); i++) {
+					tmpMaterial.push(this.lastConfig.material && this.lastConfig.material[i] ? this.lastConfig.material[i] : "")
+				}
+				this.lastConfig.material = tmpMaterial
+				let tmpNozzle = []
+				for (let i = 0; tool.io && i < parseInt(tool.io[0]); i++) {
+					tmpNozzle.push(this.lastConfig.nozzle && this.lastConfig.nozzle[i] ? this.lastConfig.nozzle[i] : "N040")
+				}
+				this.lastConfig.nozzle = tmpNozzle
+			}
+		},
+		geoClick(geo) {
+			setTimeout(function(that){that.setToolLoading(true);},0,this)
+			this.sendCode('M98 P"' + geo.directory + '/' + geo.name + '"');
+				setTimeout(function(that){that.setToolLoading(false);},1000,this)
+		},
+		meshClick(mesh) {
+			setTimeout(function(that){that.setToolLoading(true);},0,this)
+			console.log(mesh)
+			this.sendCode('G29 S1 P"' + mesh.directory + '/' + mesh.name + '"');
+				setTimeout(function(that){that.setToolLoading(false);},1000,this)
 		},
 		hide() {
 			this.$emit('update:shown', false);
 		},
+		loadLastConfig: async function() {
+			this.setToolLoading(true);
+			await this.sendCode('M98 P"' + this.lastConfig.geo.path + '"');
+			await this.sendCode('G4 S1\nG29 S1 P"' + this.lastConfig.mesh.path + '"');
+			await this.sendCode('G4 S1\nM98 P"' + this.lastConfig.thead.path + '"');
+
+		}
 	},
-	mounted() {
+	mounted: async function() {
 		this.hostname = this.lastHostname;
 		this.shown = this.connectDialogShown;
 		this.timeout = setTimeout(() => {this.waited = true}, 5000);
 		//console.log(this.exName);
 		//console.log(this.name);
-		setTimeout(function(that){
+		setTimeout(async function(that){
 			if (that.name != that.exName) {
 				that.tools = {};
-				that.loadTools();
+				//setInterval(
+				await that.loadTools()
+				await that.loadCalib()
+				//, 10000, that);
 				setInterval(that.loadAddresses, 5000, that)
+				setInterval((that) => { that.ifaces = that.user.ifaces }, 5000, that)
 				//console.log(that.waited);
 				that.waited = false;
 				that.exName = that.name;
 			}
+		}, 1000, this)
+
+		setTimeout(async function(that){
+			if (!that.axios) {
+				//let protocol = location.protocol;
+				that.axios = await axios.create({
+					baseURL:`http://`+that.selectedMachine+`/`,
+					//cancelToken: BaseConnector.getCancelSource().token,
+					timeout: 8000,	// default session timeout in RepRapFirmware
+					withCredentials: true,
+				});
+			}
+
+			let result = await that.axios.get('/pc_configmachine', {
+				withCredentials: true,
+			});
+
+			that.lastConfig = result.data
 		}, 1000, this)
 	},
 	watch: {
@@ -352,6 +475,27 @@ export default {
 		},
 		isReconnecting(){
 			//console.log(to?'reconnecting':'reconnected');
+		},
+		lastConfig: {
+			deep: true,
+			handler: async function(){
+				if (!this.axios) {
+					//let protocol = location.protocol;
+					this.axios = await axios.create({
+						baseURL:`http://`+this.selectedMachine+`/`,
+						//cancelToken: BaseConnector.getCancelSource().token,
+						timeout: 8000,	// default session timeout in RepRapFirmware
+						withCredentials: true,
+					});
+				}
+
+				this.axios.get('/pc_configmachine', {
+					withCredentials: true,
+					params: {
+						params: JSON.stringify(this.lastConfig)
+					},
+				});
+			}
 		}
 	}
 }

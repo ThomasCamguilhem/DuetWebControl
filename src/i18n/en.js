@@ -88,6 +88,10 @@ export default {
 			prime: 'Prime {0}',
 			unload: 'Unload {0}',
 		},
+		preheat: {
+			caption: 'Preheat',
+			preheat: 'Preheat for {0}',
+		},
 		upload: {
 			gcodes: {
 				caption: 'Upload G-Code File(s)',
@@ -149,6 +153,18 @@ export default {
 			caption: 'Temperature Chart',
 			heater: 'Heater {0}',
 			noData: 'No Data'
+		},
+		fan: {
+			caption: 'Fans Chart',
+			heater: 'Heater {0}',
+			noData: 'No Data'
+		},
+		smoothing: {
+			caption: 'Smoothing',
+			off: "Off",
+			low: "Low",
+			med: "Med",
+			high: "High"
 		}
 	},
 	dialog: {
@@ -227,7 +243,9 @@ export default {
 			spacing: 'Spacing',
 			startCoordinate: 'Start coordinate in {0} direction',
 			endCoordinate: 'End coordinate in {0} direction',
-			spacingDirection: 'Spacing in {0} direction'
+			spacingDirection: 'Spacing in {0} direction',
+			bed: 'Bed temperature',
+			chamber: 'Chamber temperature'
 		},
 		newDirectory: {
 			title: 'New Directory',
@@ -243,6 +261,10 @@ export default {
 		},
 		renameFile: {
 			title: 'Rename File or Directory',
+			prompt: 'Please enter a new name:'
+		},
+		moveFile: {
+			title: 'Rename File or Directory before moving',
 			prompt: 'Please enter a new name:'
 		},
 		resetHeaterFault: {
@@ -262,7 +284,7 @@ export default {
 		delete: {
 			title: 'Delete {0}?',
 			prompt: 'Are you sure you want to delete : <ul>',
-			multiple: 'multiple files'
+			multiple: '{0} files'
 		},
 		update: {
 			title: 'Install updates?',
@@ -278,7 +300,8 @@ export default {
 		temperature:  {
 			title: "Enter the target temperature",
 			prompt: "Enter {0} {1} temperature"
-		}
+		},
+		fileExists: 'File/Folder: <b>{0}</b> already exists<br/>suggested alternative <b>{1}</b>',
 	},
 	directory: {
 		display: 'Menu Directory',
@@ -343,6 +366,7 @@ export default {
 		showPreview: 'Show preview',
 		preload: 'Preload {0}',
 		unload: 'Unload tool',
+		debug: 'Back to title screen',
 		edit: 'Edit',
 		heaterStates: [
 			'off',
@@ -639,7 +663,8 @@ export default {
 				danger: 'Average',
 				reprobe: 'Default'
 			},
-			probeDate: "Probed the : {0} at {1}"
+			probeDate: "Probed the : {0} at {1}",
+			mapName: "Loaded heightmap: {0}"
 		},
 		jobControl: {
 			caption: 'Job Control',
@@ -783,7 +808,19 @@ export default {
 			flipNone: 'None',
 			flipX: 'Flip X',
 			flipY: 'Flip Y',
-			flipBoth: 'Flip both'
+			flipBoth: 'Flip both',
+		},
+		settingsTimelapse: {
+			caption: 'Timelapse',
+			showPreview: 'Show timelapses',
+			timelapseURL: 'Timelapse URL (optional)',
+			timelapseResolution: 'Timelapse resolution',
+			timelapseInterval: 'Take a picture at regular interval',
+			timelapseUpdateInterval: 'Take a picture every {} s',
+			timelapseLayer: 'Take a picture at every layer',
+			timelapseMinFramerate: 'Min framerate',
+			timelapseMaxFramerate: 'Max framerate',
+			timelapseTargetDuration: 'Target duration'
 		},
 		speedFactor: {
 			caption: 'Speed Factor'
@@ -895,6 +932,7 @@ export default {
 		debug: "Access DWC (No tool)",
 		refreshIface: "Refresh the interface",
 		refreshTools: "Refresh tools List",
+		enableTool: "show/hide tools",
 	},
 	power_settings: 'Power settings',
 }

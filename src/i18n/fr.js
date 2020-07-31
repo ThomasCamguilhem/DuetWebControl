@@ -97,6 +97,11 @@ export default {
 			preload: 'Précharger {0}',
 			prime: 'Amorcer {0}',
 			unload: 'Décharger {0}',
+			preheat: 'Pre chauffer {0}'
+		},
+		preheat: {
+			caption: 'Préchauffer',
+			preheat: 'Préchauffer pour {0}',
 		},
 		upload: {
 			gcodes: {
@@ -155,6 +160,18 @@ export default {
 			caption: 'Températures',
 			heater: 'Résistance {0}',
 			noData: 'Aucune donnée'
+		},
+		fan: {
+			caption: 'Ventilateurs',
+			heater: 'Résistance {0}',
+			noData: 'Aucune donnée'
+		},
+		smoothing: {
+			caption: 'Lissage',
+			off: "Off",
+			low: "Faible",
+			med: "Moyen",
+			high: "Haut"
 		}
 	},
 	dialog: {
@@ -218,10 +235,14 @@ export default {
 		meshEdit: {
 			title: 'Définir paramètres de maillage',
 			radius: 'Rayon de palpage',
-			spacing: 'Espacement',
-			startCoordinate: 'Coordonnée de démarrage dans la direction {0}',
-			endCoordinate: 'Coordonnée de fin dans la direction {0}',
-			spacingDirection: 'Espacement dans la direction {0}'
+			spacing: 'Espacement des points',
+			startCoordinate: 'Position {0} min',
+			endCoordinate: 'Position {0} max',
+			spacingDirection: 'Espacement des points en {0}',
+			bed: 'Temperature plateau',
+			chamber: 'Temperature étuve',
+			rectangle: 'Rectangle',
+			circle: 'Cercle'
 		},
 		newDirectory: {
 			title: 'Nouveau dossier',
@@ -237,6 +258,10 @@ export default {
 		},
 		renameFile: {
 			title: 'Renommer un fichier ou dossier',
+			prompt: 'Merci d\'entrer un nouveau nom:'
+		},
+		moveFile: {
+			title: 'Renommer un fichier ou dossier avant de le déplacer',
 			prompt: 'Merci d\'entrer un nouveau nom:'
 		},
 		resetHeaterFault: {
@@ -256,7 +281,7 @@ export default {
 		delete: {
 			title: 'Supprimer {0}?',
 			prompt: 'Voulez vous vraiment supprimer <ul>',
-			multiple: 'plusieurs fichiers'
+			multiple: '{0} fichiers'
 		},
 		update: {
 			title: 'Installer Mise à Jour?',
@@ -267,7 +292,8 @@ export default {
 		temperature:  {
 			title: "Saisir la nouvelle temperature",
 			prompt: "Saisir la temperature {1} pour {0}"
-		}
+		},
+		fileExists: 'Le fichier/dossier: <b>{0}</b> existe déjà<br/> alternative suggérée <b>{1}</b>',
 	},
 	directory: {
 		display: 'Répertoire Menu',
@@ -332,6 +358,7 @@ export default {
 		showPreview: 'Afficher pièce',
 		preload: 'Précharger {0}',
 		unload: 'Décharger l\'outil',
+		debug: 'Retour chargement outil',
 		heaterStates: [
 			'off',
 			'veille',
@@ -500,7 +527,7 @@ export default {
 			errorTitle: 'Impossible de supprimer {0}',
 			errorMessageDirectory: 'Merci de vous assurez que ce dossier est vide',
 			success: '{0} supprimé avec succès',
-			successMultiple: '{0} objets supprimé avec succès'
+			successMultiple: '{0} objets supprimés avec succès'
 		},
 		deleteFilament: {
 			errorTitle: 'Impossible de supprimer le(s) filament(s)',
@@ -554,7 +581,7 @@ export default {
 		},
 		parse: {
 			title: '<b>{0}</b>',
-			speed: '{0} {1}',
+			speed: 'Vitesse: {0} {1}',
 			eta: 'Temps restant: {0}',
 		}
 	},
@@ -622,7 +649,8 @@ export default {
 				danger: 'Moyen',
 				reprobe: 'Défaut'
 			},
-			probeDate: "Palpé le : {0} à {1}"
+			probeDate: "Palpé le : {0} à {1}",
+			mapName: "Carte chargée: {0}"
 		},
 		jobControl: {
 			caption: "Contrôle de l'impression",
@@ -666,7 +694,8 @@ export default {
 			caption: 'Mouvement machine',
 			compensation: 'Compensation & Calibration',
 			runBed: 'Calibration du plateau (G32)',
-			runDelta: 'Calibration delta (G32)',
+			runDelta: 'Calibration Machine (G32)',
+			runAdvanced: 'Calibration Machine',
 			compensationInUse: 'Compensation utilisée : {0}',
 			disableBedCompensation: 'Désactiver compensation (M561)',
 			disableMeshCompensation: 'Désactiver compensation (G29 S2)',
@@ -768,6 +797,18 @@ export default {
 			flipY: 'Verticalement',
 			flipBoth: 'Retourner les deux'
 		},
+		settingsTimelapse: {
+			caption: 'Timelapse',
+			showPreview: 'Afficher timelapses',
+			timelapseURL: 'URL du Timelapse (optionnel)',
+			timelapseResolution: 'Résolution du timelapse',
+			timelapseInterval: 'Capture a intervalle régulier',
+			timelapseUpdateInterval: 'Prendre une image toutes les {} s',
+			timelapseLayer: 'Prendre une image a chaque couche',
+			timelapseMinFramerate: 'IPS Min',
+			timelapseMaxFramerate: 'IPS Max',
+			timelapseTargetDuration: 'Durée cible'
+		},
 		speedFactor: {
 			caption: 'Facteur de vitesse'
 		},
@@ -843,7 +884,7 @@ export default {
 			standby: 'Angle veille',
 			run: 'Calibrer angle {0}',
 			auto: 'Calibraton auto',
-			move: 'Sortir&nbsp;<b>{0}</b>'
+			move: 'Activer&nbsp;<b>{0}</b>'
 		},
 		tiltCompensation: {
 			caption: 'Compensation de l\'inclinaison',

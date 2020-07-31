@@ -3,6 +3,11 @@
 	margin-top: 40px;
 }
 </style>
+<style>
+.theme--dark.v-input--slider .v-slider__ticks:empty {
+	border-color: hsla(43, 98%, 50%, 0);
+}
+</style>
 
 <template>
 	<v-layout row align-center>
@@ -13,9 +18,8 @@
 		</v-flex>
 
 		<v-flex class="px-2">
-			<v-slider :value="innerValue.toFixed(0)" @change="$emit('input', $event)" :min="min" :max="max" :disabled="disabled" hide-details thumb-label="always" class="slider" :readonly="(fan == 1)" :color="(fan == 1) ? '#595959' : 'primary'"></v-slider>
+			<v-slider :value="innerValue.toFixed(0)" @change="$emit('input', $event)" :min="min" :max="max" :disabled="disabled && fan < 0" hide-details thumb-label="always" class="slider" :readonly="disabled" :color="disabled ? '#595959' : 'primary'" :tick-labels="labels" :ticks="fan === true ? 'always': false"></v-slider>
 		</v-flex>
-
 		<v-flex shrink>
 			<v-btn large icon :disabled="disabled || innerValue >= max" @click="change(step)" @mousedown="mouseDown(true)" @mouseup="mouseUp(true)" @mouseleave="mouseUp(true)" @touchstart="mouseDown(true)" @touchend="mouseUp(true)" class="mr-0">
 				<v-icon>add</v-icon>
@@ -50,13 +54,16 @@ export default {
 		},
 		fan: {
 			type: Number,
-			default: 0,
+			default: -1,
+		},
+		labels: {
+			type: Object,
 		},
 		disabled: Boolean
 	},
 	data() {
 		return {
-			innerValue: this.value,
+			innerValue: parseFloat(this.value),
 			debounceTimer: undefined,
 			time: undefined,
 			increaseTimer: undefined,
@@ -68,7 +75,7 @@ export default {
 			if (this.debounceTimer) {
 				clearTimeout(this.debounceTimer);
 			}
-			this.innerValue = Math.round(Math.min(this.max, Math.max(this.min, this.innerValue + diff)));
+			this.innerValue = Math.round( Math.min(this.max, Math.max(this.min, parseFloat(this.innerValue) + parseFloat(diff) ) ) );
 			this.debounceTimer = setTimeout(this.debounce, debounceTime);
 		},
 		debounce() {

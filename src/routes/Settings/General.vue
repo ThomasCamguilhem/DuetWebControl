@@ -34,6 +34,9 @@
 					<settings-webcam-panel></settings-webcam-panel>
 				</v-flex>
 				<v-flex>
+					<settings-timelapse-panel></settings-timelapse-panel>
+				</v-flex>
+				<v-flex>
 					<settings-communication-panel></settings-communication-panel>
 				</v-flex>
 				<v-flex>

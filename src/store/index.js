@@ -37,6 +37,7 @@ const store = new Vuex.Store({
 		passwordRequired: false,
 		selectedMachine: defaultMachine,
 		user: {},
+		lastConfig: {},
 	},
 	getters: {
 		connectedMachines: () => Object.keys(machines).filter(machine => machine !== defaultMachine),
@@ -248,9 +249,9 @@ const store = new Vuex.Store({
 							if (typeof(keyI[keysI[j]]) == "string") {
 								if (keyI[keysI[j]] !== this.state.user.ifaces[i][keysI[j]]) {
 									diff = true
-									console.log(keysI[j])
-									console.log(keyI[keysI[j]])
-									console.log(this.state.user.ifaces[i][keysI[j]])
+									//console.log(keysI[j])
+									//console.log(keyI[keysI[j]])
+									//console.log(this.state.user.ifaces[i][keysI[j]])
 								}
 							} else if (typeof(keyI[keysI[j]]) == "object") {
 								let keyJ = keyI[keysI[j]]
@@ -259,9 +260,9 @@ const store = new Vuex.Store({
 									if (typeof(keyJ[keysJ[k]]) == "string") {
 										if (keyJ[keysJ[k]] !== this.state.user.ifaces[i][keysI[j]][keysJ[k]]) {
 											diff = true
-											console.log(keysJ[k])
-											console.log(keyJ[keysJ[k]])
-											console.log(this.state.user.ifaces[i][keysI[j]][keysJ[k]])
+											//console.log(keysJ[k])
+											//console.log(keyJ[keysJ[k]])
+											//console.log(this.state.user.ifaces[i][keysI[j]][keysJ[k]])
 										}
 									} else if (typeof(keyJ[keysJ[k]]) == "object"){
 										let keyK = keyJ[keysJ[k]];
@@ -270,9 +271,9 @@ const store = new Vuex.Store({
 											if (typeof(keyK[keysK[l]]) == "string") {
 												if (keyK[keysK[l]] !== this.state.user.ifaces[i][keysI[j]][keysJ[k]][keysK[l]]) {
 													diff = true
-													console.log(keysK[l])
-													console.log(keyK[keysK[l]])
-													console.log(this.state.user.ifaces[i][keysI[j]][keysJ[k]][keysK[l]])
+													//console.log(keysK[l])
+													//console.log(keyK[keysK[l]])
+													//console.log(this.state.user.ifaces[i][keysI[j]][keysJ[k]][keysK[l]])
 												}
 											}
 										}
@@ -342,7 +343,7 @@ const store = new Vuex.Store({
 			tmpUser.level = user.level;
 			tmpUser.last_connect = user.date;
 			tmpUser.type = user.type;
-			console.log(state.user);
+			//console.log(state.user);
 			state.user = tmpUser;
 			if (state.user.username) {
 				console.log("Welcome back " + state.user.username);
@@ -350,7 +351,7 @@ const store = new Vuex.Store({
 				console.log("last connection " + state.user.last_connect);
 			}
 
-			console.log(state.user);
+			//console.log(state.user);
 		},
 
 		setTool(state, tool) {
@@ -366,7 +367,7 @@ const store = new Vuex.Store({
 			tmpUser.ifaces = iface.cfg.filter(iface => iface.ifname == "enp1s0" || iface.ifname == "enp2s0");
 			tmpUser.ifaces.ip = iface.ip.substr(0, iface.ip.indexOf('/'))
 			state.user = tmpUser;
-			console.log(tmpUser);
+			//console.log(tmpUser);
 		},
 	},
 

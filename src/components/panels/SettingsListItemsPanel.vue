@@ -6,6 +6,7 @@
 
 		<v-container fluid grid-list-lg class="px-3 py-0">
 			<v-tabs>
+				<v-tabs-slider color="primary"></v-tabs-slider>
 				<v-tab>{{ $t('panel.settingsListItems.toolTemperatures') }}</v-tab>
 				<v-tab>{{ $t('panel.settingsListItems.bedTemperatures') }}</v-tab>
 				<v-tab>{{ $t('panel.settingsListItems.chamberTemperatures') }}</v-tab>

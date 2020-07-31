@@ -212,8 +212,9 @@ export default function(connector) {
 				displayMessage: null,
 				logFile: null,
 				mode: null,								// one of ['FFF', 'CNC', 'Laser', null (exclusive in DWC)]
-				status: null							// one of the following:
+				status: null,							// one of the following:
 				// ['updating', 'off', 'halted', 'pausing', 'paused', 'resuming', 'processing', 'simulating', 'busy', 'changingTool', 'idle', null]
+				heightmap: null,
 			},
 			storages: [],
 			tools: [

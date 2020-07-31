@@ -27,6 +27,7 @@ import SettingsMachinePanel from './SettingsMachinePanel.vue'
 import SettingsNetworkPanel from './SettingsNetworkPanel.vue'
 import SettingsNotificationsPanel from './SettingsNotificationsPanel.vue'
 import SettingsWebcamPanel from './SettingsWebcamPanel.vue'
+import SettingsTimelapsePanel from './SettingsTimelapsePanel.vue'
 import SpeedFactorPanel from './SpeedFactorPanel.vue'
 import StatusPanel from './StatusPanel.vue'
 import ToolsPanel from './ToolsPanel.vue'
@@ -62,6 +63,7 @@ Vue.component('settings-network-panel', SettingsNetworkPanel)
 Vue.component('settings-list-items-panel', SettingsListItemsPanel)
 Vue.component('settings-notifications-panel', SettingsNotificationsPanel)
 Vue.component('settings-webcam-panel', SettingsWebcamPanel)
+Vue.component('settings-timelapse-panel', SettingsTimelapsePanel)
 Vue.component('status-panel', StatusPanel)
 Vue.component('speed-factor-panel', SpeedFactorPanel)
 Vue.component('tools-panel', ToolsPanel)
@@ -96,6 +98,7 @@ export default {
 	SettingsListItemsPanel,
 	SettingsNotificationsPanel,
 	SettingsWebcamPanel,
+	SettingsTimelapsePanel,
 	SpeedFactorPanel,
 	StatusPanel,
 	ToolsPanel,

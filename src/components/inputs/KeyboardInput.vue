@@ -221,7 +221,7 @@ body {
         },
         mounted() {
           this.$write = $(this.target);
-          console.log(this.$write)
+          //console.log(this.$write)
           let keyIn = this;
           $('#keyboard li').click(function(){
             //console.log(keyIn.$write);
@@ -310,7 +310,7 @@ body {
         watch: {
           target() {
             this.$write = $(this.target);
-            console.log(this.$write)
+            //console.log(this.$write)
           }
         }
       }

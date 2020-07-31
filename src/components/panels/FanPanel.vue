@@ -27,7 +27,7 @@
 						{{ $t('panel.fan.toolFan') }}
 					</v-btn-->
 					<template v-for="(fan, index) in fans">
-						<v-btn flat v-if="!fan.thermostatic.control" :key="index" :value="index" :disabled="uiFrozen" v-bind:class="{local: isLocal}">
+						<v-btn flat v-if="!fan.thermostatic.control && index != 1" :key="index" :value="index" :disabled="uiFrozen" v-bind:class="{local: isLocal}">
 							{{ fan.name ? fan.name : $t('panel.fan.fan', [index]) }}
 						</v-btn>
 					</template>
@@ -35,7 +35,7 @@
 			</v-flex>
 
 			<v-flex order-sm1 order-md2 class="ma-1" :style="{width:(isLocal?'100%':'')}">
-				<slider v-model="fanValue" :disabled="!canControlFans" :fan="fan"></slider>
+				<slider v-model="fanValue" :disabled="!canControlFans" :fan="fan" thumb-label="always"></slider>
 			</v-flex>
 		</v-layout>
 	</v-card>

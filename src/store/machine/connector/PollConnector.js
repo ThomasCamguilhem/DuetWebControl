@@ -141,10 +141,20 @@ export default class PollConnector extends BaseConnector {
 			}
 
 			if (error.response && error.response.status === 404) {
-				return Promise.reject(new FileNotFoundError(error.config && error.config.filename));
+				console.log(error.config)
+				if (!error.config.retry) {
+					error.config.retry = 0;
+				}
+
+				if (error.config.retry < this.settings.ajaxRetries) {
+					error.config.retry++;
+					return this.axios.request(error.config);
+				} else {
+					return Promise.reject(new FileNotFoundError(error.config && error.config.filename));
+				}
 			}
 
-			if (!that.isReconnecting && error.config && (!error.config.isFileTransfer || error.config.data.byteLength <= this.settings.fileTransferRetryThreshold)) {
+			if (!that.isConnecting && !that.isReconnecting && error.config && (!error.config.isFileTransfer || error.config.data.byteLength <= this.settings.fileTransferRetryThreshold)) {
 				if (!error.config.retry) {
 					error.config.retry = 0;
 				}
@@ -330,7 +340,6 @@ export default class PollConnector extends BaseConnector {
 			// Extended Status Response
 			const axisNames = (response.data.axisNames !== undefined) ? response.data.axisNames.split('') : ['X', 'Y', 'Z', 'U', 'V', 'W', 'A', 'B', 'C'];
 			this.name = name;
-
 			quickPatch(newData, {
 				electronics: {
 					firmware: {
@@ -352,765 +361,801 @@ export default class PollConnector extends BaseConnector {
 						max: response.data.vin.max
 					} : {}
 				},
-				fans: newData.fans.map((fanData, index) => ({
-					name: !response.data.params.fanNames ? null : response.data.params.fanNames[index],
-					thermostatic: {
-						control: (response.data.controllableFans & (1 << index)) === 0,
-					}
-				})),
-				heat: {
-					// FIXME-FW: 'heater' should not be part of the standard status response
-					beds: [
-						response.data.temps.bed ? {
-							heaters: [response.data.temps.bed.heater]
-						} : null
-					],
-					chambers: [
-						response.data.temps.chamber ? {
-							heaters: [response.data.temps.chamber.heater]
-						} : null,
-						response.data.temps.cabinet ? {
-							heaters: [response.data.temps.cabinet.heater]
-						} : null
-					],
-					coldExtrudeTemperature: response.data.coldExtrudeTemp,
-					coldRetractTemperature: response.data.coldRetractTemp,
-					heaters: response.data.temps.current.map((current, index) => ({
-						max: response.data.tempLimit,
-						name: (response.data.temps.names !== undefined) ? response.data.temps.names[index] : null
-					}))
-				},
-				move: {
-					axes: response.data.coords.xyz.map((position, index) => ({
-						letter: axisNames[index],
-						visible: (response.data.axes !== undefined) ? (index < response.data.axes) : true
-					})),
-					compensation: response.data.compensation,
-					geometry: {
-						type: response.data.geometry
-					}
-				},
-				network: {
-					name: response.data.name
-				},
-				sensors: {
-					endstops: newData.move.drives.map((drive, index) => ({
-						triggered: (response.data.endstops & (1 << index)) !== 0
-					})),
-					probes: (response.data.probe !== undefined) ? [
-						{
-							threshold: response.data.probe.threshold,
-							triggerHeight: response.data.probe.height,
-							type: response.data.probe.type
+				fans: newData.fans.map((fanData, index) => (
+					!response.data.params.fanParameters ? {
+						name: !response.data.params.fanNames ? null : response.data.params.fanNames[index],
+						thermostatic: {
+							control: (response.data.controllableFans & (1 << index)) === 0,
 						}
-					] : []
-				},
-				state: {
-					mode: response.data.mode ? response.data.mode : null,
-				},
-				tools: (response.data.tools !== undefined) ? response.data.tools.map(tool => ({
-					number: tool.number,
-					name: tool.name ? tool.name : null,
-					heaters: tool.heaters,
-					extruders: tool.drives,
-					axes: tool.axisMap,
-					fans: bitmapToArray(tool.fans),
-					filament: tool.filament,
-					offsets: tool.offsets,
-					mix: tool.mix
-				})) : []
-			});
-
-			newData.storages = [];
-			for (let i = 0; i < response.data.volumes; i++) {
-				newData.storages.push({
-					mounted: (response.data.mountedVolumes & (1 << i)) !== 0
+					} : {
+						pin: response.data.params.fanParameters[index].pin,
+						frequency: response.data.params.fanParameters[index].frequency,
+						inverted: response.data.params.fanParameters[index].inverted,
+						min: response.data.params.fanParameters[index].min/100,
+						max: response.data.params.fanParameters[index].max/100,
+						blip: response.data.params.fanParameters[index].blip,
+						name: response.data.params.fanNames[index],
+						thermostatic: {
+							control: (response.data.controllableFans & (1 << index)) === 0,
+							heaters: !response.data.params.fanParameters[index].heaters ? [] : response.data.params.fanParameters[index].heaters.toString(2).split('').reverse().map((x,i) => (x == 1 ? (i >= 8 ? (100 + (i-8)) : i) : undefined)).filter((i) => i != undefined),
+							temperature: response.data.params.fanParameters[index].temperature,
+						}
+					})),
+					heat: {
+						// FIXME-FW: 'heater' should not be part of the standard status response
+						beds: [
+							response.data.temps.bed ? {
+								heaters: [response.data.temps.bed.heater]
+							} : null
+						],
+						chambers: [
+							response.data.temps.chamber ? {
+								heaters: [response.data.temps.chamber.heater]
+							} : null,
+							response.data.temps.cabinet ? {
+								heaters: [response.data.temps.cabinet.heater]
+							} : null
+						],
+						coldExtrudeTemperature: response.data.coldExtrudeTemp,
+						coldRetractTemperature: response.data.coldRetractTemp,
+						heaters: response.data.temps.current.map((current, index) => ({
+							max: response.data.tempLimit,
+							name: (response.data.temps.names !== undefined) ? response.data.temps.names[index] : null
+						}))
+					},
+					move: {
+						axes: response.data.coords.xyz.map((position, index) => ({
+							letter: axisNames[index],
+							visible: (response.data.axes !== undefined) ? (index < response.data.axes) : true
+						})),
+						compensation: response.data.compensation,
+						geometry: {
+							type: response.data.geometry
+						}
+					},
+					network: {
+						name: response.data.name
+					},
+					sensors: {
+						endstops: newData.move.drives.map((drive, index) => ({
+							triggered: (response.data.endstops & (1 << index)) !== 0
+						})),
+						probes: (response.data.probe !== undefined) ? [
+							{
+								threshold: response.data.probe.threshold,
+								triggerHeight: response.data.probe.height,
+								type: response.data.probe.type
+							}
+						] : []
+					},
+					state: {
+						mode: response.data.mode ? response.data.mode : null,
+						heightmap: response.data.loadedheightmap
+					},
+					tools: (response.data.tools !== undefined) ? response.data.tools.map(tool => ({
+						number: tool.number,
+						name: tool.name ? tool.name : null,
+						heaters: tool.heaters,
+						extruders: tool.drives,
+						axes: tool.axisMap,
+						fans: bitmapToArray(tool.fans),
+						filament: tool.filament,
+						offsets: tool.offsets,
+						mix: tool.mix
+					})) : []
 				});
-			}
-		} else if (statusType === 3) {
-			// Print Status Response
-			newData.job  = {
-				file: {},
-				filePosition: response.data.filePosition,
-				extrudedRaw: response.data.extrRaw
-			}
 
-			// Update some stats only if the print is still live
-			if (isPrinting) {
-				quickPatch(newData.job, {
-					duration: response.data.printDuration,
-					layer: response.data.currentLayer,
-					layerTime: response.data.currentLayerTime,
-					warmUpDuration: response.data.warmUpDuration,
-					timesLeft: {
-						file: response.data.timesLeft.file,
-						filament: response.data.timesLeft.filament,
-						layer: response.data.timesLeft.layer
+				newData.storages = [];
+				for (let i = 0; i < response.data.volumes; i++) {
+					newData.storages.push({
+						mounted: (response.data.mountedVolumes & (1 << i)) !== 0
+					});
+				}
+			} else if (statusType === 3) {
+				// Print Status Response
+				newData.job  = {
+					file: {},
+					filePosition: response.data.filePosition,
+					extrudedRaw: response.data.extrRaw
+				}
+
+				// Update some stats only if the print is still live
+				if (isPrinting) {
+					quickPatch(newData.job, {
+						duration: response.data.printDuration,
+						layer: response.data.currentLayer,
+						layerTime: response.data.currentLayerTime,
+						warmUpDuration: response.data.warmUpDuration,
+						timesLeft: {
+							file: response.data.timesLeft.file,
+							filament: response.data.timesLeft.filament,
+							layer: response.data.timesLeft.layer
+						}
+					});
+				} else {
+					quickPatch(newData.job, {
+						layerTime: null,
+						timesLeft: {
+							file: null,
+							filament: null,
+							layer: null
+						}
+					});
+				}
+
+				// See if we need to record more layer stats
+				if (response.data.currentLayer > this.layers.length) {
+					let addLayers = false;
+					if (!this.layers.length) {
+						// Is the first layer complete?
+						if (response.data.currentLayer > 1) {
+							this.layers.push({
+								duration: response.data.firstLayerDuration,
+								height: this.currentFileInfo.firstLayerHeight,
+								filament: (response.data.currentLayer === 2) ? response.data.extrRaw.filter(amount => amount > 0) : null,
+								fractionPrinted: (response.data.currentLayer === 2) ? response.data.fractionPrinted / 100 : null
+							});
+							newData.job.layers = this.layers;
+
+							// Keep track of the past layer
+							if (response.data.currentLayer === 2) {
+								this.printStats.duration = response.data.warmUpDuration + response.data.firstLayerDuration;
+								this.printStats.extrRaw = response.data.extrRaw;
+								this.printStats.fractionPrinted = response.data.fractionPrinted;
+								this.printStats.measuredLayerHeight = response.data.coords.xyz[2] - this.currentFileInfo.firstLayerHeight;
+								this.printStats.zPosition = response.data.coords.xyz[2];
+							} else if (response.data.currentLayer > this.layers.length + 1) {
+								addLayers = true;
+							}
+						}
+					} else if (response.data.currentLayer > this.layers.length + 1) {
+						// Another layer is complete, add it
+						addLayers = true;
 					}
-				});
-			} else {
-				quickPatch(newData.job, {
-					layerTime: null,
-					timesLeft: {
-						file: null,
-						filament: null,
-						layer: null
-					}
-				});
-			}
 
-			// See if we need to record more layer stats
-			if (response.data.currentLayer > this.layers.length) {
-				let addLayers = false;
-				if (!this.layers.length) {
-					// Is the first layer complete?
-					if (response.data.currentLayer > 1) {
-						this.layers.push({
-							duration: response.data.firstLayerDuration,
-							height: this.currentFileInfo.firstLayerHeight,
-							filament: (response.data.currentLayer === 2) ? response.data.extrRaw.filter(amount => amount > 0) : null,
-							fractionPrinted: (response.data.currentLayer === 2) ? response.data.fractionPrinted / 100 : null
-						});
+					if (addLayers) {
+						const layerJustChanged = (response.data.status === 'M') || ((response.data.currentLayer - this.layers.length) === 2);
+						if (this.printStats.duration) {
+							// Got info about the past layer, add what we know
+							this.layers.push({
+								duration: response.data.printDuration - this.printStats.duration,
+								height: this.printStats.measuredLayerHeight ? this.printStats.measuredLayerHeight : this.printStats.layerHeight,
+								filament: response.data.extrRaw.map((amount, index) => amount - this.printStats.extrRaw[index]).filter((dummy, index) => response.data.extrRaw[index] > 0),
+								fractionPrinted: (response.data.fractionPrinted - this.printStats.fractionPrinted) / 100
+							});
+						} else {
+							// Interpolate data...
+							const avgDuration = (response.data.printDuration - response.data.warmUpDuration - response.data.firstLayerDuration - response.data.currentLayerTime) / (response.data.currentLayer - 2);
+							for (let layer = this.layers.length; layer + 1 < response.data.currentLayer; layer++) {
+								this.layers.push({ duration: avgDuration });
+							}
+							this.printStats.zPosition = response.data.coords.xyz[2];
+						}
 						newData.job.layers = this.layers;
 
-						// Keep track of the past layer
-						if (response.data.currentLayer === 2) {
-							this.printStats.duration = response.data.warmUpDuration + response.data.firstLayerDuration;
+						// Keep track of the past layer if the layer change just happened
+						if (layerJustChanged) {
+							this.printStats.duration = response.data.printDuration;
 							this.printStats.extrRaw = response.data.extrRaw;
 							this.printStats.fractionPrinted = response.data.fractionPrinted;
-							this.printStats.measuredLayerHeight = response.data.coords.xyz[2] - this.currentFileInfo.firstLayerHeight;
+							this.printStats.measuredLayerHeight = response.data.coords.xyz[2] - this.printStats.zPosition;
 							this.printStats.zPosition = response.data.coords.xyz[2];
-						} else if (response.data.currentLayer > this.layers.length + 1) {
-							addLayers = true;
 						}
-					}
-				} else if (response.data.currentLayer > this.layers.length + 1) {
-					// Another layer is complete, add it
-					addLayers = true;
-				}
-
-				if (addLayers) {
-					const layerJustChanged = (response.data.status === 'M') || ((response.data.currentLayer - this.layers.length) === 2);
-					if (this.printStats.duration) {
-						// Got info about the past layer, add what we know
-						this.layers.push({
-							duration: response.data.printDuration - this.printStats.duration,
-							height: this.printStats.measuredLayerHeight ? this.printStats.measuredLayerHeight : this.printStats.layerHeight,
-							filament: response.data.extrRaw.map((amount, index) => amount - this.printStats.extrRaw[index]).filter((dummy, index) => response.data.extrRaw[index] > 0),
-							fractionPrinted: (response.data.fractionPrinted - this.printStats.fractionPrinted) / 100
-						});
-					} else {
-						// Interpolate data...
-						const avgDuration = (response.data.printDuration - response.data.warmUpDuration - response.data.firstLayerDuration - response.data.currentLayerTime) / (response.data.currentLayer - 2);
-						for (let layer = this.layers.length; layer + 1 < response.data.currentLayer; layer++) {
-							this.layers.push({ duration: avgDuration });
-						}
-						this.printStats.zPosition = response.data.coords.xyz[2];
-					}
-					newData.job.layers = this.layers;
-
-					// Keep track of the past layer if the layer change just happened
-					if (layerJustChanged) {
-						this.printStats.duration = response.data.printDuration;
-						this.printStats.extrRaw = response.data.extrRaw;
-						this.printStats.fractionPrinted = response.data.fractionPrinted;
-						this.printStats.measuredLayerHeight = response.data.coords.xyz[2] - this.printStats.zPosition;
-						this.printStats.zPosition = response.data.coords.xyz[2];
 					}
 				}
 			}
-		}
 
-		// Remove unused chamber heaters
-		while (newData.heat.chambers.length > 0 && newData.heat.chambers[newData.heat.chambers.length - 1] === null) {
-			newData.heat.chambers.pop();
-		}
-
-		// Output Utilities
-		let beepFrequency = 0, beepDuration = 0, displayMessage = "", msgBoxMode = null;
-		if (response.data.output) {
-			// Beep
-			if (response.data.output.hasOwnProperty("beepFrequency")) {
-				beepFrequency = response.data.output.beepFrequency;
-				beepDuration = response.data.output.beepDuration;
+			// Remove unused chamber heaters
+			while (newData.heat.chambers.length > 0 && newData.heat.chambers[newData.heat.chambers.length - 1] === null) {
+				newData.heat.chambers.pop();
 			}
 
-			// Persistent Message
-			if (response.data.output.hasOwnProperty("message")) {
-				displayMessage = response.data.output.message;
+			// Output Utilities
+			let beepFrequency = 0, beepDuration = 0, displayMessage = "", msgBoxMode = null;
+			if (response.data.output) {
+				// Beep
+				if (response.data.output.hasOwnProperty("beepFrequency")) {
+					beepFrequency = response.data.output.beepFrequency;
+					beepDuration = response.data.output.beepDuration;
+				}
+
+				// Persistent Message
+				if (response.data.output.hasOwnProperty("message")) {
+					displayMessage = response.data.output.message;
+				}
+
+				// Message Box
+				const msgBox = response.data.output.msgBox;
+				if (msgBox) {
+					msgBoxMode = msgBox.mode;
+					quickPatch(newData, {
+						messageBox: {
+							title: msgBox.title,
+							message: msgBox.msg,
+							timeout: msgBox.timeout,
+							axisControls: bitmapToArray(msgBox.controls),
+							seq: msgBox.seq
+						}
+					});
+				}
 			}
 
-			// Message Box
-			const msgBox = response.data.output.msgBox;
-			if (msgBox) {
-				msgBoxMode = msgBox.mode;
+			quickPatch(newData, {
+				messageBox: {
+					mode: msgBoxMode
+				},
+				state: {
+					beep: {
+						frequency: beepFrequency,
+						duration: beepDuration
+					},
+					displayMessage: displayMessage
+				}
+			});
+
+			// Spindles
+			if (response.data.spindles) {
 				quickPatch(newData, {
-					messageBox: {
-						title: msgBox.title,
-						message: msgBox.msg,
-						timeout: msgBox.timeout,
-						axisControls: bitmapToArray(msgBox.controls),
-						seq: msgBox.seq
+					spindles: response.data.spindles.map(spindle => ({
+						active: spindle.active,
+						current: spindle.current
+					}))
+				});
+
+				response.data.spindles.forEach((spindle, index) => {
+					newData.tools.find(tool => tool.number === spindle.tool).spindle = index;
+				});
+			}
+
+			// See if we need to pass some info from the connect response
+			if (this.justConnected) {
+				quickPatch(newData, {
+					electronics: {
+						type: this.boardType
+					},
+					network: {
+						password: this.password
 					}
 				});
 			}
-		}
 
-		quickPatch(newData, {
-			messageBox: {
-				mode: msgBoxMode
-			},
-			state: {
-				beep: {
-					frequency: beepFrequency,
-					duration: beepDuration
-				},
-				displayMessage: displayMessage
+			// Update the data model
+			await this.dispatch('update', newData);
+
+			// Check if the G-code response needs to be polled
+			if (response.data.seq !== this.lastStatusResponse.seq) {
+				await this.getGCodeReply(response.data.seq);
 			}
-		});
 
-		// Spindles
-		if (response.data.spindles) {
-			quickPatch(newData, {
-				spindles: response.data.spindles.map(spindle => ({
-					active: spindle.active,
-					current: spindle.current
-				}))
-			});
+			// Check if the firmware rebooted
+			if (!this.justConnected && response.data.time < this.lastStatusResponse.time) {
+				this.pendingCodes.forEach(code => code.reject(new DisconnectedError()));
+				this.pendingCodes = [];
+			}
 
-			response.data.spindles.forEach((spindle, index) => {
-				newData.tools.find(tool => tool.number === spindle.tool).spindle = index;
-			});
+			// Sometimes we need to update the config as well
+			if (requestExtendedStatus || this.justConnected || (this.verbose && this.updateLoopCounter % 2 === 0)) {
+				await this.getConfigResponse();
+			}
+
+			// Schedule next status update
+			this.lastStatusResponse = response.data;
+			this.isReconnecting = (response.data.status === 'F') || (response.data.status === 'H');
+			this.justConnected = false;
+			this.updateLoopCounter++;
+			this.scheduleUpdate();
 		}
-
-		// See if we need to pass some info from the connect response
-		if (this.justConnected) {
-			quickPatch(newData, {
-				electronics: {
-					type: this.boardType
-				},
-				network: {
-					password: this.password
-				}
-			});
+		convertStatusLetter(letter) {
+			switch (letter) {
+				case 'F': return 'updating';
+				case 'O': return 'off';
+				case 'H': return 'halted';
+				case 'D': return 'pausing';
+				case 'S': return 'paused';
+				case 'R': return 'resuming';
+				case 'P': return 'processing';
+				case 'M': return 'simulating';
+				case 'B': return 'busy';
+				case 'T': return 'changingTool';
+				case 'I': return 'idle';
+			}
+			return 'unknown';
 		}
-
-		// Update the data model
-		await this.dispatch('update', newData);
-
-		// Check if the G-code response needs to be polled
-		if (response.data.seq !== this.lastStatusResponse.seq) {
-			await this.getGCodeReply(response.data.seq);
-		}
-
-		// Check if the firmware rebooted
-		if (!this.justConnected && response.data.time < this.lastStatusResponse.time) {
-			this.pendingCodes.forEach(code => code.reject(new DisconnectedError()));
-			this.pendingCodes = [];
-		}
-
-		// Sometimes we need to update the config as well
-		if (requestExtendedStatus || this.justConnected || (this.verbose && this.updateLoopCounter % 2 === 0)) {
-			await this.getConfigResponse();
-		}
-
-		// Schedule next status update
-		this.lastStatusResponse = response.data;
-		this.isReconnecting = (response.data.status === 'F') || (response.data.status === 'H');
-		this.justConnected = false;
-		this.updateLoopCounter++;
-		this.scheduleUpdate();
-	}
-
-	convertStatusLetter(letter) {
-		switch (letter) {
-			case 'F': return 'updating';
-			case 'O': return 'off';
-			case 'H': return 'halted';
-			case 'D': return 'pausing';
-			case 'S': return 'paused';
-			case 'R': return 'resuming';
-			case 'P': return 'processing';
-			case 'M': return 'simulating';
-			case 'B': return 'busy';
-			case 'T': return 'changingTool';
-			case 'I': return 'idle';
-		}
-		return 'unknown';
-	}
-
-	async scheduleUpdate() {
-		if (this.justConnected || this.updateLoopTimer) {
-			const that = this;
-			// Perform status update
-			this.updateLoopTimer = setTimeout(async function() {
-				try {
-					/* eslint-disable no-useless-call */
-					await that.updateLoop.call(that);
-				} catch (e) {
-					if (!(e instanceof DisconnectedError)) {
-						if (that.isReconnecting) {
-							that.updateLoopTimer = undefined;
-							that.reconnect();
-						} else {
-							console.warn(e);
-							that.dispatch('onConnectionError', e);
+		async scheduleUpdate() {
+			if (this.justConnected || this.updateLoopTimer) {
+				const that = this;
+				// Perform status update
+				this.updateLoopTimer = setTimeout(async function() {
+					try {
+						/* eslint-disable no-useless-call */
+						await that.updateLoop.call(that);
+					} catch (e) {
+						if (!(e instanceof DisconnectedError)) {
+							if (that.isReconnecting) {
+								that.updateLoopTimer = undefined;
+								that.reconnect();
+							} else {
+								console.warn(e);
+								that.dispatch('onConnectionError', e);
+							}
 						}
 					}
-				}
-			}, this.settings.updateInterval);
-			//await that.updateLoop.call(that);
-		}
-	}
-
-	// Call this only from updateLoop()
-	async getGCodeReply(seq = this.lastStatusResponse.seq) {
-		const response = await this.axios.get('rr_reply', {
-			responseType: 'arraybuffer' 	// responseType: 'text' is broken, see https://github.com/axios/axios/issues/907
-		});
-		const reply = Buffer.from(response.data).toString().trim();
-
-		// TODO? Check for special JSON responses generated by M119, see DWC1
-		// Probably makes sense only as soon as the settings update notifications are working again
-
-		if (!this.pendingCodes.length) {
-			// Just log this response
-			this.dispatch('onCodeCompleted', { code: undefined, reply });
-		} else {
-			// Resolve pending code promises
-			this.pendingCodes.forEach(function(code) {
-				if (code.seq < seq) {
-					code.resolve(reply);
-					this.dispatch('onCodeCompleted', { code, reply });
-				}
-			}, this);
-			this.pendingCodes = this.pendingCodes.filter(code => code.seq >= seq);
-		}
-	}
-
-	// Call this only from updateLoop()
-	async getConfigResponse() {
-		const response = await this.axios.get('rr_config');
-		const configData = {
-			electronics: {
-				name: response.data.firmwareElectronics,
-				firmware: {
-					name: response.data.firmwareName,
-					version: response.data.firmwareVersion,
-					date: response.data.firmwareDate
-				}
-			},
-			move: {
-				axes: response.data.axisMins.map((min, index) => ({
-					min,
-					max: response.data.axisMaxes[index]
-				})),
-				drives: response.data.currents.map((current, index) => ({
-					current,
-					acceleration: response.data.accelerations[index],
-					minSpeed: response.data.minFeedrates[index],
-					maxSpeed: response.data.maxFeedrates[index]
-				})),
-				idle: {
-					factor: response.data.idleCurrentFactor,
-					timeout: response.data.idleTimeout
-				}
-			},
-			network: {
-				interfaces: [
-					{
-						type: (response.data.dwsVersion !== undefined) ? 'wifi' : 'lan',
-						firmwareVersion: response.data.dwsVersion
-						// Unfortunately we cannot populate anything else here yet
-					}
-				]
+				}, this.settings.updateInterval);
+				//await that.updateLoop.call(that);
 			}
-		};
-
-		await this.dispatch('update', configData);
-	}
-
-	async sendCode(code) {
-		const response = await this.axios.get('rr_gcode', {
-			params: { gcode: code }
-		});
-
-		if (response.data.buff === undefined) {
-			console.warn(`Received bad response for rr_gcode: ${JSON.stringify(response.data)}`);
-			throw new CodeResponseError();
 		}
-		if (response.data.buff === 0) {
-			throw new CodeBufferError();
+		// Call this only from updateLoop()
+		async getGCodeReply(seq = this.lastStatusResponse.seq) {
+			const response = await this.axios.get('rr_reply', {
+				responseType: 'arraybuffer' 	// responseType: 'text' is broken, see https://github.com/axios/axios/issues/907
+			});
+			const reply = Buffer.from(response.data).toString().trim();
+
+			// TODO? Check for special JSON responses generated by M119, see DWC1
+			// Probably makes sense only as soon as the settings update notifications are working again
+
+			if (!this.pendingCodes.length) {
+				// Just log this response
+				this.dispatch('onCodeCompleted', { code: undefined, reply });
+			} else {
+				// Resolve pending code promises
+				this.pendingCodes.forEach(function(code) {
+					if (code.seq < seq) {
+						code.resolve(reply);
+						this.dispatch('onCodeCompleted', { code, reply });
+					}
+				}, this);
+				this.pendingCodes = this.pendingCodes.filter(code => code.seq >= seq);
+			}
 		}
-
-		const pendingCodes = this.pendingCodes, seq = this.lastStatusResponse.seq;
-		return new Promise((resolve, reject) => pendingCodes.push({ seq, resolve, reject }));
-	}
-
-	upload({ filename, content, cancelSource = axios.cancelToken.source(), onProgress }) {
-		const that = this;
-		return new Promise(async function(resolve, reject) {
-			// Create upload options
-			const payload = (content instanceof(Blob)) ? content : new Blob([content]);
-			const options = {
-				cancelToken: cancelSource.token,
-				isFileTransfer: true,
-				onUploadProgress: onProgress,
-				params: {
-					name: filename,
-					time: timeToStr(content.lastModified ? new Date(content.lastModified) : new Date())
+		// Call this only from updateLoop()
+		async getConfigResponse() {
+			const response = await this.axios.get('rr_config');
+			const configData = {
+				electronics: {
+					name: response.data.firmwareElectronics,
+					firmware: {
+						name: response.data.firmwareName,
+						version: response.data.firmwareVersion,
+						date: response.data.firmwareDate
+					}
 				},
-				timeout: 0,
-				transformRequest(data, headers) {
-					delete headers.post['Content-Type'];
-					return data;
+				move: {
+					axes: response.data.axisMins.map((min, index) => ({
+						min,
+						max: response.data.axisMaxes[index]
+					})),
+					drives: response.data.currents.map((current, index) => ({
+						current,
+						acceleration: response.data.accelerations[index],
+						minSpeed: response.data.minFeedrates[index],
+						maxSpeed: response.data.maxFeedrates[index]
+					})),
+					idle: {
+						factor: response.data.idleCurrentFactor,
+						timeout: response.data.idleTimeout
+					}
+				},
+				network: {
+					interfaces: [
+						{
+							type: (response.data.dwsVersion !== undefined) ? 'wifi' : 'lan',
+							firmwareVersion: response.data.dwsVersion
+							// Unfortunately we cannot populate anything else here yet
+						}
+					]
 				}
 			};
 
-			// Check if the CRC32 checksum is required
-			if (that.settings.crcUploads) {
-				const checksum = await new Promise(async function(resolve) {
-					const fileReader = new FileReader();
-					fileReader.onload = function(e){
-						const result = crc32(e.target.result);
-						resolve(result);
-					}
-					fileReader.readAsArrayBuffer(payload);
-				});
+			await this.dispatch('update', configData);
+		}
+		async sendCode(code) {
+			const response = await this.axios.get('rr_gcode', {
+				params: { gcode: code }
+			});
 
-				options.params.crc32 = checksum.toString(16);
+			if (response.data.buff === undefined) {
+				console.warn(`Received bad response for rr_gcode: ${JSON.stringify(response.data)}`);
+				throw new CodeResponseError();
+			}
+			if (response.data.buff === 0) {
+				throw new CodeBufferError();
 			}
 
-			if (Math.ceil(payload.size/(8*1024*1024)) > 1 && !filename.endsWith('.zip')) {
-				let totalCount = 0, instructionPos = -1, startTime = new Date();
-				let lineReader = Object.assign(LineReader.methods, LineReader.data);
-				document.querySelector('div.iziToast-progressbar').style.height = "5px"
-				document.querySelector('div.iziToast-progressbar > div').style.height = "5px"
-
-				options.params.parts = Math.ceil(payload.size/(8*1024*1024))
-				options.onUploadProgress = function(e) {
-					function toHMS(delta, toStr) {
-						var sec = delta % 60,
-						min = (delta = (delta - sec) / 60) % 60,
-						hour = (delta = (delta - min) / 60) % 24,
-						day = delta = (delta - hour) / 24;
-						if (toStr) {
-							var strTime = day + "d "
-							+ hour + "h "
-							+ ( min < 10 ? "0" : "" ) + min + "m "
-							+ ( sec < 10 ? "0" : "" ) + sec + "s";
-							return strTime = strTime.replace(/(?:0. )+/, "")
-						}
-						return {
-							d: day,
-							h: hour,
-							m: min,
-							s: sec
-						}
+			const pendingCodes = this.pendingCodes, seq = this.lastStatusResponse.seq;
+			return new Promise((resolve, reject) => pendingCodes.push({ seq, resolve, reject }));
+		}
+		upload({ filename, content, cancelSource = axios.cancelToken.source(), onProgress }) {
+			const that = this;
+			return new Promise(async function(resolve, reject) {
+				// Create upload options
+				const payload = (content instanceof(Blob)) ? content : new Blob([content]);
+				const options = {
+					cancelToken: cancelSource.token,
+					isFileTransfer: true,
+					onUploadProgress: onProgress,
+					params: {
+						name: filename,
+						time: timeToStr(content.lastModified ? new Date(content.lastModified) : new Date())
+					},
+					timeout: 0,
+					transformRequest(data, headers) {
+						delete headers.post['Content-Type'];
+						return data;
 					}
-					var elt = ((new Date() - startTime)/((instructionPos+e.loaded)/payload.size));
-					var ert = elt * (1-((instructionPos + e.loaded)/payload.size));
+				};
 
-					const uploadSpeed = (instructionPos + e.loaded) / (((new Date()) - startTime) / 1000), progress = ((instructionPos + e.loaded) / payload.size) * 100;
-					document.querySelector('strong.iziToast-title').textContent = i18n.t(`notification.upload.title`, [filename.substring(filename.lastIndexOf('/')+1, filename.lastIndexOf('.')), displaySpeed(uploadSpeed), Math.round(progress), toHMS(Math.round(ert/1000), true)]);
-					document.querySelector('div.iziToast-progressbar > div').style.width = progress.toFixed(1) + '%';
+				// Check if the CRC32 checksum is required
+				if (that.settings.crcUploads) {
+					const checksum = await new Promise(async function(resolve) {
+						const fileReader = new FileReader();
+						fileReader.onload = function(e){
+							const result = crc32(e.target.result);
+							resolve(result);
+						}
+						fileReader.readAsArrayBuffer(payload);
+					});
+
+					options.params.crc32 = checksum.toString(16);
 				}
-				lineReader.LineReader({chunkSize: 8*1024*1024})
-				console.log(lineReader);
-				let myResponse;
-				lineReader.on('line', function(line, next) {
-					console.log(totalCount)
-					if (line) {
-						totalCount++;
+
+				if (Math.ceil(payload.size/(4*1024*1024)) > 1 && !filename.endsWith('.zip')) {
+					let totalCount = 0, instructionPos = -1, startTime = new Date();
+					let lineReader = Object.assign(LineReader.methods, LineReader.data);
+					document.querySelector('div.iziToast-progressbar').style.height = "5px"
+					document.querySelector('div.iziToast-progressbar > div').style.height = "5px"
+					document.getElementById("fileProgress").style.transition = 'width 2s linear';
+
+					options.params.parts = Math.ceil(payload.size/(4*1024*1024))
+					options.onUploadProgress = function(e) {
+						function toHMS(delta, toStr) {
+							var sec = delta % 60,
+							min = (delta = (delta - sec) / 60) % 60,
+							hour = (delta = (delta - min) / 60) % 24,
+							day = delta = (delta - hour) / 24;
+							if (toStr) {
+								var strTime = day + "d "
+								+ hour + "h "
+								+ ( min < 10 ? "0" : "" ) + min + "m "
+								+ ( sec < 10 ? "0" : "" ) + sec + "s";
+								return strTime = strTime.replace(/(?:0. )+/, "")
+							}
+							return {
+								d: day,
+								h: hour,
+								m: min,
+								s: sec
+							}
+						}
+						var elt = ((new Date() - startTime)/((instructionPos+e.loaded)/payload.size));
+						var ert = elt * (1-((instructionPos + e.loaded)/payload.size));
+
+						const uploadSpeed = (instructionPos + e.loaded) / (((new Date()) - startTime) / 1000), progress = ((instructionPos + e.loaded) / payload.size) * 100;
+						document.querySelector('strong.iziToast-title').textContent = i18n.t(`notification.upload.title`, [filename.substring(filename.lastIndexOf('/')+1, filename.lastIndexOf('.')), displaySpeed(uploadSpeed), Math.round(progress), toHMS(Math.round(ert/1000), true)]);
+						document.querySelector('div.iziToast-progressbar > div').style.width = progress.toFixed(1) + '%';
+
+						document.getElementById("pleft").innerHTML = i18n.t('notification.parse.eta', [toHMS(Math.round(ert/1000), true)]);
+						document.getElementById("fileProgress").style.width = progress + "%"
+						document.getElementById("pspeed").innerHTML = i18n.t('notification.parse.speed',
+						[displaySpeed(uploadSpeed), ""]);
 					}
-					//line = send(line, self.lineReader.offset);
-					const payload = (line instanceof(Blob)) ? line : new Blob([line])
-					options.cancelToken = undefined;
+					lineReader.LineReader({chunkSize: 4*1024*1024})
+
+					let myResponse;
+					lineReader.on('line', function(line, next) {
+
+						if (line) {
+							totalCount++;
+						}
+						//line = send(line, self.lineReader.offset);
+						const payload = (line instanceof(Blob)) ? line : new Blob([line])
+						options.cancelToken = undefined;
+						try {
+							// Create file transfer and start it
+							options.params.part = totalCount
+							that.axios.post('rr_upload', payload, options)
+							.then(function(response) {
+								instructionPos = lineReader.GetReadPos();
+								myResponse = response;
+								setTimeout(next);
+							})
+						} catch (e) {
+							reject(e);
+						}
+						//next();
+					});
+
+					lineReader.on('abort', function(abo) {
+						console.warn("read aborted");
+						console.warn(abo);
+					})
+
+					lineReader.on('error', function(err) {
+						console.error(err);
+					});
+
+					lineReader.on('end', function() {
+						function toHMS(delta, toStr) {
+							var sec = delta % 60,
+							min = (delta = (delta - sec) / 60) % 60,
+							hour = (delta = (delta - min) / 60) % 24,
+							day = delta = (delta - hour) / 24;
+							if (toStr) {
+								var strTime = day + "d "
+								+ hour + "h "
+								+ ( min < 10 ? "0" : "" ) + min + "m "
+								+ ( sec < 10 ? "0" : "" ) + sec + "s";
+								return strTime = strTime.replace(/(?:0. )+/, "")
+							}
+							return {
+								d: day,
+								h: hour,
+								m: min,
+								s: sec
+							}
+						}
+
+						console.log("Read complete!\n" + totalCount + " chunks sent")
+						document.querySelector('.iziToast-wrapper').innerHTML = "";
+
+						document.getElementById("progress").style.transition = 'width ' + Math.max(Math.floor(payload.size/(750*1024)), 10) + 's linear';
+						document.getElementById("progress").style.width = '100%'
+						document.getElementById("pleft").innerHTML = i18n.t('notification.parse.eta', [toHMS(Math.max(Math.floor(payload.size/(750*1024)), 10), true)]);
+						document.getElementById("pspeed").innerHTML = i18n.t('notification.parse.speed',
+						[displaySpeed((Math.round(200*Math.random()) + 500)*1024), ""]);
+
+						if (myResponse.data.err === 0) {
+							that.dispatch('onFileUploaded', { filename, content });
+							resolve(myResponse.data);
+						} else {
+							reject(new OperationFailedError(`err ${myResponse.data.err}`));
+						}
+					});
+
+					document.getElementById("progress").style.transition = 'width 4s linear';
+					lineReader.read(payload);
+				} else {
 					try {
 						// Create file transfer and start it
-						options.params.part = totalCount
 						that.axios.post('rr_upload', payload, options)
 						.then(function(response) {
-							instructionPos = lineReader.GetReadPos();
-							console.log(instructionPos)
-							myResponse = response;
-							setTimeout(next, 100);
+							if (response.data.err === 0) {
+								//that.dispatch('onFileUploaded', { filename, content });
+								resolve(response.data);
+							} else {
+								reject(new OperationFailedError(`err ${response.data.err}`));
+							}
 						})
+						.catch(reject)
+						.then(function() {
+							that.fileTransfers = that.fileTransfers.filter(item => item !== cancelSource);
+						});
+
+						// Keep it in the list of transfers
+						that.fileTransfers.push(cancelSource);
 					} catch (e) {
 						reject(e);
 					}
-					//next();
-				});
+				}
+			});
+		}
+		async delete(filename) {
+			const response = await this.axios.get('rr_delete', {
+				params: { name: filename }
+			});
 
-				lineReader.on('abort', function(abo) {
-					console.warn("read aborted");
-					console.warn(abo);
-				})
+			if (response.data.err) {
+				throw new OperationFailedError(`err ${response.data.err}`);
+			}
 
-				lineReader.on('error', function(err) {
-					console.error(err);
-				});
+			await this.dispatch('onFileOrDirectoryDeleted', filename);
+		}
+		async move({ from, to, force, silent }) {
+			const response = await this.axios.get('rr_move', {
+				params: {
+					old: from,
+					new: to,
+					deleteexisting: force ? 'yes' : 'no'
+				}
+			});
 
-				lineReader.on('end', function() {
-					console.log("Read complete!\n" + totalCount + " chunks sent")
-					document.querySelector('.iziToast-wrapper').innerHTML = "";
-					if (myResponse.data.err === 0) {
-						that.dispatch('onFileUploaded', { filename, content });
-						resolve(myResponse.data);
-					} else {
-						reject(new OperationFailedError(`err ${myResponse.data.err}`));
-					}
-				});
+			if (!silent) {
+				if (response.data.err) {
+					throw new OperationFailedError(`err ${response.data.err}`);
+				}
 
-				lineReader.read(payload);
-			} else {
+				await this.dispatch('onFileOrDirectoryMoved', { from, to, force });
+			}
+		}
+		async makeDirectory(directory) {
+			const response = await this.axios.get('rr_mkdir', {
+				params: { dir: directory }
+			});
+
+			if (response.data.err) {
+				throw new OperationFailedError(`err ${response.data.err}`);
+			}
+
+			await this.dispatch('onDirectoryCreated', directory);
+		}
+		download(payload) {
+			const filename = (payload instanceof Object) ? payload.filename : payload;
+			const type = (payload instanceof Object) ? payload.type : undefined;
+			const cancelSource = (payload instanceof Object && payload.cancelSource) ? payload.cancelSource : BaseConnector.getCancelSource();
+			const onProgress = (payload instanceof Object) ? payload.onProgress : undefined;
+
+			const that = this;
+			return new Promise(function(resolve, reject) {
+				// Create download options
+				const options = {
+					cancelToken: cancelSource.token,
+					responseType: (type === 'text') ? 'arraybuffer' : type,	// responseType: 'text' is broken, see https://github.com/axios/axios/issues/907
+					isFileTransfer: true,
+					onDownloadProgress: onProgress,
+					params: {
+						name: filename
+					},
+					timeout: 0
+				};
+
 				try {
 					// Create file transfer and start it
-					that.axios.post('rr_upload', payload, options)
+					that.axios.get('rr_download', options)
 					.then(function(response) {
-						if (response.data.err === 0) {
-							that.dispatch('onFileUploaded', { filename, content });
-							resolve(response.data);
-						} else {
-							reject(new OperationFailedError(`err ${response.data.err}`));
+						if (type === 'text') {
+							// see above...
+							response.data = Buffer.from(response.data).toString();
 						}
+						resolve(response.data);
+						that.dispatch('onFileDownloaded', { filename, content: response.data });
 					})
 					.catch(reject)
 					.then(function() {
 						that.fileTransfers = that.fileTransfers.filter(item => item !== cancelSource);
 					});
 
-					// Keep it in the list of transfers
+					// Keep it in the list of transfers and return the promise
 					that.fileTransfers.push(cancelSource);
 				} catch (e) {
 					reject(e);
 				}
-			}
-		});
-	}
-
-	async delete(filename) {
-		const response = await this.axios.get('rr_delete', {
-			params: { name: filename }
-		});
-
-		if (response.data.err) {
-			throw new OperationFailedError(`err ${response.data.err}`);
+			});
 		}
-
-		await this.dispatch('onFileOrDirectoryDeleted', filename);
-	}
-
-	async move({ from, to, force, silent }) {
-		const response = await this.axios.get('rr_move', {
-			params: {
-				old: from,
-				new: to,
-				deleteexisting: force ? 'yes' : 'no'
+		async getFileList(directory, recursive) {
+			if (typeof(directory) === typeof({})){
+				recursive = directory.recursive;
+				directory = directory.dir;
 			}
-		});
 
-		if (!silent) {
+			let fileList = [], next = 0;
+			do {
+				const response = await this.axios.get('rr_filelist', {
+					params: {
+						dir: directory,
+						first: next
+					}
+				});
+
+				if (response.data.err === 1) {
+					throw new DriveUnmountedError();
+				} else if (response.data.err === 2) {
+					throw new DirectoryNotFoundError(directory);
+				}
+
+				fileList = fileList.concat(response.data.files);
+				next = (response.data.next?response.data.next:0);
+			} while (next !== undefined && next !== 0 || (fileList.length == 1 && fileList[0] == null));
+			fileList = fileList.filter(file => file != null)
+			//console.log(fileList)
+
+			let directories = fileList.filter(file => (file.type === "d"));
+			if (directories.length > 0 && recursive) {
+				for (var i = 0; i < directories.length; i++){
+					let item = directories[i];
+					fileList = fileList.concat(await this.getFileList(directory + "/" + item.name, recursive))
+				}
+				//console.log(fileList);
+			}
+
+			return fileList.map(item => ({
+				isDirectory: item.isDirectory || item.type === 'd',
+				name: item.name,
+				size: (item.type === 'd') ? null : item.size,
+				directory: item.directory ? item.directory : directory,
+				lastModified: item.lastModified ? item.lastModified : strToTime(item.date)
+			}));
+		}
+		async getFileInfo(filename) {
+			const response = await this.axios.get('rr_fileinfo', {
+				params: filename ? { name: filename } : {}
+			});
+
 			if (response.data.err) {
 				throw new OperationFailedError(`err ${response.data.err}`);
 			}
+			delete response.data.err;
 
-			await this.dispatch('onFileOrDirectoryMoved', { from, to, force });
+			return new FileInfo(response.data);
 		}
-	}
-
-	async makeDirectory(directory) {
-		const response = await this.axios.get('rr_mkdir', {
-			params: { dir: directory }
-		});
-
-		if (response.data.err) {
-			throw new OperationFailedError(`err ${response.data.err}`);
-		}
-
-		await this.dispatch('onDirectoryCreated', directory);
-	}
-
-	download(payload) {
-		const filename = (payload instanceof Object) ? payload.filename : payload;
-		const type = (payload instanceof Object) ? payload.type : undefined;
-		const cancelSource = (payload instanceof Object && payload.cancelSource) ? payload.cancelSource : BaseConnector.getCancelSource();
-		const onProgress = (payload instanceof Object) ? payload.onProgress : undefined;
-
-		const that = this;
-		return new Promise(function(resolve, reject) {
-			// Create download options
-			const options = {
-				cancelToken: cancelSource.token,
-				responseType: (type === 'text') ? 'arraybuffer' : type,	// responseType: 'text' is broken, see https://github.com/axios/axios/issues/907
-				isFileTransfer: true,
-				onDownloadProgress: onProgress,
-				params: {
-					name: filename
-				},
-				timeout: 0
-			};
-
-			try {
-				// Create file transfer and start it
-				that.axios.get('rr_download', options)
-				.then(function(response) {
-					if (type === 'text') {
-						// see above...
-						response.data = Buffer.from(response.data).toString();
-					}
-					resolve(response.data);
-					that.dispatch('onFileDownloaded', { filename, content: response.data });
-				})
-				.catch(reject)
-				.then(function() {
-					that.fileTransfers = that.fileTransfers.filter(item => item !== cancelSource);
+		async doLogin(login, password, hostname) {
+			if (!this.axios){
+				let protocol = location.protocol;
+				this.axios = await axios.create({
+					baseURL:`${protocol}//`+hostname+`/`,
+					cancelToken: BaseConnector.getCancelSource().token,
+					timeout: 8000,	// default session timeout in RepRapFirmware
+					withCredentials: true,
 				});
-
-				// Keep it in the list of transfers and return the promise
-				that.fileTransfers.push(cancelSource);
-			} catch (e) {
-				reject(e);
 			}
-		});
-	}
-
-	async getFileList(directory, recursive) {
-		if (typeof(directory) === typeof({})){
-			recursive = directory.recursive;
-			directory = directory.dir;
-		}
-		//console.log(recursive);
-		let fileList = [], next = 0;
-		do {
-			const response = await this.axios.get('rr_filelist', {
-				params: {
-					dir: directory,
-					first: next
-				}
+			const response = await this.axios.get('pc_login', {
+				withCredentials: true,
+				params: { username: login, password: password }
 			});
 
-			if (response.data.err === 1) {
-				throw new DriveUnmountedError();
-			} else if (response.data.err === 2) {
-				throw new DirectoryNotFoundError(directory);
+			if (response.data.err) {
+				throw new OperationFailedError(`err ${response.data.err}`);
+			}
+			return response;
+		}
+		async doLogout(hostname) {
+			if (!this.axios){
+				let protocol = location.protocol;
+				this.axios = await axios.create({
+					baseURL:`${protocol}//`+hostname+`/`,
+					cancelToken: BaseConnector.getCancelSource().token,
+					timeout: 8000,	// default session timeout in RepRapFirmware
+					withCredentials: true,
+				});
+			}
+			const response = await this.axios.get('pc_logout', {
+				withCredentials: true,
+				params: {}
+			});
+
+			if (response.data.err) {
+				throw new OperationFailedError(`err ${response.data.err}`);
+			}
+			return response;
+		}
+		async doShutdown(hostname) {
+			if (!this.axios){
+				let protocol = location.protocol;
+				this.axios = await axios.create({
+					baseURL:`${protocol}//`+hostname+`/`,
+					cancelToken: BaseConnector.getCancelSource().token,
+					timeout: 8000,	// default session timeout in RepRapFirmware
+					withCredentials: true,
+				});
+			}
+			const response = await this.axios.get('pc_shutdown', {
+				withCredentials: true,
+				params: {}
+			});
+
+			if (response.data.err) {
+				throw new OperationFailedError(`err ${response.data.err}`);
+			}
+			return response;
+		}
+		async doLoadAddresses(hostname) {
+			if (!this.axios){
+				let protocol = location.protocol;
+				this.axios = await axios.create({
+					baseURL:`${protocol}//`+hostname+`/`,
+					cancelToken: BaseConnector.getCancelSource().token,
+					timeout: 8000,	// default session timeout in RepRapFirmware
+					withCredentials: true,
+				});
 			}
 
-			fileList = fileList.concat(response.data.files);
-			next = (response.data.next?response.data.next:0);
-		} while (next !== undefined && next !== 0);
-		let directories = fileList.filter(file => (file.type === "d"));
-		if (directories.length > 0 && recursive) {
-			for (var i = 0; i < directories.length; i++){
-				let item = directories[i];
-				fileList = fileList.concat(await this.getFileList(directory + "/" + item.name, recursive))
+			const response = await this.axios.get('pc_getip', {
+				withCredentials: true,
+				params: {}
+			});
+
+			if (response.data.err) {
+				throw new OperationFailedError(`err ${response.data.err}`);
 			}
-			//console.log(fileList);
+			return response;
 		}
-
-		return fileList.map(item => ({
-			isDirectory: item.isDirectory || item.type === 'd',
-			name: item.name,
-			size: (item.type === 'd') ? null : item.size,
-			directory: item.directory ? item.directory : directory,
-			lastModified: item.lastModified ? item.lastModified : strToTime(item.date)
-		}));
 	}
-
-	async getFileInfo(filename) {
-		const response = await this.axios.get('rr_fileinfo', {
-			params: filename ? { name: filename } : {}
-		});
-
-		if (response.data.err) {
-			throw new OperationFailedError(`err ${response.data.err}`);
-		}
-		delete response.data.err;
-
-		return new FileInfo(response.data);
-	}
-
-	async doLogin(login, password, hostname) {
-		if (!this.axios){
-			let protocol = location.protocol;
-			this.axios = await axios.create({
-				baseURL:`${protocol}//`+hostname+`/`,
-				cancelToken: BaseConnector.getCancelSource().token,
-				timeout: 8000,	// default session timeout in RepRapFirmware
-				withCredentials: true,
-			});
-		}
-		const response = await this.axios.get('pc_login', {
-			withCredentials: true,
-			params: { username: login, password: password }
-		});
-
-		if (response.data.err) {
-			throw new OperationFailedError(`err ${response.data.err}`);
-		}
-		return response;
-	}
-
-	async doLogout(hostname) {
-		if (!this.axios){
-			let protocol = location.protocol;
-			this.axios = await axios.create({
-				baseURL:`${protocol}//`+hostname+`/`,
-				cancelToken: BaseConnector.getCancelSource().token,
-				timeout: 8000,	// default session timeout in RepRapFirmware
-				withCredentials: true,
-			});
-		}
-		const response = await this.axios.get('pc_logout', {
-			withCredentials: true,
-			params: {}
-		});
-
-		if (response.data.err) {
-			throw new OperationFailedError(`err ${response.data.err}`);
-		}
-		return response;
-	}
-	async doShutdown(hostname) {
-		if (!this.axios){
-			let protocol = location.protocol;
-			this.axios = await axios.create({
-				baseURL:`${protocol}//`+hostname+`/`,
-				cancelToken: BaseConnector.getCancelSource().token,
-				timeout: 8000,	// default session timeout in RepRapFirmware
-				withCredentials: true,
-			});
-		}
-		const response = await this.axios.get('pc_shutdown', {
-			withCredentials: true,
-			params: {}
-		});
-
-		if (response.data.err) {
-			throw new OperationFailedError(`err ${response.data.err}`);
-		}
-		return response;
-	}
-	async doLoadAddresses(hostname) {
-		if (!this.axios){
-			let protocol = location.protocol;
-			this.axios = await axios.create({
-				baseURL:`${protocol}//`+hostname+`/`,
-				cancelToken: BaseConnector.getCancelSource().token,
-				timeout: 8000,	// default session timeout in RepRapFirmware
-				withCredentials: true,
-			});
-		}
-		//console.log(location.protocol);
-		//console.log(hostname)
-		const response = await this.axios.get('pc_getip', {
-			withCredentials: true,
-			params: {}
-		});
-
-		if (response.data.err) {
-			throw new OperationFailedError(`err ${response.data.err}`);
-		}
-		return response;
-	}
-}

@@ -39,11 +39,20 @@ export default {
 		add: {
 			caption: 'Hinzufügen'
 		},
+		parkHead: {
+			caption: 'Park Toolhead'
+		},
 		connect: {
 			connect: 'Verbinden',
 			connecting: 'Verbinde...',
 			disconnect: 'Trennen',
 			disconnecting: 'Trenne...'
+		},
+		login: {
+			login: 'Log in',
+			loggingin: 'Logging in...',
+			logout: 'Log out',
+			loggingout: 'Logging out...'
 		},
 		emergencyStop: {
 			caption: 'NOT-AUS',
@@ -58,14 +67,30 @@ export default {
 		newDirectory: {
 			caption: 'Neues Verzeichnis'
 		},
+		newMaterial: {
+			caption: 'New Material'
+		},
 		newFilament: {
 			caption: 'Neues Filament'
+		},
+		newLiquid: {
+			caption: 'New Liquid'
 		},
 		newFile: {
 			caption: 'Neue Datei'
 		},
 		refresh: {
 			caption: 'Aktualisieren'
+		},
+		preloadPrime: {
+			caption: 'Preload/Prime',
+			preload: 'Preload {0}',
+			prime: 'Prime {0}',
+			unload: 'Unload {0}',
+		},
+		preheat: {
+			caption: 'Preheat',
+			preheat: 'Preheat for {0}',
 		},
 		upload: {
 			gcodes: {
@@ -80,9 +105,17 @@ export default {
 				caption: 'Makro(s) Hochladen',
 				title: 'Eine oder mehr Makrodateien hochladen (Drag&Drop wird ebenfalls unterstützt)'
 			},
+			materials: {
+				caption: 'Upload Material Configs',
+				title: 'Upload one or more material configurations (drag&drop is supported as well)'
+			},
 			filaments: {
 				caption: 'Filamentkonfiguration Hochladen',
                 title: 'Eine oder mehr Filamentkonfigurationen hochladen (Drag&Drop wird ebenfalls unterstützt)'
+			},
+			liquids: {
+				caption: 'Upload Liquid Configs',
+				title: 'Upload one or more liquid configurations (drag&drop is supported as well)'
 			},
 			display: {
 				caption: 'Menüdatei(en) hochladen',
@@ -120,9 +153,25 @@ export default {
 			caption: 'Temperaturdiagramm',
 			heater: 'Heizer {0}',
 			noData: 'Keine Daten'
+		},
+		fan: {
+			caption: 'Fans Chart',
+			heater: 'Heater {0}',
+			noData: 'No Data'
+		},
+		smoothing: {
+			caption: 'Smoothing',
+			off: "Off",
+			low: "Low",
+			med: "Med",
+			high: "High"
 		}
 	},
 	dialog: {
+		cancel: {
+			title: "Cancel the print",
+			prompt: "Are you sure you want to cancel <b>'{0}'</b>?"
+		},
 		changeMoveStep: {
 			title: 'Bewegungsschritt ändern',
 			prompt: 'Bitte geben Sie einen neuen Wert für den angeklickten Bewegungsbutton ein:'
@@ -130,6 +179,10 @@ export default {
 		configUpdated: {
 			title: 'Board neu starten?',
 			prompt: 'Möchten Sie das Board neu starten um die aktualisierte Konfiguration zu übernehmen?'
+		},
+		confirmShutdown: {
+			title: 'Shutdown Printer',
+			prompt: "Are you sure you want to shutdown the Printer",
 		},
 		connect: {
 			title: 'Zu Maschine verbinden',
@@ -141,12 +194,25 @@ export default {
 			passwordRequired: 'Passwort ist erforderlich',
 			connect: 'Verbinden'
 		},
+		login: {
+			title: 'Login to account',
+			prompt: 'Please enter your login and password:',
+			hostPlaceholder: 'Login',
+			hostRequired: 'Login is required',
+			passwordPlaceholderOptional: 'Password (optional)',
+			passwordPlaceholder: 'Password',
+			passwordRequired: 'Password is required',
+			connect: 'Log in'
+		},
 		connection: {
 			connecting: 'Verbinde...',
 			disconnecting: 'Trenne...',
 			updating: 'Bitte warten Sie während Updates installiert werden...',
+			loggingin: 'Logging In...',
+			loggingout: 'Logging Out...',
 			reconnecting: 'Verbindung verloren, versuche erneut zu verbinden...',
-			standBy: 'Bitte warten...'
+			standBy: 'Bitte warten...',
+			loadingtool: "Loading Tool please wait",
 		},
 		editExtrusionAmount: {
 			title: 'Extrusionsmenge bearbeiten',
@@ -177,7 +243,9 @@ export default {
 			spacing: 'Abstand',
 			startCoordinate: 'Startkoordinate in {0}-Richtung',
 			endCoordinate: 'Endkoordinate in {0}-Richtung',
-			spacingDirection: 'Abstand in {0}-Richtung'
+			spacingDirection: 'Abstand in {0}-Richtung',
+			bed: 'Bed temperature',
+			chamber: 'Chamber temperature'
 		},
 		newDirectory: {
 			title: 'Neues Verzeichnis',
@@ -195,9 +263,14 @@ export default {
 			title: 'Datei oder Verzeichnis umbennenen',
 			prompt: 'Bitte geben Sie einen neuen Namen ein:'
 		},
+		moveFile: {
+			title: 'Rename File or Directory before moving',
+			prompt: 'Please enter a new name:'
+		},
 		resetHeaterFault: {
 			title: 'Heizerfehler zurücksetzen',
 			prompt: 'Ein Fehler ist bei der Steuerung von Heizer {0} aufgetreten. Es wird dringend empfohlen Ihre Maschine auszuschalten und die Verkabelung zu prüfen bevor Sie fortfahren. Wenn Sie absolut sicher sind, dass es sich dabei um kein physikalisches Problem handelt können sie den Fehler AUF EIGENE GEFAHR zurücksetzen. Dies ist NICHT EMPFOHLEN und kann zu weiteren Problemen führen. Wie möchten Sie fortfahren?',
+			/**/
 			resetFault: 'Fehler zurücksetzen'
 		},
 		runMacro: {
@@ -208,12 +281,27 @@ export default {
 			title: '{0} starten',
 			prompt: 'Möchten Sie {0} starten?'
 		},
+		delete: {
+			title: 'Delete {0}?',
+			prompt: 'Are you sure you want to delete : <ul>',
+			multiple: '{0} files'
+		},
 		update: {
 			title: 'Updates installieren?',
 			prompt: 'Sie haben gerade mindestens ein Firmwareupdate hochgeladen. Möchten Sie diese jetzt installieren?'
 		},
+		tool: {
+			titleUnload: 'Unload tool',
+			titleLoad: 'Load tool',
+			prompt: 'Please choose a tool:'
+		},
 		inputRequired: 'Bitte Wert eingeben',
-		numberRequired: 'Bitte gültige Zahl eingeben'
+		numberRequired: 'Bitte gültige Zahl eingeben',
+		temperature:  {
+			title: "Enter the target temperature",
+			prompt: "Enter {0} {1} temperature"
+		},
+		fileExists: 'File/Folder: <b>{0}</b> already exists<br/>suggested alternative <b>{1}</b>',
 	},
 	directory: {
 		display: 'Menüverzeichnis',
@@ -249,6 +337,7 @@ export default {
 		filelistRequestFailed: 'Konnte Dateilist nicht abfragen',
 		fileinfoRequestFailed: 'Konnte Dateiinfo für {0} nicht abfragen',
 		filamentsLoadFailed: 'Konnte Filamente nicht laden',
+		toolsLoadFailed: 'Failed to load the Tools list',
 		move: 'Konnte Datei {0} nicht nach {1} verschieben'
 	},
 	events: {
@@ -272,6 +361,13 @@ export default {
 		info: 'Info',
 		warning: 'Warnung',
 		success: 'Erfolg',
+		print: 'Print',
+		showBuildplate: 'Show buildplate',
+		showPreview: 'Show preview',
+		preload: 'Preload {0}',
+		unload: 'Unload tool',
+		debug: 'Back to title screen',
+		edit: 'Edit',
 		heaterStates: [
 			'aus',
 			'standby',
@@ -336,7 +432,8 @@ export default {
 			downloadZIP: 'Als ZIP herunterladen',
 			noFiles: 'Keine Dateien oder Verzeichnisse',
 			driveUnmounted: 'Laufwerk ist nicht eingebunden',
-			goUp: 'Nach oben'
+			goUp: 'Nach oben',
+			showMore: 'Show More'
 		},
 		display: {
 			noFiles: 'Keine Displaydateien'
@@ -346,18 +443,31 @@ export default {
 			type: 'Typ',
 			message: 'Ereignis',
 			noEvents: 'Keine Ereignisse',
+			copy: 'Copy',
 			clear: 'Leeren',
 			downloadText: 'Als Text herunterladen',
 			downloadCSV: 'Als CSV herunterladen'
 		},
+		material: {
+			noMaterials: "No Materials"
+		},
 		filament: {
 			noFilaments: 'Keine Filamente'
+		},
+		liquid: {
+			noLiquids: 'No Liquids'
 		},
 		macro: {
 			caption: 'Makros',
 			noMacros: 'Keine Makros',
 			run: 'Makro ausführen',
 			root: 'Stammverzeichnis'
+		},
+		gcode: {
+			caption: 'Gcodes',
+			noGcodes: 'No Gcodes',
+			run: 'Run Gcode',
+			root: 'Root'
 		},
 		jobs: {
 			height: 'Objekthöhe',
@@ -398,11 +508,27 @@ export default {
 			system: 'System',
 			web: 'Web'
 		},
+		material: {
+			materials: 'Materials',
+			filaments: 'Filaments',
+			liquids: 'Liquids',
+			pellets: 'Pellets',
+			fibers: 'Fibers',
+			hybrids: 'Hybrids',
+		},
 		settings: {
 			caption: 'Einstellungen',
 			general: 'Allgemein',
 			machine: 'Maschinenspezifisch',
-			update: 'Aktualisierung'
+			update: 'Aktualisierung',
+			setup: 'Equipement/Setup',
+			support: 'Support',
+			maintenance:'Maintnance',
+		},
+		lynxter: {
+			control: 'Controls',
+			calibrate: 'Calibrate',
+			advanced: 'Advanced'
 		}
 	},
 	notification: {
@@ -463,7 +589,14 @@ export default {
 			message: 'Bitte warten während die Datei hochgeladen wird...',
 			success: 'Datei {0} erfolgreich nach {1} hochgeladen',
 			successMulti: '{0} Dateien sind erfolgreich hochgeladen worden',
-			error: 'Konnte {0} nicht hochladen'
+			error: 'Konnte {0} nicht hochladen',
+			queueTitle: '{0} has been added to queue',
+			queued: 'This file is quite big this may take up to {0} to be fully uploaded',
+		},
+		parse: {
+			title: 'Parsing: <b>{0}</b>',
+			speed: 'Speed: {0} {1}',
+			eta: 'Time left: {0}',
 		}
 	},
 	panel: {
@@ -514,13 +647,24 @@ export default {
 			radius: 'Messradius: {0}',
 			area: 'Messfläche: {0}',
 			maxDeviations: 'Maximale Abweichungen: {0} / {1}',
+			biasError: 'Mean error: {0}',
 			meanError: 'Gemittelter Fehler: {0}',
 			rmsError: 'Standardabweichung: {0}',
 			topView: 'Draufsicht',
+			perspective: 'Default view',
 			colorScheme: 'Farbschema:',
 			terrain: 'Terrain',
 			heat: 'Hitze',
-			reload: 'Höhenkarte neu laden'
+			reload: 'Höhenkarte neu laden',
+			diff: 'Diff',
+			probing: {
+				perfect: 'OK',
+				valid: 'OK',
+				danger: 'Average',
+				reprobe: 'Default'
+			},
+			probeDate: "Probed the : {0} at {1}",
+			mapName: "Loaded heightmap: {0}"
 		},
 		jobControl: {
 			caption: 'Auftragskontrolle',
@@ -572,11 +716,16 @@ export default {
 			runMesh: 'Gitterkompensation durchführen (G29)',
 			loadMesh: 'Gespeicherte Höhenkarte laden (G29 S1)',
 			axesNotHomed: 'Die folgende Achse ist nicht referenziert:|Die folgenden Achsen sind nicht referenziert:',
-			noAxes: 'Keine Achsen'
+			noAxes: 'Keine Achsen',
+			runNozzleHeight: 'Run nozzle height calibration',
+			showHeightmap: "Shown the Heightmap"
 		},
 		settingsAbout: {
 			caption: 'Über',
 			developedBy: 'Weboberfläche entwickelt von',
+			updatededBy: 'updated by',
+			buildDate: "Build date: ",
+			lxVersion: "Lynxter version: ",
 			for: 'für',
 			licensedUnder: 'Lizensiert unter den Bedingungen der'
 		},
@@ -633,6 +782,14 @@ export default {
 			babystepAmount: 'Schrittgröße für Babystepping ({0})',
 			moveFeedrate: 'Vorschubrate für Bewegungen ({0})'
 		},
+		settingsNetwork: {
+			caption: 'Networking',
+			advanced: 'Advanced',
+			publicIP: 'Machine\'s address',
+			netmask: 'Netmask',
+			gateway: 'Gateway',
+			dns: 'DNS addresses'
+		},
 		settingsNotifications: {
 			caption: 'Benachrichtigungen',
 			notificationErrorsPersistent: 'Fehlermeldungen nicht automatisch schließen',
@@ -646,10 +803,24 @@ export default {
 			webcamEmbedded: 'Webcambild in ein iframe einbetten',
 			webcamRotation: 'Webcambild drehen',
 			webcamFlip: 'Webcambild spiegeln',
+			webcamResolution: 'Webcam resolution',
+			webcamFramerate: 'Webcam framerate',
 			flipNone: 'Keine',
 			flipX: 'X spiegeln',
 			flipY: 'Y spiegeln',
-			flipBoth: 'Beide spiegeln'
+			flipBoth: 'Beide spiegeln',
+		},
+		settingsTimelapse: {
+			caption: 'Timelapse',
+			showPreview: 'Show timelapses',
+			timelapseURL: 'Timelapse URL (optional)',
+			timelapseResolution: 'Timelapse resolution',
+			timelapseInterval: 'Take a picture at regular interval',
+			timelapseUpdateInterval: 'Take a picture every {} s',
+			timelapseLayer: 'Take a picture at every layer',
+			timelapseMinFramerate: 'Min framerate',
+			timelapseMaxFramerate: 'Max framerate',
+			timelapseTargetDuration: 'Target duration'
 		},
 		speedFactor: {
 			caption: 'Geschwindigkeitsfaktor'
@@ -667,6 +838,8 @@ export default {
 			sensors: 'Sensoren',
 			mcuTemp: 'MCU-Temperatur',
 			mcuTempTitle: 'Minimum: {0}, Maximum: {1}',
+			cpuTemp: 'CPU',
+			cpuTempTitle: 'Minimum: {0}, Maximum: {1}',
 			vIn: 'Vin',
 			vInTitle: 'Minimum: {0}, Maximum {1}',
 			fanRPM: 'Lüfter-RPM',
@@ -687,6 +860,7 @@ export default {
 			current: 'Aktuell',
 			active: 'Aktiv',
 			standby: 'Standby',
+			target: 'Target',
 			bed: 'Bett {0}',
 			chamber: 'Kammer {0}',
 			extra: {
@@ -696,11 +870,69 @@ export default {
 				showInChart: 'Im Temperaturdiagramm anzeigen',
 				noItems: 'Keine zusätzlichen Heizer'
 			},
-			noTools: 'Keine Werkzeuge'
+			noTools: 'Keine Werkzeuge',
+			noTool: 'Load a tool first'
 		},
 		webcam: {
 			caption: 'Webcamüberwachung',
-			alt: '(webcam bild)'
-		}
-	}
+			alt: '(webcam bild)',
+			advanced: 'Advanced webcam controls'
+		},
+		toolOffset: {
+			captionXY: 'X-Y Tool Offset',
+			captionZ: 'Z Probe Offset',
+			tool: 'Tool',
+			offset: 'Offset <b>{0}</b>:',
+			toolTrigHeight: 'Tool trigger height',
+			bbStepping: 'Usual babystepping',
+			dialog: {
+				title: "X-Y Tool Offset",
+				sucess: "Successfully saved new Tool offset",
+				error: "An error occured {0}"
+			}
+		},
+		toolAngle: {
+			caption: 'Tool angle calibration',
+			angle: 'Angle <b>{0}</b>',
+			active: 'Active angle',
+			standby: 'Standby angle',
+			run: 'Calibrate {0} angle',
+			auto: 'Auto calibraton'
+		},
+		tiltCompensation: {
+			caption: 'X-Y Tilt Compensation',
+			tilt: 'Tilt <b>{0}</b>',
+			offset: 'Offset <b>{0}</b>',
+			tooltip: 'Offset on {0} axis',
+			switch: 'Display tilt as :',
+			rotation: 'Rotation around {0}',
+			buttonCaption: {
+				decrease: 'Decrease bed tilt around the {0} axis (M666 {1}xxx)',
+				increase: 'Increase bed tilt around the {0} axis (M666 {1}xxx)',
+			}
+		},
+		toolPID: {
+			caption: 'PID calibration',
+			tool: 'Tool',
+			pid: 'Calibration PID <b>{0}</b>',
+			calibration: 'calibration T°',
+			pwm: 'calibration PWM',
+			run: 'Run PID tuning',
+			save: 'Save results'
+
+		},
+	},
+	loadTool: {
+		toolhead: 'Select a toolhead',
+		network: {
+			disconnected: 'Network disconnected',
+			booting: 'Booting'
+		},
+		calibrationTool: "Load calibration tool",
+		debug: "Access DWC (No tool)",
+		refreshIface: "Refresh the interface",
+		refreshTools: "Refresh tools List",
+		enableTool: "show/hide tools",
+	},
+	power_settings: 'Power settings',
 }

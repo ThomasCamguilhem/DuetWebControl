@@ -4,9 +4,11 @@
 import Calibration from './Calibration.vue'
 import Control from './Control.vue'
 import Dashboard from './Dashboard.vue'
+import Debug from './Debug.vue'
 
 export default {
 	Calibration,
 	Control,
 	Dashboard,
+	Debug,
 }

@@ -176,7 +176,7 @@ export default {
 			}
 			var color = new THREE.Color(this.tempChartOptions.colors[this.keys[this.i]]);
 			if(this.DEBUG)
-				console.log(this.keys[this.i] +" ("+color.r+","+color.g+","+color.b+")")
+			console.log(this.keys[this.i] +" ("+color.r+","+color.g+","+color.b+")")
 			this.pointMaterial = new THREE.LineBasicMaterial({
 				color: color,
 				linewidth: 2
@@ -196,38 +196,6 @@ export default {
 			if (this.previewScene.getObjectByName("bbox")) {
 				this.previewScene.remove(this.previewScene.getObjectByName("bbox"));
 			}
-			/*var geo = new THREE.Geometry();
-			// bottom bbox
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.min.y, gcodeReader.boundingBox.min.z, gcodeReader.boundingBox.min.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.min.y, gcodeReader.boundingBox.min.z, gcodeReader.boundingBox.max.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.min.y, gcodeReader.boundingBox.min.z, gcodeReader.boundingBox.max.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.max.y, gcodeReader.boundingBox.min.z, gcodeReader.boundingBox.max.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.max.y, gcodeReader.boundingBox.min.z, gcodeReader.boundingBox.max.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.max.y, gcodeReader.boundingBox.min.z, gcodeReader.boundingBox.min.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.max.y, gcodeReader.boundingBox.min.z, gcodeReader.boundingBox.min.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.min.y, gcodeReader.boundingBox.min.z, gcodeReader.boundingBox.min.x));
-			// sides bbox
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.min.y, gcodeReader.boundingBox.min.z, gcodeReader.boundingBox.min.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.min.y, gcodeReader.boundingBox.max.z, gcodeReader.boundingBox.min.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.min.y, gcodeReader.boundingBox.min.z, gcodeReader.boundingBox.max.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.min.y, gcodeReader.boundingBox.max.z, gcodeReader.boundingBox.max.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.max.y, gcodeReader.boundingBox.min.z, gcodeReader.boundingBox.max.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.max.y, gcodeReader.boundingBox.max.z, gcodeReader.boundingBox.max.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.max.y, gcodeReader.boundingBox.min.z, gcodeReader.boundingBox.min.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.max.y, gcodeReader.boundingBox.max.z, gcodeReader.boundingBox.min.x));
-			//top bbox
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.min.y, gcodeReader.boundingBox.max.z, gcodeReader.boundingBox.min.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.min.y, gcodeReader.boundingBox.max.z, gcodeReader.boundingBox.max.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.min.y, gcodeReader.boundingBox.max.z, gcodeReader.boundingBox.max.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.max.y, gcodeReader.boundingBox.max.z, gcodeReader.boundingBox.max.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.max.y, gcodeReader.boundingBox.max.z, gcodeReader.boundingBox.max.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.max.y, gcodeReader.boundingBox.max.z, gcodeReader.boundingBox.min.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.max.y, gcodeReader.boundingBox.max.z, gcodeReader.boundingBox.min.x));
-			geo.vertices.push(new THREE.Vector3(gcodeReader.boundingBox.min.y, gcodeReader.boundingBox.max.z, gcodeReader.boundingBox.min.x));
-
-			var bbox = new THREE.LineSegments(geo, new THREE.LineBasicMaterial());
-			bbox.name = "bbox";
-			this.previewScene.add(bbox);*/
 			//this.newStatus = this.parseRows[this.parsedFileCount].find("#status");
 			if(this.DEBUG)
 			console.log("BBox redrawn");
@@ -375,44 +343,41 @@ export default {
 				while (t.includes(" ")) {
 					t = t.replace(" ", "_");
 				}
-				/*if (!t.includes(this.fileName)) {
-				t = this.fileName + t;
-			}*/
-			//console.log("uploading("+this.fileName+"):	" + f + "/" + t);
-			$.ajax({
-				url: (this.selectedMachine?this.selectedMachine:"/") + "rr_upload?name=0:/www/img/GCodePreview/" + f + "/" + t + "&time=" + encodeURIComponent(this.timeToStr(new Date)),
-				data: r,
-				type: "POST",
-				contentType: !1,
-				processData: !1,
-				cache: !1,
-				dataType: "json",
-				async: false,
-				error: function(e) {
-					console.error(e)
-				},
-				success: function() {
-					//console.log("Envoi Réussi")
-				},
-				complete: function() {
-					//console.log("Request finished.")
-				}
-			})
+				//console.log("uploading("+this.fileName+"):	" + f + "/" + t);
+				$.ajax({
+					url: (this.selectedMachine?this.selectedMachine:"/") + "rr_upload?name=0:/www/img/GCodePreview/" + f + "/" + t + "&time=" + encodeURIComponent(this.timeToStr(new Date)),
+					data: r,
+					type: "POST",
+					contentType: !1,
+					processData: !1,
+					cache: !1,
+					dataType: "json",
+					async: false,
+					error: function(e) {
+						console.error(e)
+					},
+					success: function() {
+						//console.log("Envoi Réussi")
+					},
+					complete: function() {
+						//console.log("Request finished.")
+					}
+				})
+			},
+			timeToStr: function(time) {
+				// Should return an ISO-like datetime string like "2016-10-24T15:39:09"
+				// Cannot use toISOString() here because it doesn't output the localtime
+				var result = "";
+				result += time.getFullYear() + "-";
+				result += (time.getMonth() + 1) + "-";
+				result += time.getDate() + "T";
+				result += time.getHours() + ":";
+				result += time.getMinutes() + ":";
+				result += time.getSeconds();
+				return result;
+			},
 		},
-		timeToStr: function(time) {
-			// Should return an ISO-like datetime string like "2016-10-24T15:39:09"
-			// Cannot use toISOString() here because it doesn't output the localtime
-			var result = "";
-			result += time.getFullYear() + "-";
-			result += (time.getMonth() + 1) + "-";
-			result += time.getDate() + "T";
-			result += time.getHours() + ":";
-			result += time.getMinutes() + ":";
-			result += time.getSeconds();
-			return result;
-		},
-	},
-	mounted(){
-		console.log(this.selectedMachine);
+		mounted(){
+			//console.log(this.selectedMachine);
+		}
 	}
-}

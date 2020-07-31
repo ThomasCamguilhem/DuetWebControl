@@ -116,7 +116,7 @@ a:hover {
 		<template v-if="getTool">
 			<v-navigation-drawer v-model="drawer" persistent clipped fixed app enable-resize-watcher >
 				<v-list class="pt-0" :expand="$vuetify.breakpoint.mdAndUp || isLocal">
-					<v-list-group v-for="(category, index) in routing.filter((category, index) => checkLynxCatCondition(category.showLocal, category.minLevel, category.showDist))" :key="index" :prepend-icon="category.icon" no-action :value="isExpanded(category)">
+					<v-list-group v-for="(category, index) in routing.filter((category, index) => checkMenuCondition(category.condition) && checkLynxCatCondition(category.showLocal, category.minLevel, category.showDist))" :key="index" :prepend-icon="category.icon" no-action :value="isExpanded(category)">
 						<v-list-tile slot="activator">
 							<v-list-tile-title>{{ $t(category.caption) }}</v-list-tile-title>
 						</v-list-tile>
@@ -170,7 +170,6 @@ a:hover {
 					<div @click="$router.push('/');" style="cursor:pointer; padding:10px 15px;margin: 0 10px 0 0;">
 						<a id="title" v-tab-control style="width: max-content; margin: 0px auto;position: relative;"> {{ /*isLocal ?*/ (name.substr(0, 8) + name.substr(8).split('-').map(tname => tname.substr(0,tname.indexOf('_'))).join('_')) /*: name*/	}}</a>
 					</div>
-					<!--img src="/img/ressources/logoLynxter-dark.png" style="width:35px;"-->
 					<a id="user" v-tab-control style="color: inherit" v-if="!isLocal && isLocal">{{ username }} ({{ type }})</a>
 				</v-toolbar-title>
 				<status-label v-if="state.status && isLocal" style="font-size: large; letter-spacing: 0.1rem;"></status-label>
@@ -183,16 +182,15 @@ a:hover {
 
 				<v-spacer></v-spacer>
 
-				<upload-btn target="start" class="mr-3 hidden-sm-and-down" v-if="!isLocal"></upload-btn>
 				<emergency-btn class="hidden-xs-only"></emergency-btn>
 
 				<v-btn icon class="hidden-md-and-up ml-3" :class="toggleGlobalContainerColor" @click="hideGlobalContainer = !hideGlobalContainer" v-if="!isLocal">
 					<v-icon>aspect_ratio</v-icon>
 				</v-btn>
 				<!-- TODO: Add quick actions and UI designer here -->
-				<!--<v-btn icon class="hidden-sm-and-down" @click="rightDrawer = !rightDrawer">
+				<!--v-btn icon class="hidden-sm-and-down" @click="rightDrawer = !rightDrawer">
 					<v-icon>menu</v-icon>
-				</v-btn>-->
+				</v-btn-->
 			</v-toolbar>
 
 			<v-content id="content">
@@ -239,20 +237,21 @@ a:hover {
 				TODO Add quick access / component list here in design mode
 			</v-navigation-drawer>-->
 
-			<connect-dialog v-if="selectedMachine === '[default]'"></connect-dialog>
-			<connection-dialog></connection-dialog>
-			<messagebox-dialog></messagebox-dialog>
-			<!--login-dialog></login-dialog-->
-			<confirm-dialog :shown.sync="confirmShutdownDialog.shown" :question="confirmShutdownDialog.title" :prompt="confirmShutdownDialog.prompt" @confirmed="shutdown"></confirm-dialog>
-		</template>
-	</v-app>
+		<connect-dialog v-if="selectedMachine === '[default]'"></connect-dialog>
+		<connection-dialog></connection-dialog>
+		<messagebox-dialog></messagebox-dialog>
+		<!--login-dialog></login-dialog-->
+		<confirm-dialog :shown.sync="confirmShutdownDialog.shown" :question="confirmShutdownDialog.title" :prompt="confirmShutdownDialog.prompt" @confirmed="shutdown"></confirm-dialog>
+	</template>
+</v-app>
 </template>
 
 <script>
 'use strict'
 
 import Piecon from 'piecon'
-import { mapState, mapGetters, mapActions } from 'vuex'
+import axios from 'axios'
+import { mapState, mapGetters, mapActions, mapMutations } from 'vuex'
 
 import { Routing } from './routes'
 
@@ -267,6 +266,7 @@ export default {
 			globalShowLoginDialog: state => state.showLoginDialog,
 
 			isPrinting: state => state.machine.model.state.isPrinting,
+			connectStatus: state => state,
 			name: state => state.machine.model.network.name,
 			level: state => state.user.level,
 			type: state => state.user.type,
@@ -274,7 +274,7 @@ export default {
 			darkTheme: state => state.settings.darkTheme,
 			webcam: state => state.settings.webcam,
 			stateColor() {
-				console.log(this.ifaces);
+				//console.log(this.ifaces);
 
 				function GetNavigatorInfo() {
 					var ua= navigator.userAgent, tem,
@@ -308,26 +308,23 @@ export default {
 				this.ifaces.filter(iface => iface.ifname == 'enp1s0')[0].operstate == 'UP' &&
 				this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0] &&
 				this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0].operstate == 'UP' ) {
-					console.log('green');
 					return 'background: green;'
 				} else if( this.ifaces.filter(iface => iface.ifname == 'enp1s0')[0] &&
 				this.ifaces.filter(iface => iface.ifname == 'enp1s0')[0].operstate == 'UP' ||
 				this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0] &&
 				this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0].operstate == 'UP' ) {
-					console.log('orange')
 					return CanonicalGradientSupported() ? 'background: conic-gradient(yellow, orange 10% 90%, yellow);':'background: orange;'
 				} else if (this.ifaces.filter(iface => iface.ifname == 'enp1s0')[0] &&
 				this.ifaces.filter(iface => iface.ifname == 'enp1s0')[0].operstate == 'DOWN' ||
 				this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0] &&
 				this.ifaces.filter(iface => iface.ifname == 'enp2s0')[0].operstate == 'DOWN' ) {
-					console.log('red')
 					return CanonicalGradientSupported() ? 'background: conic-gradient(red, darkred 10% 40%, red, darkred 60% 90%, red);animation-duration: 2s' : 'background: red;'
 				} else {
 					return 'background: GRAY'
 				}
 			}
 		}),
-		...mapState(['user']),
+		...mapState(['user', 'lastConfig']),
 		...mapGetters('machine', ['hasTemperaturesToDisplay']),
 		...mapGetters('machine/model', ['board', 'isPrinting', 'jobProgress']),
 		...mapState('machine/model', ['state']),
@@ -339,7 +336,15 @@ export default {
 		},
 		showDebug() {
 			return this.isLocal && ((location.port === "8080") || (location.port === "8081"))
-		}
+		},
+		lastConfig:
+		{
+			get() { return this.state.lastConfig },
+			set(value) {
+				console.log(value)
+				this.update({ lastConfig: value });
+			}
+		},
 	},
 	data() {
 		return {
@@ -355,21 +360,27 @@ export default {
 			},
 			timeout: -1,
 			times: [],
+			ifaces:[],
 			fps: 0,
 			framerate: undefined,
+			axios: undefined,
 		}
 	},
 	methods: {
-		...mapActions(['connect', 'disconnectAll']),
+		...mapActions(['connect', 'disconnect', 'disconnectAll']),
 		...mapActions('machine', ['getFileList']),
 		...mapActions('settings', ['load']),
 		...mapActions(['loadTool', 'shutdown','loadAddresses']),
+		...mapMutations('settings', ['update']),
 		checkMenuCondition(condition) {
 			if (condition === 'webcam') {
 				return (this.webcam.url !== '');
 			}
 			if (condition === 'display') {
 				return this.board.hasDisplay;
+			}
+			if (condition === 'debug'){
+				return this.getTool === "Debug"
 			}
 			return true;
 		},
@@ -429,12 +440,51 @@ export default {
 		// Attempt to disconnect from every machine when the page is being unloaded
 		window.addEventListener('unload', this.disconnectAll);
 
-		// Connect if running on a board
 		if(((location.port === "8080") || (location.port === "8081") || (location.port === "8082"))){
-			this.connect({hostname: "192.168.1.70"});
+			this.connect({hostname: "192.168.1.243"});
 		} else if (!this.isLocal || (location.port === "80") || (location.port === "")) {
 			this.connect();
 		}
+
+		setInterval(async function(that) {
+			// Connect if running on a board
+			if ( that.selectedMachine == "[default]" && that.selectedMachine != "[default]") {
+				if (!that.connectStatus.isDisconnecting) {
+					console.log(that.selectedMachine)
+					await that.disconnectAll()
+				}
+
+				if (!that.connectStatus.isConnecting) {
+					setTimeout(() => {
+						console.log(location.host)
+						if(((location.port === "8080") || (location.port === "8081") || (location.port === "8082"))){
+							that.connect({hostname: "192.168.1.243"});
+						} else if (!that.isLocal || (location.port === "80") || (location.port === "")) {
+							that.connect();
+						}
+					}, 2000)
+				}
+			}
+		}, 5000, this)
+
+
+		setTimeout(async function(that){
+			if (!that.axios) {
+				//let protocol = location.protocol;
+				that.axios = await axios.create({
+					baseURL:`http://`+that.selectedMachine+`/`,
+					//cancelToken: BaseConnector.getCancelSource().token,
+					timeout: 8000,	// default session timeout in RepRapFirmware
+					withCredentials: true,
+				});
+			}
+
+			let result = await that.axios.get('/pc_configmachine', {
+				withCredentials: true,
+			});
+
+			that.lastConfig = result.data
+		}, 1000, this)
 
 		// Attempt to load the settings
 		this.load();
@@ -523,6 +573,27 @@ export default {
 			//console.log(as);
 			this.ifaces = as.ifaces;
 		},
+	},
+	lastConfig: {
+		deep: true,
+		handler: async function(){
+			if (!this.axios) {
+				//let protocol = location.protocol;
+				this.axios = await axios.create({
+					baseURL:`http://`+this.selectedMachine+`/`,
+					//cancelToken: BaseConnector.getCancelSource().token,
+					timeout: 8000,	// default session timeout in RepRapFirmware
+					withCredentials: true,
+				});
+			}
+
+			this.axios.get('/pc_configmachine', {
+				withCredentials: true,
+				params: {
+					params: JSON.stringify(this.lastConfig)
+				},
+			});
+		}
 	}
 }
 </script>

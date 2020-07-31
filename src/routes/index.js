@@ -77,7 +77,7 @@ export const Routing = ( [
 				caption: 'menu.job.webcam',
 				path: '/Job/Webcam',
 				component: Job.Webcam,
-				condition: 'webcam',
+				/*condition: 'webcam',*/
 				showLocal: true,
 				//minLevel: 1,
 			}
@@ -147,6 +147,26 @@ export const Routing = ( [
 			},
 		]
 	},
+	// Debug
+	{
+		icon: 'bug_report',
+		caption: 'Debug',
+		showLocal: true,
+		showDist: true,
+		defaultClosed: true,
+		condition: 'debug',
+		pages: [
+			// Debug
+			{
+				icon: 'bug_report',
+				caption: 'Debug',
+				path: '/Debug',
+				component: Lynxter.Debug,
+				showLocal: true,
+				showDist: true,
+				//minLevel: 3
+			},
+	]}
 	// Materials
 	/*{
 		icon: 'widgets',

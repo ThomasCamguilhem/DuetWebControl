@@ -18,8 +18,9 @@
 		<v-flex style="width: -webkit-fill-available;">
 			<job-file-list></job-file-list>
 		</v-flex>
-		<v-flex id="uploadDiv" style="position: fixed; right: 15px; bottom: 15px; width: 320px; border-radius: 5px !important; overflow: hidden; display: none; background: #515151; border: 1px solid #202020; padding: 10px">
-			<div style="border: 1px solid #606060; border-radius: 5px; overflow: hidden; height: 300px">
+		<v-flex id="uploadDiv" style="position: fixed; right: 15px; bottom: 15px; width: 320px; border-radius: 5px !important; overflow: hidden; display: none; background: #515151; border: 1px solid #202020; padding: 10px; z-index: 1">
+			<div id="previewDisplay" style="border: 1px solid #606060; border-radius: 5px; overflow: hidden; height: 300px">
+				<div style="width: 300px;position: absolute;font-size: x-large;text-align: center;vertical-align: middle;margin-top: 132px;"> No preview available </div>
 				<div id="threeDisplay" style="max-height: 300px; transform: scale(0.25); transform-origin: 0% 0%;"></div>
 			</div>
 			<div style="height: 15px; overflow: hidden; border-radius: 5px; background: rgb(101, 73, 1); margin: 10px 0;">
@@ -27,7 +28,7 @@
 				<div id="progress" class="progress" style="height: 15px; text-align: center; font-size: 10px; width: 25%; color: black; overflow: hidden; position: relative; bottom: 15px"></div>
 			</div>
 			<div style="padding: 10px">
-				<span id="fname"></span><br/>
+				<div id="fname" style="text-overflow: ellipsis;overflow: hidden; max-width: 300px;"></div><br/>
 				<span id="pspeed"></span><br/>
 				<span id="pleft"></span>
 			</div>

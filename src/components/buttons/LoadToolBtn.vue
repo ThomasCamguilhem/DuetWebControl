@@ -2,7 +2,7 @@
 	<v-btn large v-bind="$props" :color="buttonColor" :depressed="isBusy" @click="clicked" tabindex="0" :disabled="(['pausing', 'paused', 'resuming', 'processing', 'simulating', 'busy', 'changingTool'].indexOf(state.status) !== -1)">
 		<v-icon v-show="!isBusy">{{ buttonIcon }}</v-icon>
 		<v-progress-circular size="20" v-show="isBusy" indeterminate></v-progress-circular>
-		<span class="ml-2" v-bind:style="isLocal?'font-size: larger;':''">{{ $t('generic.unload', [getTool]) }}</span>
+		<span class="ml-2" v-bind:style="isLocal?'font-size: larger;':''">{{ getTool.toUpperCase().includes("DEBUG") ? $t('generic.debug') : $t('generic.unload', [getTool]) }}</span>
 	</v-btn>
 </template>
 <script>

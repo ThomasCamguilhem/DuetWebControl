@@ -40,18 +40,20 @@ tr:hover {
 				<v-tabs v-if="!loading" grow>
 					<v-tabs-slider color="primary"></v-tabs-slider>
 					<v-tab v-for="(material, key) in tools" :key="key" :class="{selected: false && material.selected}">
-						<img :src="material.ico" :alt="material.tech" width="50px" height="50px">
-						<br/>{{ material.tech }}
+						<div style="width: 50px; height: 50px; margin: 0 auto">
+							<img :src="material.ico" width="50px" height="50px" alt="">
+						</div>
+						{{ material.tech }}
 					</v-tab>
 					<v-tab-item v-for="(material, key) in tools" :key="key">
 						<v-list v-if="!loading">
 							<v-list-tile v-for="(tool, index) in material.tools" :key="index" @click.stop.prevent="tool.selected != tool.selected" :class="{'toolLocal': isLocal, selected: tool.selected}">
 								<div @click.stop.prevent="tool.selected = !tool.selected" style="width: 100%; padding: 10px">
-									<div style="width: 15%; display: inline-block; text-align: center">
+									<div style="width: 10%; display: inline-block; text-align: center">
 										<v-icon class="mr-1">
 											{{ 'radio_button_unchecked' }}
 										</v-icon>
-										<v-icon class="mr-1" :style="'position: absolute;left: 10%;top: 25%;color: hsl(43, 98%, 50%);font-size: 18px;'">
+										<v-icon class="mr-1" :style="'position: absolute;left: 8%;top: 25%;color: hsl(43, 98%, 50%);font-size: 18px;'">
 											{{ tool.selected ? 'done' : '' }}
 										</v-icon>
 									</div>
@@ -70,6 +72,11 @@ tr:hover {
 									<div style="width: 15%; display: inline-block">
 										{{ tool.version }}
 									</div>
+									<!--div style="display: inline-block" @click.stop.prevent="deleteTool(key, index)">
+										<v-icon class="mr-1" :style="'position: absolute;right: 5%;top: 25%;color: darkgray;'">
+											{{ 'delete' }}
+										</v-icon>
+									</div-->
 								</div>
 							</v-list-tile>
 						</v-list>
@@ -139,7 +146,7 @@ export default {
 			this.loading = true
 			try {
 				this.tools = [];
-				let result = await this.download({filename: Path.macros+"/selectedTools.json", showSuccess: false, showProgress: false});
+				let result = await this.download({filename: Path.sys+"/selectedTools.json", showSuccess: false, showProgress: false});
 				if (result) this.tools = result;
 				//console.log(this.tools)
 				const response = await this.getFileList(Path.macros+"/_Toolheads");
@@ -161,7 +168,7 @@ export default {
 										"tech": material,
 										"tools" : [],
 									});
-									console.log("new material : " + material);
+									console.log("new material : " + material, tool);
 								}
 								var materialIndex = that.tools.findIndex(tool => tool.tech == material)
 								if (tool.name.startsWith("_Load")) {
@@ -204,11 +211,16 @@ export default {
 				let json = JSON.stringify(this.tools)
 				//console.log(json);
 				try {
-					await this.upload({ filename: Path.macros+"/selectedTools.json", content: json });
+					await this.upload({ filename: Path.sys+"/selectedTools.json", content: json });
 				} catch(e) {
 					console.log("Error: " + (e.err == 1 ? "no such file" : "not mounted"));
 					console.error(e);// TODO Optionally ask user to save file somewhere else
 				}
+			},
+			deleteTool: function(mater, tool) {
+				console.log(mater, tool)
+				console.log(this[tool]);
+				this.tools[mater].tools.splice(tool,1)
 			}
 		},
 		mounted() {

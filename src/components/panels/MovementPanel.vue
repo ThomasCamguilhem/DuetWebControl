@@ -44,14 +44,51 @@
 							<v-list-tile class="center-menu-item">
 								{{ $t('panel.movement.compensationInUse', [move.compensation]) }}
 							</v-list-tile>
-
 							<v-divider></v-divider>
 						</template>
-
-						<v-list-tile @click="sendCode('G32')">
-							<v-icon class="mr-1">view_module</v-icon> {{ $t(move.geometry.type === 'delta' ? 'panel.movement.runDelta' : 'panel.movement.runBed') }}
-						</v-list-tile>
-						<v-list-tile :disabled="false" @click="nozzleHeightCalib">
+						<v-expansion-panel :value="-1" style="margin-bottom: 15px">
+							<v-expansion-panel-content style="background: #ffffff0f">
+								<template v-slot:header style="padding: 0">
+									<span style="font-size: normal;">
+										<v-icon class="mr-1">view_module</v-icon> {{ $t('panel.movement.runAdvanced') }}
+									</span>
+								</template>
+								<v-card style="background: #4d4d4d; padding: 0 20px">
+									<v-list-tile @click="getTool.toUpperCase().startsWith('CAL') ? sendCode('G32') : null" :disabled="!getTool.toUpperCase().startsWith('CAL')">
+										<v-tooltip left>
+											<template v-slot:activator="{ on }">
+												<v-list-tile-content v-on="on">
+													<v-list-tile-title>
+														<v-icon class="mr-1">view_module</v-icon> machine_OF
+													</v-list-tile-title>
+												</v-list-tile-content>
+											</template>
+											<span>
+												{{ 'Chamber: Off' }} <br/>
+												{{ 'Bed: Off' }}
+											</span>
+										</v-tooltip>
+									</v-list-tile>
+									<v-list-tile v-for="calibration in calibrations" @click="getTool.toUpperCase().startsWith('CAL') ? sendCode('M98 P' + calibration.path) : null" :disabled="!getTool.toUpperCase().startsWith('CAL')">
+										<v-tooltip left>
+											<template v-slot:activator="{ on }">
+												<v-list-tile-content v-on="on">
+													<v-list-tile-title>
+														<v-icon class="mr-1">view_module</v-icon>
+														{{ calibration.name.split('_')[1] == 'C' ? calibration.name.substr(0, 9) : calibration.name.substr(0, 10) }}
+													</v-list-tile-title>
+												</v-list-tile-content>
+											</template>
+											<span>
+												{{ 'Chamber: ' + calibration.name.split('_')[2].substr(1) }}°C <br/>
+												{{ 'Bed: ' + calibration.name.split('_')[3].substr(1, calibration.name.split('_')[3].length-3) }}°C
+											</span>
+										</v-tooltip>
+									</v-list-tile>
+								</v-card>
+							</v-expansion-panel-content>
+						</v-expansion-panel>
+						<v-list-tile :disabled="tools.length == 0" @click="nozzleHeightCalib">
 							<v-icon class="mr-1">vertical_align_bottom</v-icon> {{ $t('panel.movement.runNozzleHeight') }}
 						</v-list-tile>
 						<v-expansion-panel :value="-1" style="margin-bottom: 15px">
@@ -188,7 +225,7 @@ import { mapState, mapGetters, mapActions, mapMutations } from 'vuex'
 export default {
 	computed: {
 		...mapGetters(['isConnected', 'uiFrozen']),
-		...mapState('machine/model', ['move']),
+		...mapState('machine/model', ['move', 'tools', 'state']),
 		...mapState('machine/settings', ['moveFeedrate']),
 		...mapState(['isLocal']),
 		...mapGetters('machine/settings', ['moveSteps', 'numMoveSteps']),
@@ -196,9 +233,10 @@ export default {
 		unhomedAxes() { return this.move.axes.filter(axis => axis.visible && !axis.homed); },
 		...mapState({
 			name: state => state.machine.model.network.name,
+			getTool: state => state.user.loadedTool,
 		}),
 		...mapState('machine/model', {
-			disabled: (state) => {state = state.state; return ['updating', 'off', 'halted', 'pausing', 'resuming', 'processing', 'simulating', 'busy', 'changingTool'].indexOf(state.status) >= 0}
+			disabled: (state) => {state = state.state; return ['updating', 'halted', 'pausing', 'resuming', 'processing', 'simulating', 'busy', 'changingTool'].indexOf(state.status) >= 0},
 		}),
 		//['updating', 'off', 'halted', 'pausing', 'paused', 'resuming', 'processing', 'simulating', 'busy', 'changingTool', 'idle']
 	},
@@ -211,11 +249,14 @@ export default {
 				axis: 'X',
 				index: 0,
 				preset: 0
-			}
+			},
+			b4: "",
+			toolHeads: "",
+			calibrations: [],
 		}
 	},
 	methods: {
-		...mapActions('machine', ['getFileList', 'sendCode']),
+		...mapActions('machine', ['getFileList', 'sendCode', 'download', 'upload']),
 		...mapMutations('machine/settings', ['setMoveStep']),
 		getMoveCellClass(index) {
 			let classes = '';
@@ -239,12 +280,24 @@ export default {
 		nozzleHeightCalib: async function() {
 			console.log("Running Nozzle Height");
 			const files = await this.getFileList("0:/macros/_Toolheads");
-			let name = this.name.substr(8, 5);
-			let vers = this.name.substr(this.name.lastIndexOf('v')+1);
-			let tools = files.filter(tool => tool.name.includes(name) && tool.name.includes(vers))
-			console.log(name)
+
+			let params = this.name.substr(8).split('_')
+			let name = params[0];
+			let appro = params.length == 4 ? params[1] : '';
+			let model = params.length == 4 ? params[2].split("~")[0] : ''
+			//		let opt = params.length == 4 && params[2].split("~").length == 2 ? params[2].split("~")[1] : ''
+			let vers = params.length == 4 ? params[3].substring(1, params[3].length) : params[1].substring(1, params[1].length)
+
+			let tools = files.filter(tool => tool.name.includes(name) && tool.name.includes(appro) && tool.name.includes(model) && tool.name.includes(vers))
+
+			/*console.log(name)
+			console.log(appro)
+			console.log(model)
+			console.log(opt)
 			console.log(vers)
+
 			console.log(tools.length ? tools : "");
+			*/
 			let that = this;
 			tools.forEach(function(item) {
 				if (item.isDirectory)
@@ -257,20 +310,236 @@ export default {
 		preloadToolMatrix: async function(path){
 			try {
 				let files = await this.getFileList(path);
-				let name = (this.name.lastIndexOf("~")>0?this.name.substr(this.name.lastIndexOf("~")+1, 2):"");
-				console.log(name)
-				files = files.filter(file => file.name.includes("Nozzle") && file.name.includes(name))
-				console.log(files);
+				//console.log(this.name)
+				let config = files.filter(file => file.name.startsWith("Toolmatrix_") && !file.isDirectory)
+				if (config.length > 1) {
+					let name = (this.name.lastIndexOf("~")>0?this.name.substr(this.name.lastIndexOf("~")+1, 2):"");
+					config = config.filter(file => file.name.includes(name))
+				}
+				console.log('config', config);
+				files = files.filter(file => file.name.startsWith("_Nozzle height calibration") && !file.isDirectory)
+				if (files.length > 1) {
+					let name = (this.name.lastIndexOf("~")>0?this.name.substr(this.name.lastIndexOf("~")+1, 2):"");
+					files = files.filter(file => file.name.includes(name) )
+				}
+				console.log('nozzle macro', files);
 				let that = this;
 				files.forEach(function (file) {
-					if(file != undefined && file.name.includes("Nozzle")) {
+					if(file != undefined && file.name.startsWith("_Nozzle height calibration")) {
 						that.sendCode('M98 P' + files[0].directory + "/" + files[0].name)
 					}
 				});
+				//console.log(that.state.status)
+				let inter = setInterval(async function(that) {
+					//console.log(that.state.status)
+					if(that.state.status == 'idle') {
+						clearInterval(inter)
+						that.saveToolOffset(config[0].directory + '/' + config[0].name)
+					}
+				}, 1000, that)
 			} catch(e) {
 				console.error(e);
 			}
 		},
+		saveToolOffset: async function(filename) {
+			this.b4 = [];
+			this.toolHeads = [];
+			let result = await this.download({ filename, type: 'text', showSuccess: false });
+			let data = result.split("\n");
+			this.b4[0] = "";
+			let indexB4 = 0;
+			var lines = [];
+			let toolNum = -1;
+			for( var i = 0; i < data.length; i++)
+			{
+				if (data[i].includes("G10") || data[i].includes("M563")) {
+					lines.push(data[i]);
+					if (this.b4[indexB4] != "") {
+						indexB4 ++ ;
+						this.b4[indexB4] = "";
+					}
+				} else if (data[i] !== "" && data[i] !== "\n"){
+					this.b4[indexB4] += data[i] + "\n";
+				}
+			}
+			for (i = 0; i < lines.length; i++)
+			{
+				var line = lines[i].substring(0, lines[i].indexOf(";")).split(" ");
+				for( var j = 0; j < line.length; j++)
+				{
+					if (line[0] === "G10"){
+						if (line[j].includes("P")) { //Tool number
+							if ((this.toolHeads[toolNum] == undefined) || (this.toolHeads[toolNum+1] == undefined && this.toolHeads[toolNum].t !== parseInt(line[j].substring(1)))) {
+								toolNum++;
+								//console.log("G10: tool " + parseInt(line[j].substring(1)) +" found");
+								this.toolHeads[toolNum] = {};
+								this.toolHeads[toolNum].t = parseInt(line[j].substring(1))
+								this.toolHeads[toolNum].offsets = []
+							}
+						} else if(line[j].includes("X")) { // axis X-Z
+							//console.log("offset X of tool " + this.toolHeads[toolNum].t + " = "+ parseFloat(line[j].substring(1)));
+							this.toolHeads[toolNum].offsets[0] = parseFloat(line[j].substring(1)).toFixed(2);
+						} else if(line[j].includes("Y")) {
+							//console.log("offset Y of tool " + this.toolHeads[toolNum].t + " = "+ parseFloat(line[j].substring(1)));
+							this.toolHeads[toolNum].offsets[1] = parseFloat(line[j].substring(1)).toFixed(2);
+						} else if(line[j].includes("Z")) {
+							//console.log("offset Z of tool " + this.toolHeads[toolNum].t + " = "+ parseFloat(line[j].substring(1)));
+							this.toolHeads[toolNum].offsets[2] = parseFloat(line[j].substring(1)).toFixed(2);
+						} else if(line[j].includes("S")) {
+							//console.log("default active temp of tool " + this.toolHeads[toolNum].t + " = " + parseFloat(line[j].substring(1)));
+							this.toolHeads[toolNum].s = parseFloat(line[j].substring(1)).toFixed(2);
+						} else if(line[j].includes("R")) {
+							//console.log("default stanby temp of tool " + this.toolHeads[toolNum].t + " = " + parseFloat(line[j].substring(1)));
+							this.toolHeads[toolNum].r = parseFloat(line[j].substring(1)).toFixed(2);
+						}
+					} else if (line[0] === "M563") {
+						if (line[j].includes("P")) {
+							if ((this.toolHeads[toolNum] == undefined) || (this.toolHeads[toolNum+1] == undefined && this.toolHeads[toolNum].t !== parseInt(line[j].substring(1)))) {
+								toolNum++;
+								//console.log("M563: tool " + parseInt(line[j].substring(1)) +" found");
+								this.toolHeads[toolNum] = {};
+								this.toolHeads[toolNum].t = parseInt(line[j].substring(1))
+								this.toolHeads[toolNum].offsets = []
+							}
+						} else if ( line[j].includes("S")) {
+							var open = -1;
+							var close = -1;
+							do {
+								if (open < 0) {
+									open = line[j].indexOf("\"");
+									if (open < line[j].lastIndexOf("\"")){ // IE there is a second " after the first one ex( "A+B")
+										close = line[j].lastIndexOf("\"");
+										this.toolHeads[toolNum].e = line[j].substring(open+1, close)
+									} else {
+										this.toolHeads[toolNum].e = line[j].substring(open+1);
+									}
+								} else if (line[j].indexOf("\"") >= 0){ // we found the closing "
+									close  = line[j].indexOf("\"");
+									this.toolHeads[toolNum].e += " " + line[j].substring(0,close)
+								} else {
+									this.toolHeads[toolNum].e += " " + line[j]
+								}
+								j++;
+							} while (close < 0);
+							j--;
+							//console.log("tool " + this.toolHeads[toolNum].t +" named: " + this.toolHeads[toolNum].e);
+						} else if (line[j].includes("D")) {
+							//console.log("tool " + this.toolHeads[toolNum].t + " drive " + parseFloat(line[j].substring(1)));
+							var drives = line[j].substring(1).split(":")
+							for(var k = 0; k < drives.length; k++)
+							drives[k] = parseFloat(drives[k]);
+							this.toolHeads[toolNum].d = drives;
+						} else if (line[j].includes("H")) {
+							//console.log("tool " + this.toolHeads[toolNum].t + " heater " + parseFloat(line[j].substring(1)));
+							var heaters = line[j].substring(1).split(":")
+							for(k = 0; k < heaters.length; k++)
+							heaters[k] = parseFloat(heaters[k]);
+							this.toolHeads[toolNum].h = heaters;
+						} else if (line[j].includes("F")) {
+							//console.log("fan " + parseFloat(line[j].substring(1)) + "maped to tool " + this.toolHeads[toolNum].t);
+							this.toolHeads[toolNum].f = parseFloat(line[j].substring(1));
+						} else if (line[j].includes("L")) {
+							this.toolHeads[toolNum].l = parseFloat(line[j].substring(1));
+						}
+					}
+				}
+			}
+			this.sendToolMatrix(filename)
+		},
+		sendToolMatrix: function(filename) {
+			//console.log("sending new tool matrix");
+			var out = "";
+			//console.trace();
+			console.log(this.toolHeads)
+			for (var i = 0; i < this.toolHeads.length; i++)
+			{
+				let tool = this.toolHeads[i];
+				let sysTool = this.tools.filter((head) => tool.t == head.number)[0]
+				out += (this.b4[i] == undefined?"":this.b4[i]);
+				out += "\n"
+				let str = "M563 P" + tool.t + " S\"" + tool.e + "\"" +
+				(tool.d ? " D" + tool.d : '') +
+				(tool.h ? " H" + tool.h : '')
+				out += str.padEnd(40, ' ') + "; Define tool " + tool.t + "\n";
+				str = "G10 P" + tool.t +
+				( sysTool.offsets[0] != undefined ? " X" + parseFloat(sysTool.offsets[0]).toFixed(2) : '' ) +
+				( sysTool.offsets[0] != undefined ? " Y" + parseFloat(sysTool.offsets[1]).toFixed(2) : '' ) +
+				( sysTool.offsets[0] != undefined ? " Z" + parseFloat(sysTool.offsets[2]).toFixed(2) : '' )
+				out += str.padEnd(40, ' ') + "; Set tool " + tool.t + " axis offsets\n"
+				if (tool.h) {
+					str = "G10 P" + tool.t + " R" + tool.r + " S" + tool.s
+					out += str.padEnd(40, ' ') + "; Set initial tool " + tool.t +
+					" active and standby temperatures to " + tool.s + "/" + tool.r + "°C\n";
+				}
+			}
+			out += (this.b4[this.toolHeads.length] == undefined? "" : this.b4[this.toolHeads.length] );
+			//console.log(this.tools);
+			//let filename = "0:/macros/_Toolheads/" + this.toolPath[this.select].matrix;
+			let data =  out;
+			console.log(filename, data);
+			const content = new Blob([data]);
+			try {
+				//this.upload({ filename: filename, content });
+				this.$makeNotification('success',
+				this.$t("panel.toolOffset.dialog.title"),
+				this.$t("panel.toolOffset.dialog.sucess"),
+				5000);
+			} catch (e) {
+				this.$makeNotification('error',
+				this.$t("panel.toolOffset.dialog.title"),
+				this.$t("panel.toolOffset.dialog.error", [(e.err == 1 ? "no such file" : "not mounted")]),
+				5000);
+				console.error(e);// TODO Optionally ask user to save file somewhere else
+			}
+		},
+	},
+	mounted: async function() {
+		let files = await this.getFileList("0:/macros/_Toolheads");
+
+		let params = this.name.substr(8).split('_')
+		let name = params[0];
+		let appro = params.length == 4 ? params[1] : '';
+		let model = params.length == 4 ? params[2].split("~")[0] : ''
+		//		let opt = params.length == 4 && params[2].split("~").length == 2 ? params[2].split("~")[1] : ''
+		let vers = params.length == 4 ? params[3].substring(1, params[3].length) : params[1].substring(1, params[1].length)
+
+		let tools = files.filter(tool => tool.name.includes(name) && tool.name.includes(appro) && tool.name.includes(model) && tool.name.includes(vers) && tool.name.includes("CAL"))
+
+		/*console.log(name)
+		console.log(appro)
+		console.log(model)
+		console.log(opt)
+		console.log(vers)
+
+		console.log(tools.length ? tools : "");
+		*/
+
+		let that = this;
+		tools.forEach(async function(item) {
+			if (item.isDirectory)
+			{
+				console.log(item);
+				files = await that.getFileList(item.directory + '/' + item.name);
+				console.log(files)
+				tools = files.filter(item => item.isDirectory && (item.name.includes('Presets') || item.name.includes('Custom calibrations')))
+				console.log(tools)
+				that.calibrations = []
+				tools.forEach(async function(item) {
+					if (item.isDirectory)
+					{
+						console.log(item);
+						files = await that.getFileList(item.directory + '/' + item.name);
+						console.log(files)
+						tools = files.filter(item => !item.isDirectory && item.name.includes('machine'))
+						console.log(tools)
+						tools.forEach((item, i) => {
+							that.calibrations.push(item)
+						});
+					}
+				});
+				console.log(that.calibrations)
+			}
+		});
 	},
 	watch: {
 		isConnected() {

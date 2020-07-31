@@ -82,7 +82,7 @@ text:hover {
 						</v-layout>
 						<div style="width: 480px; height: 480px; margin: 0 auto; overflow: hidden;">
 							<div id="scaleableDiv" @click="videoDivClick" style="transform: scale(1)">
-								<img style="background: url(/img/ressources/noSignal.gif); background-position-x: center; overflow: hidden; margin-left: 50%; position: relative;" height="480" id="webcam">
+								<img style="background: url(/img/ressources/noSignal.gif); background-position-x: center; overflow: hidden; margin-left: 50%; position: relative; min-height: 420px" height="480" id="webcam">
 								<!--video id="video" style="margin-left: -187px; position: relative; bottom: 486px;" width="853" height="480" autoplay ></video-->
 							</div>
 							<svg @click="videoDivClick" v-if="showTarget" height="480" style="position: relative; left: 0px; bottom: 486px;" width="480">
@@ -137,95 +137,95 @@ text:hover {
 						<v-slider v-if="focus.id" v-model="focus.value" append-icon="filter_hdr" prepend-icon="local_florist" :min="focus.min" :step="1" :max="focus.max" @click:append="focusFar" @click:prepend="focusNear" hide-details thumb-label="">
 						</v-slider>
 						<!--v-slider v-if="exposure.id" v-model="exposure.value" append-icon="brightness_7" prepend-icon="brightness_2" :min="exposure.min" :step="5" :max="exposure.max" @click:append="exposurePlus" @click:prepend="exposureMinus" hide-details thumb-label="">
-						</v-slider-->
-					</div>
-					<v-expansion-panel :value="-1" class="z_probe_offset" style="margin-top: 10px">
-						<v-expansion-panel-content style="background: #4D4D4D">
-							<template v-slot:header>
-								<div>
-									{{ $t('panel.settingsNetwork.advanced' )}}
-								</div>
-							</template>
-							<v-card style="background: #4D4D4D">
-								<v-card-text class="panel-body">
-									<v-layout row wrap>
-										<v-flex v-for="(tool, index) in toolHeads" :key="tool.t" xl4 lg4 md4 sm6 xs12>
-											<v-layout column style="border-right: 1px solid #333; border-bottom: 1px solid #222; margin: 5px; text-align: center; background: #5A5A5A;" v-if="!tool.hide">
-												<v-layout style="font-size: larger;" row>
-													<span v-html="$t('panel.toolOffset.offset', [''])"></span>&nbsp;<strong @click="targetTool(tool.t)" :id="tool.t"> T{{tool.t}}</strong>
-													<span style="color: darkgray;" v-for="sec in tool.sec" :key="sec">
-														, T{{toolHeads[sec].t}}
-													</span>
+					</v-slider-->
+				</div>
+				<v-expansion-panel :value="-1" class="z_probe_offset" style="margin-top: 10px">
+					<v-expansion-panel-content style="background: #4D4D4D">
+						<template v-slot:header>
+							<div>
+								{{ $t('panel.settingsNetwork.advanced' )}}
+							</div>
+						</template>
+						<v-card style="background: #4D4D4D">
+							<v-card-text class="panel-body">
+								<v-layout row wrap>
+									<v-flex v-for="(tool, index) in toolHeads" :key="tool.t" xl4 lg4 md4 sm6 xs12>
+										<v-layout column style="border-right: 1px solid #333; border-bottom: 1px solid #222; margin: 5px; text-align: center; background: #5A5A5A;" v-if="!tool.hide">
+											<v-layout style="font-size: larger;" row>
+												<span v-html="$t('panel.toolOffset.offset', [''])"></span>&nbsp;<strong @click="targetTool(tool.t)" :id="tool.t"> T{{tool.t}}</strong>
+												<span style="color: darkgray;" v-for="sec in tool.sec" :key="sec">
+													, T{{toolHeads[sec].t}}
+												</span>
+											</v-layout>
+											<v-divider></v-divider>
+											<v-layout column>
+												<v-layout row>
+													<span v-html="$t('panel.toolOffset.offset', ['X'])"></span>&nbsp; <input v-if="!isLocal" class="tool_offset" autocomplete="off" type="number" :value="(relative?(tool.x-toolHeads[0].x):tool.x)" step="0.01" off="x" :tnum="index" v-bind:class="{disabled: (index == 0)}" @blur="handleToolOffsetBlurEvent" @keyup.enter="handleToolOffsetBlurEvent"/>&nbsp;{{ isLocal? '' : 'mm' }}
 												</v-layout>
-												<v-divider></v-divider>
-												<v-layout column>
-													<v-layout row>
-														<span v-html="$t('panel.toolOffset.offset', ['X'])"></span>&nbsp; <input v-if="!isLocal" class="tool_offset" autocomplete="off" type="number" :value="(relative?(tool.x-toolHeads[0].x):tool.x)" step="0.01" off="x" :tnum="index" v-bind:class="{disabled: (index == 0)}" @blur="handleToolOffsetBlurEvent" @keyup.enter="handleToolOffsetBlurEvent"/>&nbsp;{{ isLocal? '' : 'mm' }}
-													</v-layout>
-													<number-control v-if="isLocal" v-model.number="tool.x" ref="input" :min="-100" :max="100" :step="0.05" @keydown.native="onkeydown" @keyup.enter="toolOffsetEvent($event, index, tool)" @change="toolOffsetEvent($event, index, tool, 'x')" @blur="toolOffsetEvent($event, index, tool)" :title="'Tool ' + tool.t + ' X offset'" prompt="Please enter target tool offset" :loading="false" :disabled="false" :precision="2" ></number-control>
-													<v-layout row v-if="!isLocal">
-														<v-tooltip bottom>
-															<template v-slot:activator="{ on }">
-																<v-btn class="btn_tilt" off="x" :tnum="index" dir="d" v-on="on" @click="handleBtnOffsetEvent" v-bind:class="{'v-btn--disabled': (index == 0 && relative)}">
-																	<span class="content">-0.01mm</span>
-																	<v-icon> arrow_left </v-icon>
-																</v-btn>
-															</template>
-															<span> Offsets the tool head by a tiny amount in the X direction (G10 Px Xyy) </span>
-														</v-tooltip>
-														<v-tooltip bottom>
-															<template v-slot:activator="{ on }">
-																<v-btn class="btn_tilt" off="x" :tnum="index" dir="u" v-on="on" @click="handleBtnOffsetEvent" v-bind:class="{'v-btn--disabled': (index == 0 && relative)}">
-																	<span class="content">+0.01mm</span>
-																	<v-icon> arrow_right </v-icon>
-																</v-btn>
-															</template>
-															<span> Offsets the tool head by a tiny amount in the X direction (G10 Px Xyy) </span>
-														</v-tooltip><br/>
-													</v-layout>
-												</v-layout>
-												<v-layout column>
-													<v-layout row>
-														<span v-html="$t('panel.toolOffset.offset', ['Y'])"></span>&nbsp; <input v-if="!isLocal" class="tool_offset" autocomplete="off" type="number" :value="(relative?(tool.y-toolHeads[0].y):tool.y)" step="0.01" off="y" :tnum="index" tsec="{2}" @blur="handleToolOffsetBlurEvent" @keyup.enter="handleToolOffsetBlurEvent"/>&nbsp;{{ isLocal? '' : 'mm' }}
-													</v-layout>
-													<number-control v-if="isLocal" v-model.number="tool.y" ref="input" :min="-100" :max="100" :step="0.05" @keydown.native="onkeydown" @keyup.enter="toolOffsetEvent($event, index, tool)" @change="toolOffsetEvent($event, index, tool, 'y')" @blur="toolOffsetEvent($event, index, tool)" :title="'Tool '+tool.t+' Y offset'" prompt="Please enter target tool offset" :loading="false" :disabled="false" :precision="2"></number-control>
-													<v-layout v-if="!isLocal" row>
-														<v-tooltip bottom>
-															<template v-slot:activator="{ on }">
-																<v-btn class="btn_tilt" off="y" :tnum="index" dir="d" v-on="on" @click="handleBtnOffsetEvent" v-bind:class="{'v-btn--disabled': (index == 0 && relative)}">
-																	<span class="content">-0.01mm</span>
-																	<v-icon> arrow_left </v-icon>
-																</v-btn>
-															</template>
-															<span> Offsets the tool head by a tiny amount in the Y direction (G10 Px Yyy) </span>
-														</v-tooltip>
-														<v-tooltip bottom>
-															<template v-slot:activator="{ on }">
-																<v-btn class="btn_tilt" off="y" :tnum="index" dir="u" v-on="on" @click="handleBtnOffsetEvent" v-bind:class="{'v-btn--disabled': (index == 0 && relative)}">
-																	<span class="content">+0.01mm</span>
-																	<v-icon> arrow_right </v-icon>
-																</v-btn>
-															</template>
-															<span> Offsets the tool head by a tiny amount in the Y direction (G10 Px Xyy) </span>
-														</v-tooltip>
-													</v-layout>
+												<number-control v-if="isLocal" v-model.number="tool.x" ref="input" :min="-100" :max="100" :step="0.05" @keydown.native="onkeydown" @keyup.enter="toolOffsetEvent($event, index, tool)" @change="toolOffsetEvent($event, index, tool, 'x')" @blur="toolOffsetEvent($event, index, tool)" :title="'Tool ' + tool.t + ' X offset'" prompt="Please enter target tool offset" :loading="false" :disabled="false" :precision="2" ></number-control>
+												<v-layout row v-if="!isLocal">
+													<v-tooltip bottom>
+														<template v-slot:activator="{ on }">
+															<v-btn class="btn_tilt" off="x" :tnum="index" dir="d" v-on="on" @click="handleBtnOffsetEvent" v-bind:class="{'v-btn--disabled': (index == 0 && relative)}">
+																<span class="content">-0.01mm</span>
+																<v-icon> arrow_left </v-icon>
+															</v-btn>
+														</template>
+														<span> Offsets the tool head by a tiny amount in the X direction (G10 Px Xyy) </span>
+													</v-tooltip>
+													<v-tooltip bottom>
+														<template v-slot:activator="{ on }">
+															<v-btn class="btn_tilt" off="x" :tnum="index" dir="u" v-on="on" @click="handleBtnOffsetEvent" v-bind:class="{'v-btn--disabled': (index == 0 && relative)}">
+																<span class="content">+0.01mm</span>
+																<v-icon> arrow_right </v-icon>
+															</v-btn>
+														</template>
+														<span> Offsets the tool head by a tiny amount in the X direction (G10 Px Xyy) </span>
+													</v-tooltip><br/>
 												</v-layout>
 											</v-layout>
-										</v-flex>
-										<div style="width: max-content; margin: 0 auto">
-											<v-btn :onclick="'window.open(location.protocol+\'//'+selectedMachine+':8080/control.htm\', \'control\', \'width=500, height=600\')'" style="background: #212121;" :style="{'font-size': (isLocal ? 'larger' : '')}">
-												{{ $t('panel.webcam.advanced' )}}
-											</v-btn>
-										</div>
-									</v-layout>
-								</v-card-text>
-							</v-card>
-						</v-expansion-panel-content>
-					</v-expansion-panel>
-				</v-card-text>
-			</v-card>
-		</v-expansion-panel-content>
-	</v-expansion-panel>
+											<v-layout column>
+												<v-layout row>
+													<span v-html="$t('panel.toolOffset.offset', ['Y'])"></span>&nbsp; <input v-if="!isLocal" class="tool_offset" autocomplete="off" type="number" :value="(relative?(tool.y-toolHeads[0].y):tool.y)" step="0.01" off="y" :tnum="index" tsec="{2}" @blur="handleToolOffsetBlurEvent" @keyup.enter="handleToolOffsetBlurEvent"/>&nbsp;{{ isLocal? '' : 'mm' }}
+												</v-layout>
+												<number-control v-if="isLocal" v-model.number="tool.y" ref="input" :min="-100" :max="100" :step="0.05" @keydown.native="onkeydown" @keyup.enter="toolOffsetEvent($event, index, tool)" @change="toolOffsetEvent($event, index, tool, 'y')" @blur="toolOffsetEvent($event, index, tool)" :title="'Tool '+tool.t+' Y offset'" prompt="Please enter target tool offset" :loading="false" :disabled="false" :precision="2"></number-control>
+												<v-layout v-if="!isLocal" row>
+													<v-tooltip bottom>
+														<template v-slot:activator="{ on }">
+															<v-btn class="btn_tilt" off="y" :tnum="index" dir="d" v-on="on" @click="handleBtnOffsetEvent" v-bind:class="{'v-btn--disabled': (index == 0 && relative)}">
+																<span class="content">-0.01mm</span>
+																<v-icon> arrow_left </v-icon>
+															</v-btn>
+														</template>
+														<span> Offsets the tool head by a tiny amount in the Y direction (G10 Px Yyy) </span>
+													</v-tooltip>
+													<v-tooltip bottom>
+														<template v-slot:activator="{ on }">
+															<v-btn class="btn_tilt" off="y" :tnum="index" dir="u" v-on="on" @click="handleBtnOffsetEvent" v-bind:class="{'v-btn--disabled': (index == 0 && relative)}">
+																<span class="content">+0.01mm</span>
+																<v-icon> arrow_right </v-icon>
+															</v-btn>
+														</template>
+														<span> Offsets the tool head by a tiny amount in the Y direction (G10 Px Xyy) </span>
+													</v-tooltip>
+												</v-layout>
+											</v-layout>
+										</v-layout>
+									</v-flex>
+									<!--div style="width: max-content; margin: 0 auto">
+									<v-btn :onclick="'window.open(location.protocol+\'//'+selectedMachine+':8080/control.htm\', \'control\', \'width=500, height=600\')'" style="background: #212121;" :style="{'font-size': (isLocal ? 'larger' : '')}">
+									{{ $t('panel.webcam.advanced' )}}
+								</v-btn>
+							</div-->
+						</v-layout>
+					</v-card-text>
+				</v-card>
+			</v-expansion-panel-content>
+		</v-expansion-panel>
+	</v-card-text>
+</v-card>
+</v-expansion-panel-content>
+</v-expansion-panel>
 </template>
 <script>
 'use strict'
@@ -590,13 +590,15 @@ export default {
 			for (var i = 0; i < this.toolHeads.length; i++)
 			{
 				out += (this.b4[i] == undefined?"":this.b4[i]);
-				out += "M563 P"+ i + " S\"" + this.toolHeads[i].e + "\" D" + this.toolHeads[i].d + " H" + this.toolHeads[i].h + "\t\t\t; Define tool " + i + "\n";
-				out += "G10 P" + i +
+				let str = "M563 P"+ i + " S\"" + this.toolHeads[i].e + "\" D" + this.toolHeads[i].d + " H" + this.toolHeads[i].h
+				out += str.padEnd(40, ' ') + "; Define tool " + i + "\n";
+				str = "G10 P" + i +
 				" X" + (parseFloat(this.toolHeads[i].x) /*- (i == 0 ? 0 : this.offset.x)*/).toFixed(2) +
 				" Y" + (parseFloat(this.toolHeads[i].y) /*- (i == 0 ? 0 : this.offset.y)*/).toFixed(2) +
-				" Z" + parseFloat(this.toolHeads[i].z).toFixed(2) + "\t\t; Set tool " + i + " axis offsets\n"
-				out += "G10 P" + i + " R" + this.toolHeads[i].r + " S" + this.toolHeads[i].s +
-				"\t\t\t\t; Set initial tool " + i
+				" Z" + parseFloat(this.toolHeads[i].z).toFixed(2)
+				out += str.padEnd(40, ' ') + "; Set tool " + i + " axis offsets\n"
+				str = "G10 P" + i + " R" + this.toolHeads[i].r + " S" + this.toolHeads[i].s
+				out += str.padEnd(40, ' ') + "; Set initial tool " + i
 				+ " active and standby temperatures to " + this.toolHeads[i].s + "/" + this.toolHeads[i].r + "°C\n";
 			}
 			out += (this.b4[this.toolHeads.length] == undefined? "" : this.b4[this.toolHeads.length] );
@@ -666,7 +668,6 @@ export default {
 			//console.log(e)
 			this.focus.value += 5
 		},
-
 		saveOffset: function() {
 			console.log(this.toolHeads[this.curTool])
 			console.log(this.curTool)
@@ -731,14 +732,19 @@ export default {
 	},
 	mounted: async function() {
 		setTimeout(this.preloadToolMatrices, 1000*Math.random());
-		var img = new Image();
+		var xhr =  new XMLHttpRequest();
+		xhr.timeout = 2000;
 		let that = this;
 
 
-		img.onload = function() {
-			//console.log(this.width + 'x' + this.height);
-			document.getElementById('scaleableDiv').parentElement.style.display= "";
-			document.getElementById('webcam').style.left = -((480/img.height)*img.width)/2 + "px";
+		xhr.onload = function() {
+			let img = new Image()
+			img.src = 'http://'+that.selectedMachine+':8080/?action=snapshot&dummy='+Math.random()
+			img.onload = () => {
+				console.log(img.width + 'x' + img.height);
+				document.getElementById('scaleableDiv').parentElement.style.display= "";
+				document.getElementById('webcam').style.left = -((480/img.height)*img.width)/2 + "px";
+			}
 			//if (document.getElementById('webcam').src == "") {
 			document.getElementById('webcam').style.transform = "rotate(180deg) scale(1, -1)";
 			document.getElementById('webcam').src = 'http://'+that.selectedMachine+':8080/?action=stream&dummy=' + Math.random()
@@ -746,9 +752,19 @@ export default {
 			that.showTarget = true;
 		}
 
+		xhr.ontimeout = function() {
+			//console.log(this.width + 'x' + this.height);
+			document.getElementById('webcam').style.left = "-210px";
+			//if (document.getElementById('webcam').src == "") {
+			document.getElementById('webcam').style.transform = "";
+			document.getElementById('webcam').src = ''
+
+			that.showTarget = false;
+		}
+
 		setInterval(async function(that) {
 			if (document.getElementById('scaleableDiv') && document.getElementById('webcam') && document.getElementById('webcam').src == "") {
-				if (that.webcam.active < 0) {
+				if (that.webcam.active < 0 || !that.showTarget) {
 					if (!that.axios) {
 						//let protocol = location.protocol;
 						that.axios = await axios.create({
@@ -769,13 +785,14 @@ export default {
 					that.webcam.active++
 				}
 			}
-			img.src = 'http://'+that.selectedMachine+':8080/?action=snapshot&dummy='+Math.random();
+			xhr.open('GET', 'http://'+that.selectedMachine+':8080/?action=snapshot&dummy='+Math.random(), true);
+			xhr.send(null);
 		}, 5000, that);
 
 		document.getElementById('webcam').style.left = "-240px"
 		document.getElementById('webcam').style['min-width'] = "420px";
 		document.getElementById('scaleableDiv').parentElement.style.display= "none";
-		console.log(img)
+		console.log(xhr)
 	},
 	watch: {
 		toolHeads: {
@@ -785,7 +802,7 @@ export default {
 				//console.log(newVal);
 			}
 		},
-		exposure: {
+		/*exposure: {
 			deep: true,
 			handler: async function(post, pre) {
 				//console.log(pre, post)
@@ -794,41 +811,41 @@ export default {
 					if (!this.axios) {
 						//let protocol = location.protocol;
 						this.axios = await axios.create({
-							baseURL:`http://`+this.selectedMachine+`/`,
-							//cancelToken: BaseConnector.getCancelSource().token,
-							timeout: 8000,	// default session timeout in RepRapFirmware
-							withCredentials: true,
-						});
-					}
-
-					await this.exposure.auto.forEach((item) => {
-						this.axios.get('/pc_webcam', {
-							withCredentials: true,
-							params: {
-								action: "command",
-								dest: item.dest,
-								plugin: 0,
-								id: item.id,
-								group: item.group,
-								value: item.type == 2 ? 0 : 1//item.menu.indexOf("Manual Mode")
-							}
-						})
+						baseURL:`http://`+this.selectedMachine+`/`,
+						//cancelToken: BaseConnector.getCancelSource().token,
+						timeout: 8000,	// default session timeout in RepRapFirmware
+						withCredentials: true,
 					});
+				}
 
+				await this.exposure.auto.forEach((item) => {
 					this.axios.get('/pc_webcam', {
 						withCredentials: true,
 						params: {
 							action: "command",
-							dest: this.exposure.dest,
+							dest: item.dest,
 							plugin: 0,
-							id: this.exposure.id,
-							group: this.exposure.group,
-							value: ((this.exposure.max - this.exposure.min) - this.exposure.value)
+							id: item.id,
+							group: item.group,
+							value: item.type == 2 ? 0 : 1//item.menu.indexOf("Manual Mode")
+							}
+						})
+					});
+
+				this.axios.get('/pc_webcam', {
+					withCredentials: true,
+					params: {
+						action: "command",
+						dest: this.exposure.dest,
+						plugin: 0,
+						id: this.exposure.id,
+						group: this.exposure.group,
+						value: ((this.exposure.max - this.exposure.min) - this.exposure.value)
 						}
 					})
 				}
 			}
-		},
+		},*/
 		focus: {
 			deep: true,
 			handler: async function(post, pre) {
@@ -897,7 +914,7 @@ export default {
 						that.getWebcamParams();
 						document.getElementById('webcam').src == ""
 						document.getElementById('webcam').style.left = "-240px"
-					} , 2000, this)
+					} , 3000, this)
 				}
 			}
 		},

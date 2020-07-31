@@ -179,7 +179,7 @@ table.extra tr > td:first-child {
 								</div>
 							</div>
 						</div>
-						<div v-if="(shown || !isLocal) && materials.length && window.width > 385" @click.prevent="">
+						<div v-if="(shown || !isLocal) && materials != {} && window.width > 385" @click.prevent="">
 							<v-menu offset-y left :disabled="uiFrozen" v-tab-control :close-on-content-click="false">
 								<template slot="activator">
 									<v-btn color="secondary darken-1" small class="mx-0" :disabled="uiFrozen">
@@ -194,7 +194,7 @@ table.extra tr > td:first-child {
 												{{ $t('button.preloadPrime.preload', [(tool.name || $t('panel.tools.tool', [tool.number]))]) }}
 											</v-btn>
 										</v-list-tile>
-										<v-list-tile v-if="materials.length > 0">
+										<v-list-tile v-if="Object.entries(materials).filter(item => item[1].filter(item => item.indexOf('Prime') >= 0).length).length > 0">
 											<v-menu offset-y left :disabled="uiFrozen" v-tab-control>
 												<template slot="activator">
 													<v-btn color="secondary darken-1" small class="mx-0" :disabled="uiFrozen">
@@ -204,14 +204,14 @@ table.extra tr > td:first-child {
 
 												<v-card>
 													<v-list>
-														<v-list-tile v-for="material in materials" :key="material" @click="sendCode('M98 P0:/macros/_Materials/' +  universe + '/' + material + '/Prime ' + tool.name)">
+														<v-list-tile v-for="(file, material) in Object.fromEntries(Object.entries(materials).filter(item => item[1].filter(item => item.indexOf('Prime') >= 0).length))" :key="material" @click="sendCode('M98 P0:/macros/_Materials/' +  universe + '/' + material + '/Prime ' + tool.name)">
 															{{ $t('button.preloadPrime.prime', [material]) }}
 														</v-list-tile>
 													</v-list>
 												</v-card>
 											</v-menu>
 										</v-list-tile>
-										<v-list-tile v-if="materials.length > 0">
+										<v-list-tile v-if="Object.entries(materials).filter(item => item[1].filter(item => item.indexOf('Unload') >= 0).length).length > 0">
 											<v-menu offset-y left :disabled="uiFrozen" v-tab-control>
 												<template slot="activator">
 													<v-btn color="secondary darken-1" small class="mx-0" :disabled="uiFrozen">
@@ -221,8 +221,25 @@ table.extra tr > td:first-child {
 
 												<v-card>
 													<v-list>
-														<v-list-tile v-for="material in materials" :key="material" @click="sendCode('M98 P0:/macros/_Materials/' +  universe + '/' + material + '/Unload ' + tool.name)">
+														<v-list-tile v-for="(file, material) in Object.fromEntries(Object.entries(materials).filter(item => item[1].filter(item => item.indexOf('Unload') >= 0).length))" :key="material" @click="sendCode('M98 P0:/macros/_Materials/' +  universe + '/' + material + '/Unload ' + tool.name)">
 															{{ $t('button.preloadPrime.unload', [material]) }}
+														</v-list-tile>
+													</v-list>
+												</v-card>
+											</v-menu>
+										</v-list-tile>
+										<v-list-tile v-if="Object.entries(materials).filter(item => item[1].filter(item => item.indexOf('Pre-heat') >= 0).length).length > 0">
+											<v-menu offset-y left :disabled="uiFrozen" v-tab-control>
+												<template slot="activator">
+													<v-btn color="secondary darken-1" small class="mx-0" :disabled="uiFrozen">
+														{{ $t('button.preloadPrime.preheat', [(tool.name || $t('panel.tools.tool', [tool.number]))]) }} <v-icon>arrow_drop_down</v-icon>
+													</v-btn>
+												</template>
+
+												<v-card>
+													<v-list>
+														<v-list-tile v-for="(file, material) in Object.fromEntries(Object.entries(materials).filter(item => item[1].filter(item => item.indexOf('Pre-heat') >= 0).length))" :key="material" @click="sendCode('M98 P0:/macros/_Materials/' +  universe + '/' + material + '/Pre-heat ' + tool.name)">
+															{{ $t('button.preloadPrime.preheat', [material]) }}
 														</v-list-tile>
 													</v-list>
 												</v-card>
@@ -262,7 +279,7 @@ table.extra tr > td:first-child {
 					<td class="pl-1 pr-2"	v-if="!isLocal || shown || (tool.heaters.length && heat.heaters[tool.heaters[0]].state == 1)">
 						<tool-input :shown="shown" v-if="tool.heaters.length" :tool="tool" :heaterIndex="0" :precision="1" standby></tool-input>
 					</td>
-					<td class="pl-1 pr-2" v-if="isLocal  && !shown && (!tool.heaters.length || heat.heaters[tool.heaters[0]].state == 0)">
+					<td class="pl-1 pr-2" v-if="isLocal && !shown && (!tool.heaters.length || heat.heaters[tool.heaters[0]].state == 0)">
 						<div class="control number">
 							<span >
 								0 C
@@ -271,23 +288,48 @@ table.extra tr > td:first-child {
 					</td>
 				</tr>
 
-				<tr v-for="(heater, heaterIndex) in tool.heaters.slice(1)" :class="{ 'grey lighten-4' : tool.number === state.currentTool }" :key="`tool-${index}-${heater}`">
-					<th>
+				<tr v-for="(heater, heaterIndex) in tool.heaters.slice(1)" :class="{ 'grey darken-2' : tool.number === state.currentTool }" :key="`tool-${index}-${heater}`">
+					<th v-if="!isLocal">
 						<a href="#" :class="getHeaterColor(heater)" @click.prevent="toolHeaterClick(tool, heater)">
 							{{ formatHeaterName(heat.heaters[heater], heater) }}
 						</a>
 						<br/>
-						<span v-if="heat.heaters[heater].state !== null" class="font-weight-regular caption">
+						<span v-if="tool.heaters.length && heat.heaters[heater].state !== null" class="font-weight-regular caption" :class="{
+							red:	heat.heaters[heater] !== undefined && heat.heaters[heater].state == 3,
+							[activeToolClass]: heat.heaters[heater] !== undefined && (heat.heaters[heater].state == 2 || heat.heaters[heater].state == 4),
+							[standbyToolClass]: heat.heaters[heater] !== undefined && heat.heaters[heater].state == 1,
+							'grey darken-2': heat.heaters[heater] !== undefined && heat.heaters[heater].state == 0,}" style="padding:1px 5px">
 							{{ $t(`generic.heaterStates[${heat.heaters[heater].state}]`) }}
 						</span>
 					</th>
+
+					<!-- Heater value -->
 					<td>
 						{{ formatHeaterValue(heat.heaters[heater]) }}
 					</td>
-					<td class="pl-2 pr-1">
+
+					<td v-if="isLocal && !shown">
+						<tool-input :shown="shown" v-if="(heat.heaters[heater].state == 2)" :tool="tool" :heaterIndex="heaterIndex+1" :precision="1" active></tool-input>
+						<tool-input :shown="shown" v-if="(heat.heaters[heater].state == 1)" :tool="tool" :heaterIndex="heaterIndex+1" :precision="1" standby></tool-input>
+						<div class="control number" v-if="(heat.heaters[heater].state == 0)">
+							<span>
+								0 C
+							</span>
+						</div>
+						<div class="control number" v-if="(heat.heaters[heater].state == 3)">
+							<b style="color: red">
+								ERR
+							</b>
+						</div>
+					</td>
+
+					<!-- Heater active -->
+					<td class="pl-2 pr-1"  v-if="!isLocal || shown">
 						<tool-input :shown="shown" :tool="tool" :heaterIndex="heaterIndex + 1" :precision="1" active></tool-input>
 					</td>
-					<td class="pl-1 pr-2">
+
+					<!-- Heater standby -->
+					<td class="pl-1 pr-2"  v-if="!isLocal || shown">
 						<tool-input :shown="shown" :tool="tool" :heaterIndex="heaterIndex + 1" :precision="1" standby></tool-input>
 					</td>
 				</tr>
@@ -649,7 +691,7 @@ export default {
 			resetHeaterFault: false,
 			faultyHeater: -1,
 			universe: undefined,
-			materials: [],
+			materials: {},
 			window: {
 				width: 0,
 				height: 0
@@ -761,10 +803,10 @@ export default {
 			try {
 				if (this.state.currentTool === tool.number) {
 					// Deselect current tool
-					this.sendCode('T-1');
+					this.sendCode('T-1 P0');
 				} else {
 					// Select new tool
-					this.sendCode(`T${tool.number}`);
+					this.sendCode(`T${tool.number} P0`);
 				}
 			} catch (e) {
 				if (!(e instanceof DisconnectedError)) {
@@ -782,7 +824,7 @@ export default {
 			let onTempsA, onTempsS;
 			switch (this.heat.heaters[heater].state) {
 				case 0:		// Off -> Active
-				this.sendCode(`T${tool.number}`);
+				this.sendCode(`T${tool.number} P0`);
 				break;
 
 				case 1:		// Standby -> Off
@@ -794,7 +836,7 @@ export default {
 				break;
 
 				case 2:		// Active -> Standby
-				this.sendCode('T-1');
+				this.sendCode('T-1 P0');
 				break;
 
 				case 3:		// Fault -> Ask for reset
@@ -885,17 +927,21 @@ export default {
 			this.universe = this.user.loadedTool.substr(0,5)
 
 			let files = await this.getFileList("0:/macros/_Materials/" + this.universe);
-			const directories = files.filter((file) => file.isDirectory)
-			files = files.filter((file) => !file.isDirectory)
+			console.log(files)
+			const directories = files.filter((file) => file && file.isDirectory)
+			files = files.filter((file) => file && !file.isDirectory)
 			//console.log(directories)
 			//console.log(files)
 			const that = this;
-			directories.forEach(async function(dir){ that.materials.push(dir.name);
-				console.log(await that.getFileList("0:/macros/_Materials/" + that.universe + "/" + dir.name))
-			})
+			directories.forEach(async function(dir) {
+				let files = await that.getFileList("0:/macros/_Materials/" + that.universe + "/" + dir.name)
+				that.materials[dir.name] = []
+				files.forEach((item) => {
+					that.materials[dir.name].push(item.name)
+				})})
 			//this.materials.push(file)
 			//console.log(this.universe);
-			//console.log(this.materials);
+			console.log(this.materials);
 		}
 		this.interval = setInterval(() => {
 			if (document.getElementById('toolContainer')) {

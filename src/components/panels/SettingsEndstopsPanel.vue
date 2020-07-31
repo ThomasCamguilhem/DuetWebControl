@@ -3,9 +3,7 @@
 		<v-card-title class="pb-0">
 			{{ $t('panel.settingsEndstops.caption') }}
 		</v-card-title>
-
-		<v-simple-table v-show="endstops.length" :dense="endstops.length > 6">
-			<template v-slot:default>
+		<table v-show="endstops.length" :dense="endstops.length > 6" style="width: 100%">
 				<thead>
 					<tr>
 						<th class="text-center">{{ $t('panel.settingsEndstops.index') }}</th>
@@ -14,12 +12,17 @@
 				</thead>
 				<tbody>
 					<tr v-for="endstop in endstops" :key="endstop.index">
-						<td class="text-center">{{ endstop.index }}</td>
-						<td class="text-center">{{ endstop.triggered ? $t('generic.yes') : $t('generic.no') }}</td>
+						<td style="text-align: center; font-weight: bold;">{{ endstop.index < 3 ? ['X','Y','Z'][endstop.index] : 'E'+(endstop.index - 3) }}</td>
+						<td style="text-align: center">
+							<div id="state" style="border-radius: 50%; display: inline-flex; margin-left: 0px; vertical-align: middle; width: 15px; height: 15px;" :style="{background: (endstop.triggered ? 'green' : 'red')}">
+							</div>
+							<span>
+								{{ endstop.triggered ? $t('generic.yes') : $t('generic.no') }}
+							</span>
+						</td>
 					</tr>
 				</tbody>
-			</template>
-		</v-simple-table>
+		</table>
 
 		<div v-show="!endstops.length" class="mt-1 text-center">
 			{{ $t('$vuetify.noDataText') }}
