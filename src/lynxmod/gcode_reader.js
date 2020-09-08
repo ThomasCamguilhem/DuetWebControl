@@ -1,9 +1,13 @@
-let THREE = require('three');
+'use strict'
+
 let Scene = require('./threeScene.js');
 let LineReader = require('./LineReader.js');
+let THREE = require('three') ;
 
 import { displaySpeed } from '../plugins/display.js'
 import i18n from '../i18n'
+import Axios from 'axios'
+import { strToTime, timeToStr } from '../utils/time.js'
 
 const exportSTL = require('threejs-export-stl');
 import JSZip from 'jszip'
@@ -14,7 +18,6 @@ let $ = require('jquery');
 /* ======== GCODE_READER ======== */
 
 export default {
-	name: 'gcode_reader',
 	data() {
 		return {
 			instructionPos: 0,
@@ -88,6 +91,7 @@ export default {
 			lastPrct: undefined,
 			onProgress: function(){},
 			gcodeToStl: undefined,
+			axios: undefined,
 		}
 	},
 	methods: {
@@ -231,7 +235,7 @@ export default {
 					console.log(err);
 				});
 
-				self.lineReader.on('end', function() {
+				self.lineReader.on('end',async function() {
 					console.log("Read complete!\n" + totalCount + " lines parsed\n took " + self.toHMS(Math.round((new Date() - start) / 1000), true));
 					self.scene.hasGeoToRender = true;
 					self.scene.preview.pointCloud["MOVE"] = self.moves;
@@ -241,7 +245,63 @@ export default {
 					//self.toast.domElement.firstChild.childNodes[1].lastChild.innerText = "Please stand by while the preview is being generated"
 					//let notif = makeNotification('info', 'Generating preview', "Please wait while we generate the preview for the gcode uploaded", null);
 
-					if ((location.port === "8080") || (location.port === "8081") || (location.port === "8082")) {
+					//console.log(self.boundingBox)
+					let out  = "";
+
+					out += "G28\nG1 X0 Y0 Z100 F18000\n";
+
+					out += "G1 X" +  ((self.boundingBox.max.x + self.boundingBox.min.x)/2).toFixed(2) + " Y" + ((self.boundingBox.max.y + self.boundingBox.min.y)/2).toFixed(2) + " Z" + (self.boundingBox.min.z + 10).toFixed(2) + " F6000\n"
+					out += "G1 X" + self.boundingBox.min.x.toFixed(2) + " Y" + self.boundingBox.min.y.toFixed(2) + " Z" + (self.boundingBox.min.z + 10).toFixed(2) + " F6000\n"
+
+					for (let i = 0; i < 5; i++) {
+						if ((self.boundingBox.max.z - self.boundingBox.min.z) > 10) {
+							out += "G1 X" + self.boundingBox.min.x.toFixed(2) + " Y" + self.boundingBox.min.y.toFixed(2) + " Z" + (self.boundingBox.min.z + 10).toFixed(2) + " F6000\n"
+							out += "G1 X" + self.boundingBox.min.x.toFixed(2) + " Y" + self.boundingBox.min.y.toFixed(2) + " Z" + self.boundingBox.min.z.toFixed(2) + " F" + (60 * (10 - self.boundingBox.min.z)).toFixed(2) + "\n"
+						} else {
+							out += "G1 X" + self.boundingBox.min.x.toFixed(2) + " Y" + self.boundingBox.min.y.toFixed(2) + " Z" + self.boundingBox.min.z.toFixed(2) + " F" + (60 * (self.boundingBox.max.z - self.boundingBox.min.z)).toFixed(2) + "\n"
+						}
+						out += "G1 X" + self.boundingBox.max.x.toFixed(2) + " Y" + self.boundingBox.min.y.toFixed(2) + " Z" + self.boundingBox.min.z.toFixed(2) + " F6000\n"
+						out += "G1 X" + self.boundingBox.max.x.toFixed(2) + " Y" + self.boundingBox.max.y.toFixed(2) + " Z" + self.boundingBox.min.z.toFixed(2) + " F6000\n"
+						out += "G1 X" + self.boundingBox.min.x.toFixed(2) + " Y" + self.boundingBox.max.y.toFixed(2) + " Z" + self.boundingBox.min.z.toFixed(2) + " F6000\n"
+						out += "G1 X" + self.boundingBox.min.x.toFixed(2) + " Y" + self.boundingBox.min.y.toFixed(2) + " Z" + self.boundingBox.min.z.toFixed(2) + " F6000\n"
+
+						out += "G1 X" + self.boundingBox.min.x.toFixed(2) + " Y" + self.boundingBox.min.y.toFixed(2) + " Z" + self.boundingBox.max.z.toFixed(2) + " F6000\n"
+						out += "G1 X" + self.boundingBox.max.x.toFixed(2) + " Y" + self.boundingBox.min.y.toFixed(2) + " Z" + self.boundingBox.max.z.toFixed(2) + " F6000\n"
+						out += "G1 X" + self.boundingBox.max.x.toFixed(2) + " Y" + self.boundingBox.max.y.toFixed(2) + " Z" + self.boundingBox.max.z.toFixed(2) + " F6000\n"
+						out += "G1 X" + self.boundingBox.min.x.toFixed(2) + " Y" + self.boundingBox.max.y.toFixed(2) + " Z" + self.boundingBox.max.z.toFixed(2) + " F6000\n"
+						out += "G1 X" + self.boundingBox.min.x.toFixed(2) + " Y" + self.boundingBox.min.y.toFixed(2) + " Z" + self.boundingBox.max.z.toFixed(2) + " F6000\n"
+					}
+					out += "G28\n"
+
+					let bboxPath = path.split('/')
+					let fName = bboxPath.pop()
+					bboxPath = '0:/gcodes/' + bboxPath.join('/') + '/' + 'BBox ' + file.name
+
+					let content = new Blob([out]);
+					//self.upload({ filename: bboxPath, content, showProgress: false, showSuccess: false });
+
+					if( !self.axios) {
+						self.axios = await Axios.create({
+							baseURL:`http://192.168.1.54/`,
+							//cancelToken: BaseConnector.getCancelSource().token,
+							timeout: 8000,	// default session timeout in RepRapFirmware
+							withCredentials: true,
+						});
+					}
+					self.axios.post('rr_upload', content, {
+						isFileTransfer: true,
+						params: {
+							name: bboxPath,
+							time: timeToStr(file.lastModified ? new Date(file.lastModified) : new Date())
+						},
+						timeout: 0,
+						transformRequest(data, headers) {
+							delete headers.post['Content-Type'];
+							return data;
+						}
+					})
+
+					/*if ((location.port === "8080") || (location.port === "8081") || (location.port === "8082")) {
 						//$("#firstLayer")[0].value = 0;
 						//$("#lastLayer")[0].value = nbLayers;
 						//$("#firstLayer")[0].max = nbLayers;
@@ -270,7 +330,7 @@ export default {
 							// see FileSaver.js
 							saveAs(content, self.fileInput.name.substring(0, self.fileInput.name.lastIndexOf('.')) + ".zip");
 						});
-					}
+					}*/
 
 					self.scene.preview.initRender(self);
 					self.scene.preview.animate();
@@ -323,7 +383,6 @@ export default {
 								args[key] = value;
 							}
 						});
-						//console.log(args);
 						this.extractGCode(args);
 					}
 				}
@@ -405,6 +464,8 @@ export default {
 					/* ====== G Codes ====== */
 					case "G0":
 					case "G1":
+					case "G00":
+					case "G01":
 					//console.log("move");
 					/*console.log("new position: \n\t" +
 					(args.x?(this.relative?this.lastPos.x+args.x:args.x):this.lastPos.x) + "\n\t" +
@@ -413,8 +474,9 @@ export default {
 					if ((this.relative ? this.lastPos.z + args.z : args.z) > this.lastPos.z) {
 						this.extruding = false;
 					}
-					if (args.e)
-					this.extruding = (this.lastPos.e < (this.relativeExtrude ? this.lastPos.e + args.e : args.e));
+					if (args.e) {
+						this.extruding = (this.lastPos.e < (this.relativeExtrude ? this.lastPos.e + args.e : args.e));
+					}
 					if (this.zLayer !== this.lastPos.z && this.extruding) {
 						//console.log(this.zLayer + " !== " + this.lastPos.z + " && " + this.extruding)
 						this.zPrevLayer = this.zLayer;
@@ -551,921 +613,995 @@ export default {
 										return;
 									}
 									//console.log(planter.ici)
-								} else {
+								} /*else {
 									this.boundingBox = {
-										min: {
-											x: 1000,
-											y: 1000,
-											z: 1000
-										},
-										max: {
-											x: -1000,
-											y: -1000,
-											z: -1000
-										}
-									};
-								}
-							}
-							this.gcodeLayer = {
-								lbbox: {
 									min: {
-										x: 1000,
-										y: 1000,
-										z: 1000
-									},
-									max: {
-										x: -1000,
-										y: -1000,
-										z: -1000
-									}
+									x: 1000,
+									y: 1000,
+									z: 1000
 								},
-								points: []
-							};
-						}
-
-						if ((this.lastPos.x && this.lastPos.y && this.lastPos.z) && (args.x || args.y || args.z)) {
-							this.x2 = (this.relative ? (this.lastPos.x + args.x) : args.x);
-							this.y2 = (this.relative ? (this.lastPos.y + args.y) : args.y);
-
-							var point_start = new THREE.Vector3();
-							var point_end = new THREE.Vector3();
-							if (args.e) {
-								//console.log(Math.round(this.lastPos.z*100));
-								if (!this.scene.preview.pointCloud[0] || !this.scene.preview.pointCloud[0][(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))]) {
-									if (!this.scene.preview.pointCloud[0]) {
-										this.scene.preview.pointCloud[0] = [];
-										this.scene.preview.pointCloud.length++;
-									}
-									this.scene.preview.pointCloud[0][(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))] = new THREE.Geometry();
-									this.scene.preview.pointCloud[0][(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))].name = this.lastPos.t + "_" + (this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)));
-								}
-								point_start.x = this.lastPos.y;
-								point_start.y = this.lastPos.z; //-this.y2;
-								point_start.z = this.lastPos.x; //this.lastPos.z;
-
-								point_end.x = this.y2;
-								point_end.y = this.lastPos.z; //-this.y2;
-								point_end.z = this.x2; //this.lastPos.z;
-								if (this.fileSize < 16 * 1024 * 1024) {
-									this.setPoly(point_start, point_end);
-								} else {
-									this.scene.preview.pointCloud[0][(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))].vertices.push(point_start);
-									this.scene.preview.pointCloud[0][(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))].vertices.push(point_end);
-								}
-							} else {
-								point_start.x = this.lastPos.y;
-								point_start.y = this.lastPos.z; //-this.y2;
-								point_start.z = this.lastPos.x //this.lastPos.z;
-
-								point_end.x = this.y2;
-								point_end.y = (args.z ? (this.relative ? (this.lastPos.z + args.z) : args.z) : this.lastPos.z); //-this.y2;
-								point_end.z = this.x2 //this.lastPos.z;
-								if (!this.moves[(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))]) {
-									this.moves[(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))] = new THREE.Geometry();
-									this.moves[(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))].name = "MOVE_" + (this.curLay ? this.curLay : (Math.round(this.lastPos.z * 100)));
-								}
-								this.moves[(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))].vertices.push(point_start);
-								this.moves[(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))].vertices.push(point_end);
+								max: {
+								x: -1000,
+								y: -1000,
+								z: -1000
 							}
-						}
-
-						if (args.x) {
-							this.lastPos.x = (this.relative ? this.lastPos.x + args.x : args.x);
-							if (this.lastPos.x < this.boundingBox.min.x)
-							this.boundingBox.min.x = this.lastPos.x;
-							if (this.lastPos.x > this.boundingBox.max.x)
-							this.boundingBox.max.x = this.lastPos.x;
-
-						}
-						if (args.y) {
-							this.lastPos.y = (this.relative ? this.lastPos.y + args.y : args.y);
-							if (this.lastPos.y < this.boundingBox.min.y)
-							this.boundingBox.min.y = this.lastPos.y;
-							if (this.lastPos.y > this.boundingBox.max.y)
-							this.boundingBox.max.y = this.lastPos.y;
-						}
-						if (args.z) {
-							this.lastPos.z = (this.relative ? this.lastPos.z + args.z : args.z);
-							if (this.lastPos.z < this.boundingBox.min.z)
-							this.boundingBox.min.z = this.lastPos.z;
-							if (this.lastPos.z > this.boundingBox.max.z)
-							this.boundingBox.max.z = this.lastPos.z;
-						}
-						if (args.e) {
-							this.lastPos.e = (this.relativeExtrude ? this.lastPos.e + args.e : args.e);
-						}
-						if (args.f)
-						this.lastPos.f = args.f;
-
-						if (args.x || args.y) {
-							this.tmpPos = {};
-							this.tmpPos.x = this.lastPos.x;
-							this.tmpPos.y = this.lastPos.y;
-							this.tmpPos.z = this.lastPos.z;
-							this.tmpPos.e = this.lastPos.e;
-							this.tmpPos.f = this.lastPos.f;
-							this.tmpPos.w = this.lastPos.w;
-							this.tmpPos.t = this.lastPos.t;
-							if (["OUTER_PERIMETER", "INNER_PERIMETER", "SOLID_LAYER"].includes(this.tmpPos.w))
-							this.gcodeLayer.points.push(this.tmpPos);
-						}
-						break;
-
-						case "G2":
-						console.warn("clockwise rotation not implemented");
-
-						this.rad = Math.sqrt(((args.i - args.x) * (args.i - args.x)) + ((args.y - args.j) * (args.y - args.j)))
-						this.acos = Math.acos((this.lastPos.x - args.i) / this.rad);
-						this.asin = Math.asin((this.lastPos.y - args.j) / this.rad);
-						this.startA = 0;
-						if (this.acos == this.asin) {
-							this.startA = this.acos;
-						} else if ((this.acos - Math.PI) == this.asin) {
-							this.startA = this.asin;
-						} else {
-							console.error('Que faire?')
-						}
-
-						this.acos = Math.acos(args.x / this.rad);
-						this.asin = Math.asin(args.y / this.rad);
-						this.endA = 0;
-						if (this.acos == this.asin) {
-							this.endA = this.acos;
-						} else {
-							console.error('Que faire?')
-						}
-						this.curve = new THREE.EllipseCurve(
-							args.i, args.j, // cX, cY
-							this.rad, this.rad, // xRadius, yRadius
-							this.startA, this.endA, // aStartAngle, aendAngle
-							true, // aClockwise
-							0 // aRotation
-						);
-
-						this.points = this.curve.getPoints(50);
-						this.geometry = new THREE.BufferGeometry().setFromPoints(this.points);
-
-						this.material = new THREE.LineBasicMaterial({
-							color: 0xff0000
-						});
-
-						// Create the final object to add to the scene
-						this.ellipse = new THREE.Line(this.geometry, this.material);
-						this.ellipse.position.z = this.lastPos.z;
-						this.threeScene.live.add(this.ellipse);
-
-						this.lastPos.x = args.x;
-						this.lastPos.y = args.y;
-						break;
-
-						case "G3":
-						console.warn("counterclockwise rotation not implemented");
-						//console.log(args)
-
-						this.rad = Math.sqrt(((args.i - args.x) * (args.i - args.x)) + ((args.y - args.j) * (args.y - args.j)))
-						this.acos = Math.acos((this.lastPos.x - args.i) / this.rad);
-						this.asin = Math.asin((this.lastPos.y - args.j) / this.rad);
-						this.startA = 0;
-						if (this.acos == this.asin) {
-							this.startA = this.acos;
-						} else {
-							console.error('Que faire?')
-						}
-
-						this.acos = Math.acos(args.x / this.rad);
-						this.asin = Math.asin(args.y / this.rad);
-						this.endA = 0;
-						if (this.acos == this.asin) {
-							this.endA = this.acos;
-						} else {
-							console.error('Que faire?')
-						}
-						this.curve = new THREE.EllipseCurve(
-							args.i, args.j, // cX, cY
-							this.rad, this.rad, // xRadius, yRadius
-							this.startA, this.endA, // aStartAngle, aendAngle
-							false, // aClockwise
-							0 // aRotation
-						);
-
-						this.points = this.curve.getPoints(50);
-						this.geometry = new THREE.BufferGeometry().setFromPoints(this.points);
-
-						this.material = new THREE.LineBasicMaterial({
-							color: 0xff0000
-						});
-
-						// Create the final object to add to the scene
-						this.ellipse = new THREE.Line(this.geometry, this.material);
-						this.ellipse.position.z = this.lastPos.z;
-						this.threeScene.live.add(this.ellipse);
-
-						this.lastPos.x = args.x;
-						this.lastPos.y = args.y;
-						break;
-
-						case "G4":
-						if (this.DEBUG)
-						console.log("Wait");
-						break;
-
-						case "G10":
-						if (this.DEBUG)
-						if (args.p && (args.s || args.r))
-						console.log("Set tool " + args.p + " \n\tstanby temp: " + args.r + "\n\tactive temp: " + args.s);
-						else if (args.l)
-						console.log("Set tool " + args.p + " offset\n\tX:" + args.x + "\n\tY:" + args.y + "\n\tZ:" + args.z);
-						else
-						console.log("Retracting filament");
-						break;
-
-						case "G21":
-						if (this.DEBUG)
-						console.log("Units set to mm");
-						break;
-
-						case "G28":
-						if (this.DEBUG)
-						console.log("Homing");
-						this.lastPos.x = 0;
-						this.lastPos.y = 0;
-						this.lastPos.z = 0;
-						break;
-
-						case "G90":
-						if (this.DEBUG)
-						console.log("Absolute positioning");
-						this.relative = false;
-						break;
-
-						case "G91":
-						if (this.DEBUG)
-						console.log("Relative positioning");
-						this.relative = true;
-						break;
-
-						case "G92":
-						if (this.DEBUG && (args.x || args.y || args.z))
-						console.log("position set to" +
-						(args.x ? " \n\tX: " + args.x : "") +
-						(args.y ? " \n\tY: " + args.y : "") +
-						(args.z ? " \n\tZ: " + args.z : ""));
-						this.lastPos.x = (args.x ? args.x : this.lastPos.x);
-						this.lastPos.y = (args.y ? args.y : this.lastPos.y);
-						this.lastPos.z = (args.y ? args.z : this.lastPos.z);
-						break;
-
-						/* ====== M Codes ====== */
-
-						case "M42":
-						if (this.DEBUG)
-						console.log("new state " + args.s + " for Pin " + args.p);
-						break;
-
-						case "M82":
-						if (this.DEBUG)
-						console.log("Absolute extruder");
-						this.relativeExtrude = false;
-						break;
-
-						case "M83":
-						if (this.DEBUG)
-						console.log("Relative extruder");
-						this.relativeExtrude = true;
-						break;
-
-						case "M84":
-						if (this.DEBUG)
-						console.log("Steppers off");
-						break;
-
-						case "M104":
-						if (this.DEBUG)
-						console.log("Extruder set to " + args.s + "°C");
-						break;
-
-						case "M106":
-						if (this.DEBUG)
-						console.log("Fan " + (args.p ? args.p + " " : "") + (args.s ? "set to: " + args.s : "On"));
-						break;
-
-						case "M107":
-						if (this.DEBUG)
-						console.log("Fan off");
-						break;
-
-						case "M109":
-						if (this.DEBUG)
-						console.log("wait for Extruder to reach " + args.s + "°C");
-						break;
-
-						case "M116":
-						if (this.DEBUG)
-						if (args.p || args.h || args.c)
-						console.log("wait for " + (args.p ? "Tool " + args.p + " " : "") + (args.h ? "Extruder " + args.h + " " : "") + (args.c ? "Chamber " + args.c + " " : "") + "to reach it's target temperature");
-						else
-						console.log("wait for All to reach their target temperature");
-						break;
-
-						case "M117":
-						break;
-
-						case "M140":
-						if (this.DEBUG)
-						console.log("Bed set to " + args.s + "°C");
-						break;
-
-						case "M141":
-						if (this.DEBUG)
-						console.log("Chamber set to " + args.s + "°C");
-						break;
-
-						case "M190":
-						if (this.DEBUG)
-						console.log("Wait for bed to reach " + args.s + "°C");
-						break;
-
-						case "M191":
-						if (this.DEBUG)
-						console.log("Wait for chamber to reach " + args.s + "°C");
-						break;
-
-						case "M204":
-						if (this.DEBUG)
-						console.log("Acceleration set " + args.s + "mm/s^2");
-						break;
-
-						/* ====== T Codes ====== */
-						case "T-1":
-						if (this.DEBUG) {
-							console.log("Tools deselected");
-						}
-						this.extWidth = 0;
-						this.lastPos.t = -1;
-						break;
-
-						case "T0":
-						if (this.DEBUG) {
-							console.log("Tool 0 selected");
-							console.log(this.extruders[0]);
-						}
-						this.extWidth = (this.extruders[0] !== undefined?this.extruders[0].width:0.4);
-						if(this.DEBUG)
-						this.extWidth
-						this.lastPos.t = 0;
-						break;
-
-						case "T1":
-						if (this.DEBUG) {
-							console.log("Tool 1 selected");
-							console.log(this.extruders[1]);
-						}
-						this.extWidth = (this.extruders[1] !== undefined?this.extruders[1].width:0.4);
-						if(this.DEBUG)
-						this.extWidth
-						this.lastPos.t = 1;
-						break;
-
-						case "T2":
-						if (this.DEBUG) {
-							console.log("Tool 2 selected");
-							console.log(this.extruders[2]);
-						}
-						this.extWidth = (this.extruders[2] !== undefined?this.extruders[2].width:0.4);
-						if(this.DEBUG)
-						this.extWidth
-						this.lastPos.t = 2;
-						break;
-
-						case "T3":
-						if (this.DEBUG) {
-							console.log("Tool 3 selected");
-							console.log(this.extruders[3]);
-						}
-						this.extWidth = (this.extruders[3] !== undefined?this.extruders[3].width:0.4);
-						this.lastPos.t = 3;
-						break;
-
-						case "T4":
-						if (this.DEBUG) {
-							console.log("Tool 4 selected");
-							console.log(this.extruders[4]);
-						}
-						this.extWidth = (this.extruders[4] !== undefined?this.extruders[4].width:0.4);
-						this.lastPos.t = 4;
-						break;
-
-						case "T5":
-						if (this.DEBUG) {
-							console.log("Tool 6 selected");
-							console.log(this.extruders[5]);
-						}
-						this.extWidth = (this.extruders[5] !== undefined?this.extruders[5].width:0.4);
-						this.lastPos.t = 5;
-						break;
-
-						case "T10":
-						if (this.DEBUG) {
-							console.log("Tool 10 selected");
-							console.log(this.extruders[0]);
-						}
-						this.extWidth = (this.extruders[0] !== undefined?this.extruders[0].width:0.4);
-						if(this.DEBUG)
-						this.extWidth
-						this.lastPos.t = 10;
-						break;
-
-						case "T11":
-						if (this.DEBUG) {
-							console.log("Tool 11 selected");
-							console.log(this.extruders[1]);
-						}
-						this.extWidth = (this.extruders[1] !== undefined?this.extruders[1].width:0.4);
-						if(this.DEBUG)
-						this.extWidth
-						this.lastPos.t = 11;
-						break;
-
-						case "T12":
-						if (this.DEBUG) {
-							console.log("Tool 12 selected");
-							console.log(this.extruders[2]);
-						}
-						this.extWidth = (this.extruders[2] !== undefined?this.extruders[2].width:0.4);
-						if(this.DEBUG)
-						this.extWidth
-						this.lastPos.t = 12;
-						break;
-
-						case "T13":
-						if (this.DEBUG) {
-							console.log("Tool 13 selected");
-							console.log(this.extruders[0]);
-						}
-						this.extWidth = (this.extruders[0] !== undefined?this.extruders[0].width:0.4);
-						if(this.DEBUG)
-						this.extWidth
-						this.lastPos.t = 13;
-						break;
-
-						case "T20":
-						if (this.DEBUG) {
-							console.log("Tool 20 selected");
-							console.log(this.extruders[0]);
-						}
-						this.extWidth = (this.extruders[0] !== undefined?this.extruders[0].width:0.4);
-						if(this.DEBUG)
-						this.extWidth
-						this.lastPos.t = 20;
-						break;
-
-						case "T999":
-						if (this.DEBUG) {
-							console.log("Tool deselected");
-						}
-						this.extWidth = 0;
-						this.lastPos.t = -1;
-						break;
-
-						default:
-						if (this.DEBUG) {
-							console.log("unknown command: " + args.cmd);
-							console.log(args);
-						}
-						break;
-					}
-				},
-				setPoly: function(start, end) {
-					//console.log("from " + start.toSource() + "to " + end.toSource());
-					var vertices = this.scene.preview.pointCloud[0][(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))].vertices;
-					var faces = this.scene.preview.pointCloud[0][(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))].faces;
-
-					var iv = vertices.length;
-
-					var dx = (-(end.x - start.x));
-					var dy = (end.z - start.z)
-					//console.log("dX = " + dx)
-					//console.log("dY = " + dy)
-					//console.log("dZ = " +	(end.y-start.y) )
-					var a;
-					//var b;
-					if (dx != 0) {
-						a = ((end.z - start.z) / (start.x - end.x));
-						//b = (start.z - (a * (-start.x)));
-					} else {
-						a = ((start.x - end.x) / (end.z - start.z));
-						//b = (-start.x - (a * (start.z)))
-					}
-					var alpha = Math.atan(a);
-					//console.log("alpha = " + a);
-					//console.log("extrusion width: "+this.extWidth+"mm")
-
-					var start_x
-					var end_x
-					var start_y
-					var end_y
-
-					if (dx != 0) {
-						start_x = start.x + (this.extWidth / 2) * Math.sin(alpha);
-						end_x = end.x + (this.extWidth / 2) * Math.sin(alpha);
-						start_y = start.z + (this.extWidth / 2) * Math.cos(alpha)
-						end_y = end.z + (this.extWidth / 2) * Math.cos(alpha)
-					} else {
-						start_x = start.x + (this.extWidth / 2) * Math.cos(alpha);
-						end_x = end.x + (this.extWidth / 2) * Math.cos(alpha);
-						start_y = start.z + (this.extWidth / 2) * Math.sin(alpha)
-						end_y = end.z + (this.extWidth / 2) * Math.sin(alpha)
-					}
-					//console.log("line 1 from ("+start_x+", " + start_y + ", " + start.y + ") to (" + end_x +", " + end_y + ", " + end.y +")");
-
-					var pstr = new THREE.Vector3(start_x, start.y, start_y)
-					var petr = new THREE.Vector3(end_x, end.y, end_y)
-					var pebr = new THREE.Vector3(end_x, end.y - (this.layHeight ? this.layHeight : this.lastPos.z - this.zPrevLayer), end_y)
-					var psbr = new THREE.Vector3(start_x, start.y - (this.layHeight ? this.layHeight : this.lastPos.z - this.zPrevLayer), start_y)
-
-					if (dx != 0) {
-						start_x = start.x - (this.extWidth / 2) * Math.sin(alpha);
-						end_x = end.x - (this.extWidth / 2) * Math.sin(alpha);
-						start_y = start.z - (this.extWidth / 2) * Math.cos(alpha)
-						end_y = end.z - (this.extWidth / 2) * Math.cos(alpha)
-					} else {
-						start_x = start.x - (this.extWidth / 2) * Math.cos(alpha);
-						end_x = end.x - (this.extWidth / 2) * Math.cos(alpha);
-						start_y = start.z - (this.extWidth / 2) * Math.sin(alpha);
-						end_y = end.z - (this.extWidth / 2) * Math.sin(alpha);
-					}
-					//console.log("line 2 from (" + start_x + ", " + start_y + ", " + start.y + ") to (" + end_x +", " + end_y + ", " + end.y + ")");
-
-					var pstl = new THREE.Vector3(start_x, start.y, start_y)
-					var petl = new THREE.Vector3(end_x, end.y, end_y)
-					var pebl = new THREE.Vector3(end_x, end.y - (this.layHeight ? this.layHeight : this.lastPos.z - this.zPrevLayer), end_y)
-					var psbl = new THREE.Vector3(start_x, start.y - (this.layHeight ? this.layHeight : this.lastPos.z - this.zPrevLayer), start_y)
-					var diffPos = Infinity;
-					if (iv > 4) {
-						var diffx = pstr.x - vertices[iv - 4].x
-						var diffy = pstr.z - vertices[iv - 4].z
-						diffPos = Math.sqrt(diffx * diffx + diffy * diffy);
-					}
-					//console.log("head moved "+diffPos+"mm");
-
-					if ((iv < 4) || diffPos > (this.extWidth / 2)) {
-						vertices.push(pstr); // 0
-						vertices.push(psbr); // 1
-						vertices.push(pstl); // 2
-						vertices.push(psbl); // 3
-					}
-					vertices.push(petr); // 4
-					vertices.push(pebr); // 5
-					vertices.push(petl); // 6
-					vertices.push(pebl); // 7
-
-					if (iv >= 4 && (diffPos < (this.extWidth / 2))) {
-						iv -= 4
-					}
-					//console.log(diffPos)
-
-					var ftrr;
-					var fbrr;
-
-					var ftll;
-					var fbll;
-
-					var fttr;
-					var fttl;
-
-					var fbbr;
-					var fbbl;
-
-					if (dx < 0) {
-						ftrr = new THREE.Face3(iv, iv + 5, iv + 4);
-						fbrr = new THREE.Face3(iv, iv + 1, iv + 5);
-
-						ftll = new THREE.Face3(iv + 2, iv + 6, iv + 7);
-						fbll = new THREE.Face3(iv + 2, iv + 7, iv + 3);
-
-						fttr = new THREE.Face3(iv, iv + 4, iv + 6);
-						fttl = new THREE.Face3(iv, iv + 6, iv + 2);
-
-						fbbr = new THREE.Face3(iv + 5, iv + 1, iv + 3);
-						fbbl = new THREE.Face3(iv + 5, iv + 3, iv + 7);
-					} else if (dx > 0) {
-						ftrr = new THREE.Face3(iv, iv + 4, iv + 5);
-						fbrr = new THREE.Face3(iv, iv + 5, iv + 1);
-
-						ftll = new THREE.Face3(iv + 2, iv + 7, iv + 6);
-						fbll = new THREE.Face3(iv + 2, iv + 3, iv + 7);
-
-						fttr = new THREE.Face3(iv, iv + 6, iv + 4);
-						fttl = new THREE.Face3(iv, iv + 2, iv + 6);
-
-						fbbr = new THREE.Face3(iv + 5, iv + 3, iv + 1);
-						fbbl = new THREE.Face3(iv + 5, iv + 7, iv + 3);
-					} else if (dx == 0) {
-						if (dy < 0) {
-							ftrr = new THREE.Face3(iv, iv + 5, iv + 4);
-							fbrr = new THREE.Face3(iv, iv + 1, iv + 5);
-
-							ftll = new THREE.Face3(iv + 2, iv + 6, iv + 7);
-							fbll = new THREE.Face3(iv + 2, iv + 7, iv + 3);
-
-							fttr = new THREE.Face3(iv, iv + 4, iv + 6);
-							fttl = new THREE.Face3(iv, iv + 6, iv + 2);
-
-							fbbr = new THREE.Face3(iv + 5, iv + 1, iv + 3);
-							fbbl = new THREE.Face3(iv + 5, iv + 3, iv + 7);
-						} else if (dy > 0) {
-							ftrr = new THREE.Face3(iv, iv + 4, iv + 5);
-							fbrr = new THREE.Face3(iv, iv + 5, iv + 1);
-
-							ftll = new THREE.Face3(iv + 2, iv + 7, iv + 6);
-							fbll = new THREE.Face3(iv + 2, iv + 3, iv + 7);
-
-							fttr = new THREE.Face3(iv, iv + 6, iv + 4);
-							fttl = new THREE.Face3(iv, iv + 2, iv + 6);
-
-							fbbr = new THREE.Face3(iv + 5, iv + 3, iv + 1);
-							fbbl = new THREE.Face3(iv + 5, iv + 7, iv + 3);
-						}
-					}
-
-					if (ftrr && fbrr) {
-						faces.push(ftrr) // (0,1,2)
-						faces.push(fbrr) // (0,2,3)
-					}
-
-					if (ftll && fbll) {
-						faces.push(ftll) // (4,5,6)
-						faces.push(fbll) // (4,6,7)
-					}
-
-					if (fttr && fttl) {
-						faces.push(fttr) // (0,1,5)
-						faces.push(fttl) // (0,5,4)
-					}
-
-					if (fbbr && fbbl) {
-						faces.push(fbbr) // (2,3,7)
-						faces.push(fbbl) // (2,7,6)
-					}
-
-					if (!ftrr || !fbrr || !ftll || !fbll || !fttr || !fttl || !fbbr || !fbbl)
-					console.warn("C'est possible!")
-					//faces.push (new THREE.Face3( iv, iv+3, iv+4))
-					//faces.push (new THREE.Face3( iv, iv+4, iv+7)) // (2,7,6)
-				},
-				decodeCuraCom: function(args) {
-					if (args.cmd.includes("SETTING_3")) {
-						var cmd = args.cmd;
-						args.cmd = cmd.substring(0, cmd.indexOf(' '));
-						args.setting = cmd.substring(cmd.indexOf(' ') + 1);
-					}
-
-					switch (args.cmd) {
-						case "LAYER":
-						if (this.DEBUG)
-						console.log("Layer " + parseInt(args[1]) + "/" + this.nbLayers + "( " + Math.round(parseInt(args[1]) * this.layHeight * 100) / 100 + "/" + Math.round(this.nbLayers * this.layHeight * 100) / 100 + "mm )");
-						var layNum = parseInt(args[1]);
-						if (layNum != 0)
-						this.gcodeLayers[layNum] = {
-							gcodeLayerStart: this.startLayer,
-							gcodeLayer: this.gcodeLayer
 						};
-						this.curLay = layNum;
-						break;
-						case "LAYER_COUNT":
-						this.nbLayers = parseInt(args[1]);
-						if (this.DEBUG)
-						console.log("model height: " + Math.round((this.layHeight * this.nbLayers) * 100) / 100 + "mm");
-						break;
-						case "TYPE":
-						if (this.DEBUG)
-						console.log("wall type: " + args[1]);
-						this.lastPos.w = args[1];
-						break;
-						case "TIME_ELAPSED":
-						if (this.DEBUG)
-						console.log("T+ " + this.toHMS(parseInt(args[1]), true));
-						break;
-						case "SETTING_3":
-						break;
-						case "TIME":
-						console.log("Estimated print time: " + this.toHMS(parseInt(args[1]), true));
-						break;
-						case "LAYER HEIGHT":
-						if (this.DEBUG)
-						console.log("Layer height: " + args[1] + "mm");
-						this.layHeight = parseFloat(args[1]);
-						break;
-						default:
-						if (this.DEBUG)
-						console.log(args);
-					}
-				},
-				decodeSimpCom: function(comLine) {
-					var cmd = comLine;
-					if (comLine.includes(',')) {
-						cmd = comLine.substring(0, comLine.indexOf(','));
-						while (cmd.indexOf(' ') == 0)
-						cmd = cmd.substring(cmd.indexOf(' ') + 1);
-					}
-					var args = {
-						'cmd': cmd
-					};
-					var tokens = comLine.substring(cmd.length);
-					tokens = tokens.substring(tokens.indexOf(',') + 1);
-					tokens = tokens.split(',');
-					for (var token in tokens) {
-						if (tokens[token]) {
-							var value = tokens[token];
-							while (value.indexOf(' ') == 0)
-							value = value.substring(value.indexOf(' ') + 1);
-							args[token] = value;
+					}*/
+				}
+				this.gcodeLayer = {
+					lbbox: {
+						min: {
+							x: 1000,
+							y: 1000,
+							z: 1000
+						},
+						max: {
+							x: -1000,
+							y: -1000,
+							z: -1000
 						}
-					}
-					this.parseSimpCom(args);
-					//console.log(args);
-				},
-				parseSimpCom: function(args) {
-					if (this.extruders == undefined) {
-						this.extruders = [];
-					}
-					if (args.cmd.includes("layer ")) {
-						var cmd = args.cmd;
-						args.cmd = cmd.substring(0, cmd.indexOf(' '));
-						args.layNum = cmd.substring(cmd.indexOf(' ') + 1);
-						if (args[0] && args[0].includes('Z = ')) {
-							var z = args[0];
-							args[0] = "Z";
-							args.zHeight = z.substring(z.lastIndexOf(' ') + 1);
-							//console.log(args);
-						}
-					}
+					},
+					points: []
+				};
+			}
 
-					if (args.cmd.includes("tool")) {
-						let cmd = args.cmd;
-						args.cmd = cmd.substring(0, cmd.indexOf(' '));
-						cmd = cmd.substring(cmd.indexOf(' ') + 1);
-						var tokens = cmd.split(' ')
-						for (var token in tokens) {
-							var key = tokens[token][0];
-							var value = parseFloat(tokens[token].substring(1));
-							args[key] = value;
-						}
-					}
-					let i;
-					switch (args.cmd) {
-						case "printMaterial":
-						case "printQuality":
-						break;
-						/* ====== WALL TYPES ======*/
-						case "feature bridge":
-						if (this.DEBUG)
-						console.log("wall type: " + "BRIDGE");
-						this.lastPos.w = "BRIDGE";
-						break;
-						case "feature gap fill":
-						if (this.DEBUG)
-						console.log("wall type: " + "GAP_FILL");
-						this.lastPos.w = "GAP_FILL";
-						break;
-						case "feature skirt":
-						if (this.DEBUG)
-						console.log("wall type: " + "SKIRT");
-						this.lastPos.w = "SKIRT";
-						break;
-						case "feature infill":
-						if (this.DEBUG)
-						console.log("wall type: " + "INFILL");
-						this.lastPos.w = "INFILL";
-						break;
-						case "feature inner perimeter":
-						if (this.DEBUG)
-						console.log("wall type: " + "INNER_PERIMETER");
-						this.lastPos.w = "INNER_PERIMETER";
-						break;
-						case "feature outer perimeter":
-						if (this.DEBUG)
-						console.log("wall type: " + "OUTER_PERIMETER");
-						this.lastPos.w = "OUTER_PERIMETER";
-						break;
-						case "feature solid layer":
-						if (this.DEBUG)
-						console.log("wall type: " + "SOLID_LAYER");
-						this.lastPos.w = "SOLID_LAYER";
-						break;
-						case "feature support":
-						if (this.DEBUG)
-						console.log("wall type: " + "SUPPORT");
-						this.lastPos.w = "SUPPORT";
-						break;
-						case "feature dense support":
-						if (this.DEBUG)
-						console.log("wall type: " + "DENSE_SUPPORT");
-						this.lastPos.w = "DENSE_SUPPORT";
-						break;
+			if ((this.lastPos.x && this.lastPos.y && this.lastPos.z) && (args.x || args.y || args.z)) {
+				this.x2 = (this.relative ? (this.lastPos.x + args.x) : args.x);
+				this.y2 = (this.relative ? (this.lastPos.y + args.y) : args.y);
 
-						/* ====== LAYERS ====== */
-						case "layer":
-						if (this.DEBUG)
-						console.log("Layer " + args.layNum + (this.nbLayers ? "/" + this.nbLayers : ""));
-						var layNum = parseInt(args.layNum);
-						/*if (layNum != 0)
-						gcodeLayers[layNum] = {gcodeLayerStart: startLayer, gcodeLayer: gcodeLayer};*/
-						this.nbLayers++;
-						this.curLay = layNum;
-						break;
-						case "layerHeight":
-						if (this.DEBUG)
-						console.log("Layer height: " + args[0] + "mm");
-						this.layHeight = parseFloat(args[0]);
-						break;
+				var point_start = new THREE.Vector3();
+				var point_end = new THREE.Vector3();
+				if (args.e) {
+					//console.log(Math.round(this.lastPos.z*100));
+					if (!this.scene.preview.pointCloud[0] || !this.scene.preview.pointCloud[0][(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))]) {
+						if (!this.scene.preview.pointCloud[0]) {
+							this.scene.preview.pointCloud[0] = [];
+							this.scene.preview.pointCloud.length++;
+						}
+						this.scene.preview.pointCloud[0][(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))] = new THREE.Geometry();
+						this.scene.preview.pointCloud[0][(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))].name = this.lastPos.t + "_" + (this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)));
+					}
+					point_start.x = this.lastPos.y;
+					point_start.y = this.lastPos.z; //-this.y2;
+					point_start.z = this.lastPos.x; //this.lastPos.z;
 
-						/* ====== TOOLS PARAMETERS ====== */
-						case "tool":
-						if (this.layHeight === undefined)
-						this.layHeight = args.H;
-						if (this.extruders === undefined)
-						this.extruders = args.W;
-						break;
-						case "extruderName":
-						i = 0;
-						while (args[i] !== undefined) {
-							if (this.extruders[i] === undefined) {
-								this.extruders[i] = {};
-							}
-							this.extruders[i].name = args[i];
-							i++;
-						}
-						break;
-						case "extruderToolheadNumber":
-						i = 0;
-						while (args[i] !== undefined) {
-							if (this.extruders[i] === undefined) {
-								this.extruders[i] = {};
-							}
-							this.extruders[i].number = parseInt(args[i]);
-							i++;
-						}
-						break;
-						case "extruderWidth":
-						i = 0;
-						if (this.DEBUG)
-						console.log("Extruders width: " + args.toSource() + "mm");
-						while (args[i] !== undefined) {
-							if (this.extruders[i] === undefined) {
-								this.extruders[i] = {};
-							}
-							this.extruders[i].width = parseFloat(args[i]);
-							i++;
-						}
-						break;
-						case "extruderDiameter":
-						i = 0;
-						while (args[i] !== undefined) {
-							if (this.extruders[i] === undefined) {
-								this.extruders[i] = {};
-							}
-							this.extruders[i].diameter = parseFloat(args[i]);
-							i++;
-						}
-						break;
-						case "primaryExtruder":
-						for (let i = 0; i < this.extruders.length; i++) {
-							if (this.extruders[i].number == parseInt(args[0])) {
-								this.extruders[i].primary = true;
-							} else {
-								this.extruders[i].primary = false;
-							}
+					point_end.x = this.y2;
+					point_end.y = this.lastPos.z; //-this.y2;
+					point_end.z = this.x2; //this.lastPos.z;
+					if (this.fileSize < 16 * 1024 * 1024) {
+						this.setPoly(point_start, point_end);
+					} else {
+						this.scene.preview.pointCloud[0][(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))].vertices.push(point_start);
+						this.scene.preview.pointCloud[0][(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))].vertices.push(point_end);
+					}
+				} else {
+					point_start.x = this.lastPos.y;
+					point_start.y = this.lastPos.z; //-this.y2;
+					point_start.z = this.lastPos.x //this.lastPos.z;
 
-						}
-						break;
-						default:
-						if (this.DEBUG)
-						console.log(args)
+					point_end.x = this.y2;
+					point_end.y = (args.z ? (this.relative ? (this.lastPos.z + args.z) : args.z) : this.lastPos.z); //-this.y2;
+					point_end.z = this.x2 //this.lastPos.z;
+					if (!this.moves[(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))]) {
+						this.moves[(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))] = new THREE.Geometry();
+						this.moves[(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))].name = "MOVE_" + (this.curLay ? this.curLay : (Math.round(this.lastPos.z * 100)));
 					}
-				},
-				decodeSlicCom: function(comLine) {
-					if (this.DEBUG)
-					console.log(comLine);
-				},
-				toHMS: function(delta, toStr) {
-					var sec = delta % 60,
-					min = (delta = (delta - sec) / 60) % 60,
-					hour = (delta = (delta - min) / 60) % 24,
-					day = delta = (delta - hour) / 24;
-					if (toStr) {
-						var strTime = day + "d " + hour + "h " + min + "m " + sec + "s";
-						return strTime = strTime.replace(/(?:0. )+/, "")
-					}
-					return {
-						d: day,
-						h: hour,
-						m: min,
-						s: sec
-					}
-				},
-			},
-			mounted() {
-				this.extruders = [];
+					this.moves[(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))].vertices.push(point_start);
+					this.moves[(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))].vertices.push(point_end);
+				}
+			}
+
+			if (args.x) {
+				this.lastPos.x = (this.relative ? this.lastPos.x + args.x : args.x);
+				if (this.lastPos.x < this.boundingBox.min.x) {
+					this.boundingBox.min.x = this.lastPos.x;
+				}
+				if (this.lastPos.x > this.boundingBox.max.x) {
+					this.boundingBox.max.x = this.lastPos.x;
+				}
+
+			}
+			if (args.y) {
+				this.lastPos.y = (this.relative ? this.lastPos.y + args.y : args.y);
+				if (this.lastPos.y < this.boundingBox.min.y) {
+					this.boundingBox.min.y = this.lastPos.y;
+				}
+				if (this.lastPos.y > this.boundingBox.max.y) {
+					this.boundingBox.max.y = this.lastPos.y;
+				}
+			}
+			if (args.z) {
+				this.lastPos.z = (this.relative ? this.lastPos.z + args.z : args.z);
+				if (this.lastPos.z < this.boundingBox.min.z) {
+					this.boundingBox.min.z = this.lastPos.z;
+				}
+				if (this.lastPos.z > this.boundingBox.max.z) {
+					this.boundingBox.max.z = this.lastPos.z;
+				}
+			}
+			if (args.e) {
+				this.lastPos.e = (this.relativeExtrude ? this.lastPos.e + args.e : args.e);
+			}
+			if (args.f)
+			this.lastPos.f = args.f;
+
+			if (args.x || args.y) {
+				this.tmpPos = {};
+				this.tmpPos.x = this.lastPos.x;
+				this.tmpPos.y = this.lastPos.y;
+				this.tmpPos.z = this.lastPos.z;
+				this.tmpPos.e = this.lastPos.e;
+				this.tmpPos.f = this.lastPos.f;
+				this.tmpPos.w = this.lastPos.w;
+				this.tmpPos.t = this.lastPos.t;
+				if (["OUTER_PERIMETER", "INNER_PERIMETER", "SOLID_LAYER"].includes(this.tmpPos.w))
+				this.gcodeLayer.points.push(this.tmpPos);
+			}
+			break;
+
+			case "G2":
+			case "G02":
+			//console.warn("clockwise rotation not implemented");
+			if (args.r) {
+				this.rad = args.r
+			} else {
+				this.rad = Math.sqrt(((args.i - args.x) * (args.i - args.x)) + ((args.y - args.j) * (args.y - args.j)))
+			}
+			let center = {}
+			center.x = this.lastPos.x + args.i
+			center.y = this.lastPos.y + args.j
+
+			this.acos = Math.acos((this.lastPos.x - args.i) / this.rad);
+			this.asin = Math.asin((this.lastPos.y - args.j) / this.rad);
+			this.startA = 0;
+			if (this.acos.toFixed(3) == this.asin.toFixed(3)) {
+				this.startA = this.acos;
+			} else if ((this.acos - Math.PI).toFixed(3) == this.asin.toFixed(3)) {
+				this.startA = this.asin;
+			} else {
+				//console.warn(this.acos.toFixed(3) + "!=" + this.asin.toFixed(3))
+			}
+
+			this.acos = Math.acos((args.x - args.i)/ this.rad);
+			this.asin = Math.asin((args.y - args.j)/ this.rad);
+			this.endA = 0;
+			if (this.acos.toFixed(3) == this.asin.toFixed(3)) {
+				this.endA = this.acos;
+			} else if ((this.acos - Math.PI).toFixed(3) == this.asin.toFixed(3)) {
+				this.endA = this.asin;
+			} else {
+				//console.warn(this.acos.toFixed(3) + "!=" + this.asin.toFixed(3))
+			}
+			this.curve = new THREE.EllipseCurve(
+				args.i, args.j, // cX, cY
+				this.rad, this.rad, // xRadius, yRadius
+				this.startA, this.endA, // aStartAngle, aendAngle
+				true, // aClockwise
+				0 // aRotation
+			);
+
+			this.points = this.curve.getPoints(50);
+			this.geometry = new THREE.BufferGeometry().setFromPoints(this.points);
+
+			this.material = new THREE.LineBasicMaterial({
+				color: 0xff0000
+			});
+
+			// Create the final object to add to the scene
+			this.ellipse = new THREE.Line(this.geometry, this.material);
+			this.ellipse.position.z = this.lastPos.z;
+			//this.scene.live.liveScene.add(this.ellipse);
+
+			if (args.x) {
+				this.lastPos.x = (this.relative ? this.lastPos.x + args.x : args.x);
+				if (this.lastPos.x < this.boundingBox.min.x) {
+					this.boundingBox.min.x = this.lastPos.x;
+				}
+				if (this.lastPos.x > this.boundingBox.max.x) {
+					this.boundingBox.max.x = this.lastPos.x;
+				}
+
+			}
+			if (args.y) {
+				this.lastPos.y = (this.relative ? this.lastPos.y + args.y : args.y);
+				if (this.lastPos.y < this.boundingBox.min.y) {
+					this.boundingBox.min.y = this.lastPos.y;
+				}
+				if (this.lastPos.y > this.boundingBox.max.y) {
+					this.boundingBox.max.y = this.lastPos.y;
+				}
+			}
+			if (args.z) {
+				this.lastPos.z = (this.relative ? this.lastPos.z + args.z : args.z);
+				if (this.lastPos.z < this.boundingBox.min.z) {
+					this.boundingBox.min.z = this.lastPos.z;
+				}
+				if (this.lastPos.z > this.boundingBox.max.z) {
+					this.boundingBox.max.z = this.lastPos.z;
+				}
+			}
+
+			break;
+
+			case "G3":
+			case "G03":
+			//console.warn("counterclockwise rotation not implemented");
+			//console.log(args)
+
+			this.rad = Math.sqrt(((args.i - args.x) * (args.i - args.x)) + ((args.y - args.j) * (args.y - args.j)))
+			this.acos = Math.acos((this.lastPos.x - args.i) / this.rad);
+			this.asin = Math.asin((this.lastPos.y - args.j) / this.rad);
+			this.startA = 0;
+			if (this.acos.toFixed(3) == this.asin.toFixed(3)) {
+				this.startA = this.acos;
+			} else if ((this.acos - Math.PI).toFixed(3) == this.asin.toFixed(3)) {
+				this.startA = this.asin;
+			} else {
+				//console.warn(this.acos.toFixed(3) + "!=" + this.asin.toFixed(3))
+			}
+
+			this.acos = Math.acos(args.x / this.rad);
+			this.asin = Math.asin(args.y / this.rad);
+			this.endA = 0;
+			if (this.acos.toFixed(3) == this.asin.toFixed(3)) {
+				this.endA = this.acos;
+			} else if ((this.acos - Math.PI).toFixed(3) == this.asin.toFixed(3)) {
+				this.endA = this.asin;
+			} else {
+				//console.warn(this.acos.toFixed(3) + "!=" + this.asin.toFixed(3))
+			}
+			this.curve = new THREE.EllipseCurve(
+				args.i, args.j, // cX, cY
+				this.rad, this.rad, // xRadius, yRadius
+				this.startA, this.endA, // aStartAngle, aendAngle
+				false, // aClockwise
+				0 // aRotation
+			);
+
+			this.points = this.curve.getPoints(50);
+			this.geometry = new THREE.BufferGeometry().setFromPoints(this.points);
+
+			this.material = new THREE.LineBasicMaterial({
+				color: 0xff0000
+			});
+
+			// Create the final object to add to the scene
+			this.ellipse = new THREE.Line(this.geometry, this.material);
+			this.ellipse.position.z = this.lastPos.z;
+			//this.scene.live.liveScene.add(this.ellipse);
+
+			if (args.x) {
+				this.lastPos.x = (this.relative ? this.lastPos.x + args.x : args.x);
+				if (this.lastPos.x < this.boundingBox.min.x) {
+					this.boundingBox.min.x = this.lastPos.x;
+				}
+				if (this.lastPos.x > this.boundingBox.max.x) {
+					this.boundingBox.max.x = this.lastPos.x;
+				}
+
+			}
+			if (args.y) {
+				this.lastPos.y = (this.relative ? this.lastPos.y + args.y : args.y);
+				if (this.lastPos.y < this.boundingBox.min.y) {
+					this.boundingBox.min.y = this.lastPos.y;
+				}
+				if (this.lastPos.y > this.boundingBox.max.y) {
+					this.boundingBox.max.y = this.lastPos.y;
+				}
+			}
+			if (args.z) {
+				this.lastPos.z = (this.relative ? this.lastPos.z + args.z : args.z);
+				if (this.lastPos.z < this.boundingBox.min.z) {
+					this.boundingBox.min.z = this.lastPos.z;
+				}
+				if (this.lastPos.z > this.boundingBox.max.z) {
+					this.boundingBox.max.z = this.lastPos.z;
+				}
+			}
+			break;
+
+			case "G4":
+			if (this.DEBUG)
+			console.log("Wait");
+			break;
+
+			case "G10":
+			if (this.DEBUG)
+			if (args.p && (args.s || args.r))
+			console.log("Set tool " + args.p + " \n\tstanby temp: " + args.r + "\n\tactive temp: " + args.s);
+			else if (args.l)
+			console.log("Set tool " + args.p + " offset\n\tX:" + args.x + "\n\tY:" + args.y + "\n\tZ:" + args.z);
+			else
+			console.log("Retracting filament");
+			break;
+
+			case "G21":
+			if (this.DEBUG)
+			console.log("Units set to mm");
+			break;
+
+			case "G28":
+			if (this.DEBUG)
+			console.log("Homing");
+			this.lastPos.x = 0;
+			this.lastPos.y = 0;
+			this.lastPos.z = 0;
+			break;
+
+			case "G90":
+			if (this.DEBUG)
+			console.log("Absolute positioning");
+			this.relative = false;
+			break;
+
+			case "G91":
+			if (this.DEBUG)
+			console.log("Relative positioning");
+			this.relative = true;
+			break;
+
+			case "G92":
+			if (this.DEBUG && (args.x || args.y || args.z))
+			console.log("position set to" +
+			(args.x ? " \n\tX: " + args.x : "") +
+			(args.y ? " \n\tY: " + args.y : "") +
+			(args.z ? " \n\tZ: " + args.z : ""));
+			this.lastPos.x = (args.x ? args.x : this.lastPos.x);
+			this.lastPos.y = (args.y ? args.y : this.lastPos.y);
+			this.lastPos.z = (args.y ? args.z : this.lastPos.z);
+			break;
+
+			/* ====== M Codes ====== */
+
+			case "M42":
+			if (this.DEBUG)
+			console.log("new state " + args.s + " for Pin " + args.p);
+			break;
+
+			case "M82":
+			if (this.DEBUG)
+			console.log("Absolute extruder");
+			this.relativeExtrude = false;
+			break;
+
+			case "M83":
+			if (this.DEBUG)
+			console.log("Relative extruder");
+			this.relativeExtrude = true;
+			break;
+
+			case "M84":
+			if (this.DEBUG)
+			console.log("Steppers off");
+			break;
+
+			case "M104":
+			if (this.DEBUG)
+			console.log("Extruder set to " + args.s + "°C");
+			break;
+
+			case "M106":
+			if (this.DEBUG)
+			console.log("Fan " + (args.p ? args.p + " " : "") + (args.s ? "set to: " + args.s : "On"));
+			break;
+
+			case "M107":
+			if (this.DEBUG)
+			console.log("Fan off");
+			break;
+
+			case "M109":
+			if (this.DEBUG)
+			console.log("wait for Extruder to reach " + args.s + "°C");
+			break;
+
+			case "M116":
+			if (this.DEBUG)
+			if (args.p || args.h || args.c)
+			console.log("wait for " + (args.p ? "Tool " + args.p + " " : "") + (args.h ? "Extruder " + args.h + " " : "") + (args.c ? "Chamber " + args.c + " " : "") + "to reach it's target temperature");
+			else
+			console.log("wait for All to reach their target temperature");
+			break;
+
+			case "M117":
+			break;
+
+			case "M140":
+			if (this.DEBUG)
+			console.log("Bed set to " + args.s + "°C");
+			break;
+
+			case "M141":
+			if (this.DEBUG)
+			console.log("Chamber set to " + args.s + "°C");
+			break;
+
+			case "M190":
+			if (this.DEBUG)
+			console.log("Wait for bed to reach " + args.s + "°C");
+			break;
+
+			case "M191":
+			if (this.DEBUG)
+			console.log("Wait for chamber to reach " + args.s + "°C");
+			break;
+
+			case "M204":
+			if (this.DEBUG)
+			console.log("Acceleration set " + args.s + "mm/s^2");
+			break;
+
+			/* ====== T Codes ====== */
+			case "T-1":
+			if (this.DEBUG) {
+				console.log("Tools deselected");
+			}
+			this.extWidth = 0;
+			this.lastPos.t = -1;
+			break;
+
+			case "T0":
+			if (this.DEBUG) {
+				console.log("Tool 0 selected");
+				console.log(this.extruders[0]);
+			}
+			this.extWidth = (this.extruders[0] !== undefined?this.extruders[0].width:0.4);
+			if(this.DEBUG)
+			this.extWidth
+			this.lastPos.t = 0;
+			break;
+
+			case "T1":
+			if (this.DEBUG) {
+				console.log("Tool 1 selected");
+				console.log(this.extruders[1]);
+			}
+			this.extWidth = (this.extruders[1] !== undefined?this.extruders[1].width:0.4);
+			if(this.DEBUG)
+			this.extWidth
+			this.lastPos.t = 1;
+			break;
+
+			case "T2":
+			if (this.DEBUG) {
+				console.log("Tool 2 selected");
+				console.log(this.extruders[2]);
+			}
+			this.extWidth = (this.extruders[2] !== undefined?this.extruders[2].width:0.4);
+			if(this.DEBUG)
+			this.extWidth
+			this.lastPos.t = 2;
+			break;
+
+			case "T3":
+			if (this.DEBUG) {
+				console.log("Tool 3 selected");
+				console.log(this.extruders[3]);
+			}
+			this.extWidth = (this.extruders[3] !== undefined?this.extruders[3].width:0.4);
+			this.lastPos.t = 3;
+			break;
+
+			case "T4":
+			if (this.DEBUG) {
+				console.log("Tool 4 selected");
+				console.log(this.extruders[4]);
+			}
+			this.extWidth = (this.extruders[4] !== undefined?this.extruders[4].width:0.4);
+			this.lastPos.t = 4;
+			break;
+
+			case "T5":
+			if (this.DEBUG) {
+				console.log("Tool 6 selected");
+				console.log(this.extruders[5]);
+			}
+			this.extWidth = (this.extruders[5] !== undefined?this.extruders[5].width:0.4);
+			this.lastPos.t = 5;
+			break;
+
+			case "T10":
+			if (this.DEBUG) {
+				console.log("Tool 10 selected");
+				console.log(this.extruders[0]);
+			}
+			this.extWidth = (this.extruders[0] !== undefined?this.extruders[0].width:0.4);
+			if(this.DEBUG)
+			this.extWidth
+			this.lastPos.t = 10;
+			break;
+
+			case "T11":
+			if (this.DEBUG) {
+				console.log("Tool 11 selected");
+				console.log(this.extruders[1]);
+			}
+			this.extWidth = (this.extruders[1] !== undefined?this.extruders[1].width:0.4);
+			if(this.DEBUG)
+			this.extWidth
+			this.lastPos.t = 11;
+			break;
+
+			case "T12":
+			if (this.DEBUG) {
+				console.log("Tool 12 selected");
+				console.log(this.extruders[2]);
+			}
+			this.extWidth = (this.extruders[2] !== undefined?this.extruders[2].width:0.4);
+			if(this.DEBUG)
+			this.extWidth
+			this.lastPos.t = 12;
+			break;
+
+			case "T13":
+			if (this.DEBUG) {
+				console.log("Tool 13 selected");
+				console.log(this.extruders[0]);
+			}
+			this.extWidth = (this.extruders[0] !== undefined?this.extruders[0].width:0.4);
+			if(this.DEBUG)
+			this.extWidth
+			this.lastPos.t = 13;
+			break;
+
+			case "T20":
+			if (this.DEBUG) {
+				console.log("Tool 20 selected");
+				console.log(this.extruders[0]);
+			}
+			this.extWidth = (this.extruders[0] !== undefined?this.extruders[0].width:0.4);
+			if(this.DEBUG)
+			this.extWidth
+			this.lastPos.t = 20;
+			break;
+
+			case "T999":
+			if (this.DEBUG) {
+				console.log("Tool deselected");
+			}
+			this.extWidth = 0;
+			this.lastPos.t = -1;
+			break;
+
+			default:
+			if (this.DEBUG || true) {
+				console.log("unknown command: " + args.cmd);
+				console.log(args);
+			}
+			break;
+		}
+	},
+	setPoly: function(start, end) {
+		//console.log("from " + start.toSource() + "to " + end.toSource());
+		var vertices = this.scene.preview.pointCloud[0][(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))].vertices;
+		var faces = this.scene.preview.pointCloud[0][(this.curLay != undefined ? this.curLay : (Math.round(this.lastPos.z * 100)))].faces;
+
+		var iv = vertices.length;
+
+		var dx = (-(end.x - start.x));
+		var dy = (end.z - start.z)
+		//console.log("dX = " + dx)
+		//console.log("dY = " + dy)
+		//console.log("dZ = " +	(end.y-start.y) )
+		var a;
+		//var b;
+		if (dx != 0) {
+			a = ((end.z - start.z) / (start.x - end.x));
+			//b = (start.z - (a * (-start.x)));
+		} else {
+			a = ((start.x - end.x) / (end.z - start.z));
+			//b = (-start.x - (a * (start.z)))
+		}
+		var alpha = Math.atan(a);
+		//console.log("alpha = " + a);
+		//console.log("extrusion width: "+this.extWidth+"mm")
+
+		var start_x
+		var end_x
+		var start_y
+		var end_y
+
+		if (dx != 0) {
+			start_x = start.x + (this.extWidth / 2) * Math.sin(alpha);
+			end_x = end.x + (this.extWidth / 2) * Math.sin(alpha);
+			start_y = start.z + (this.extWidth / 2) * Math.cos(alpha)
+			end_y = end.z + (this.extWidth / 2) * Math.cos(alpha)
+		} else {
+			start_x = start.x + (this.extWidth / 2) * Math.cos(alpha);
+			end_x = end.x + (this.extWidth / 2) * Math.cos(alpha);
+			start_y = start.z + (this.extWidth / 2) * Math.sin(alpha)
+			end_y = end.z + (this.extWidth / 2) * Math.sin(alpha)
+		}
+		//console.log("line 1 from ("+start_x+", " + start_y + ", " + start.y + ") to (" + end_x +", " + end_y + ", " + end.y +")");
+
+		var pstr = new THREE.Vector3(start_x, start.y, start_y)
+		var petr = new THREE.Vector3(end_x, end.y, end_y)
+		var pebr = new THREE.Vector3(end_x, end.y - (this.layHeight ? this.layHeight : this.lastPos.z - this.zPrevLayer), end_y)
+		var psbr = new THREE.Vector3(start_x, start.y - (this.layHeight ? this.layHeight : this.lastPos.z - this.zPrevLayer), start_y)
+
+		if (dx != 0) {
+			start_x = start.x - (this.extWidth / 2) * Math.sin(alpha);
+			end_x = end.x - (this.extWidth / 2) * Math.sin(alpha);
+			start_y = start.z - (this.extWidth / 2) * Math.cos(alpha)
+			end_y = end.z - (this.extWidth / 2) * Math.cos(alpha)
+		} else {
+			start_x = start.x - (this.extWidth / 2) * Math.cos(alpha);
+			end_x = end.x - (this.extWidth / 2) * Math.cos(alpha);
+			start_y = start.z - (this.extWidth / 2) * Math.sin(alpha);
+			end_y = end.z - (this.extWidth / 2) * Math.sin(alpha);
+		}
+		//console.log("line 2 from (" + start_x + ", " + start_y + ", " + start.y + ") to (" + end_x +", " + end_y + ", " + end.y + ")");
+
+		var pstl = new THREE.Vector3(start_x, start.y, start_y)
+		var petl = new THREE.Vector3(end_x, end.y, end_y)
+		var pebl = new THREE.Vector3(end_x, end.y - (this.layHeight ? this.layHeight : this.lastPos.z - this.zPrevLayer), end_y)
+		var psbl = new THREE.Vector3(start_x, start.y - (this.layHeight ? this.layHeight : this.lastPos.z - this.zPrevLayer), start_y)
+		var diffPos = Infinity;
+		if (iv > 4) {
+			var diffx = pstr.x - vertices[iv - 4].x
+			var diffy = pstr.z - vertices[iv - 4].z
+			diffPos = Math.sqrt(diffx * diffx + diffy * diffy);
+		}
+		//console.log("head moved "+diffPos+"mm");
+
+		if ((iv < 4) || diffPos > (this.extWidth / 2)) {
+			vertices.push(pstr); // 0
+			vertices.push(psbr); // 1
+			vertices.push(pstl); // 2
+			vertices.push(psbl); // 3
+		}
+		vertices.push(petr); // 4
+		vertices.push(pebr); // 5
+		vertices.push(petl); // 6
+		vertices.push(pebl); // 7
+
+		if (iv >= 4 && (diffPos < (this.extWidth / 2))) {
+			iv -= 4
+		}
+		//console.log(diffPos)
+
+		var ftrr;
+		var fbrr;
+
+		var ftll;
+		var fbll;
+
+		var fttr;
+		var fttl;
+
+		var fbbr;
+		var fbbl;
+
+		if (dx < 0) {
+			ftrr = new THREE.Face3(iv, iv + 5, iv + 4);
+			fbrr = new THREE.Face3(iv, iv + 1, iv + 5);
+
+			ftll = new THREE.Face3(iv + 2, iv + 6, iv + 7);
+			fbll = new THREE.Face3(iv + 2, iv + 7, iv + 3);
+
+			fttr = new THREE.Face3(iv, iv + 4, iv + 6);
+			fttl = new THREE.Face3(iv, iv + 6, iv + 2);
+
+			fbbr = new THREE.Face3(iv + 5, iv + 1, iv + 3);
+			fbbl = new THREE.Face3(iv + 5, iv + 3, iv + 7);
+		} else if (dx > 0) {
+			ftrr = new THREE.Face3(iv, iv + 4, iv + 5);
+			fbrr = new THREE.Face3(iv, iv + 5, iv + 1);
+
+			ftll = new THREE.Face3(iv + 2, iv + 7, iv + 6);
+			fbll = new THREE.Face3(iv + 2, iv + 3, iv + 7);
+
+			fttr = new THREE.Face3(iv, iv + 6, iv + 4);
+			fttl = new THREE.Face3(iv, iv + 2, iv + 6);
+
+			fbbr = new THREE.Face3(iv + 5, iv + 3, iv + 1);
+			fbbl = new THREE.Face3(iv + 5, iv + 7, iv + 3);
+		} else if (dx == 0) {
+			if (dy < 0) {
+				ftrr = new THREE.Face3(iv, iv + 5, iv + 4);
+				fbrr = new THREE.Face3(iv, iv + 1, iv + 5);
+
+				ftll = new THREE.Face3(iv + 2, iv + 6, iv + 7);
+				fbll = new THREE.Face3(iv + 2, iv + 7, iv + 3);
+
+				fttr = new THREE.Face3(iv, iv + 4, iv + 6);
+				fttl = new THREE.Face3(iv, iv + 6, iv + 2);
+
+				fbbr = new THREE.Face3(iv + 5, iv + 1, iv + 3);
+				fbbl = new THREE.Face3(iv + 5, iv + 3, iv + 7);
+			} else if (dy > 0) {
+				ftrr = new THREE.Face3(iv, iv + 4, iv + 5);
+				fbrr = new THREE.Face3(iv, iv + 5, iv + 1);
+
+				ftll = new THREE.Face3(iv + 2, iv + 7, iv + 6);
+				fbll = new THREE.Face3(iv + 2, iv + 3, iv + 7);
+
+				fttr = new THREE.Face3(iv, iv + 6, iv + 4);
+				fttl = new THREE.Face3(iv, iv + 2, iv + 6);
+
+				fbbr = new THREE.Face3(iv + 5, iv + 3, iv + 1);
+				fbbl = new THREE.Face3(iv + 5, iv + 7, iv + 3);
 			}
 		}
+
+		if (ftrr && fbrr) {
+			faces.push(ftrr) // (0,1,2)
+			faces.push(fbrr) // (0,2,3)
+		}
+
+		if (ftll && fbll) {
+			faces.push(ftll) // (4,5,6)
+			faces.push(fbll) // (4,6,7)
+		}
+
+		if (fttr && fttl) {
+			faces.push(fttr) // (0,1,5)
+			faces.push(fttl) // (0,5,4)
+		}
+
+		if (fbbr && fbbl) {
+			faces.push(fbbr) // (2,3,7)
+			faces.push(fbbl) // (2,7,6)
+		}
+
+		if (!ftrr || !fbrr || !ftll || !fbll || !fttr || !fttl || !fbbr || !fbbl)
+		console.warn("C'est possible!")
+		//faces.push (new THREE.Face3( iv, iv+3, iv+4))
+		//faces.push (new THREE.Face3( iv, iv+4, iv+7)) // (2,7,6)
+	},
+	decodeCuraCom: function(args) {
+		if (args.cmd.includes("SETTING_3")) {
+			var cmd = args.cmd;
+			args.cmd = cmd.substring(0, cmd.indexOf(' '));
+			args.setting = cmd.substring(cmd.indexOf(' ') + 1);
+		}
+
+		switch (args.cmd) {
+			case "LAYER":
+			if (this.DEBUG)
+			console.log("Layer " + parseInt(args[1]) + "/" + this.nbLayers + "( " + Math.round(parseInt(args[1]) * this.layHeight * 100) / 100 + "/" + Math.round(this.nbLayers * this.layHeight * 100) / 100 + "mm )");
+			var layNum = parseInt(args[1]);
+			if (layNum != 0)
+			this.gcodeLayers[layNum] = {
+				gcodeLayerStart: this.startLayer,
+				gcodeLayer: this.gcodeLayer
+			};
+			this.curLay = layNum;
+			break;
+			case "LAYER_COUNT":
+			this.nbLayers = parseInt(args[1]);
+			if (this.DEBUG)
+			console.log("model height: " + Math.round((this.layHeight * this.nbLayers) * 100) / 100 + "mm");
+			break;
+			case "TYPE":
+			if (this.DEBUG)
+			console.log("wall type: " + args[1]);
+			this.lastPos.w = args[1];
+			break;
+			case "TIME_ELAPSED":
+			if (this.DEBUG)
+			console.log("T+ " + this.toHMS(parseInt(args[1]), true));
+			break;
+			case "SETTING_3":
+			break;
+			case "TIME":
+			console.log("Estimated print time: " + this.toHMS(parseInt(args[1]), true));
+			break;
+			case "LAYER HEIGHT":
+			if (this.DEBUG)
+			console.log("Layer height: " + args[1] + "mm");
+			this.layHeight = parseFloat(args[1]);
+			break;
+			default:
+			if (this.DEBUG)
+			console.log(args);
+		}
+	},
+	decodeSimpCom: function(comLine) {
+		var cmd = comLine;
+		if (comLine.includes(',')) {
+			cmd = comLine.substring(0, comLine.indexOf(','));
+			while (cmd.indexOf(' ') == 0)
+			cmd = cmd.substring(cmd.indexOf(' ') + 1);
+		}
+		var args = {
+			'cmd': cmd
+		};
+		var tokens = comLine.substring(cmd.length);
+		tokens = tokens.substring(tokens.indexOf(',') + 1);
+		tokens = tokens.split(',');
+		for (var token in tokens) {
+			if (tokens[token]) {
+				var value = tokens[token];
+				while (value.indexOf(' ') == 0)
+				value = value.substring(value.indexOf(' ') + 1);
+				args[token] = value;
+			}
+		}
+		this.parseSimpCom(args);
+		//console.log(args);
+	},
+	parseSimpCom: function(args) {
+		if (this.extruders == undefined) {
+			this.extruders = [];
+		}
+		if (args.cmd.includes("layer ")) {
+			var cmd = args.cmd;
+			args.cmd = cmd.substring(0, cmd.indexOf(' '));
+			args.layNum = cmd.substring(cmd.indexOf(' ') + 1);
+			if (args[0] && args[0].includes('Z = ')) {
+				var z = args[0];
+				args[0] = "Z";
+				args.zHeight = z.substring(z.lastIndexOf(' ') + 1);
+				//console.log(args);
+			}
+		}
+
+		if (args.cmd.includes("tool")) {
+			let cmd = args.cmd;
+			args.cmd = cmd.substring(0, cmd.indexOf(' '));
+			cmd = cmd.substring(cmd.indexOf(' ') + 1);
+			var tokens = cmd.split(' ')
+			for (var token in tokens) {
+				var key = tokens[token][0];
+				var value = parseFloat(tokens[token].substring(1));
+				args[key] = value;
+			}
+		}
+		let i;
+		switch (args.cmd) {
+			case "printMaterial":
+			case "printQuality":
+			break;
+			/* ====== WALL TYPES ======*/
+			case "feature bridge":
+			if (this.DEBUG)
+			console.log("wall type: " + "BRIDGE");
+			this.lastPos.w = "BRIDGE";
+			break;
+			case "feature gap fill":
+			if (this.DEBUG)
+			console.log("wall type: " + "GAP_FILL");
+			this.lastPos.w = "GAP_FILL";
+			break;
+			case "feature skirt":
+			if (this.DEBUG)
+			console.log("wall type: " + "SKIRT");
+			this.lastPos.w = "SKIRT";
+			break;
+			case "feature infill":
+			if (this.DEBUG)
+			console.log("wall type: " + "INFILL");
+			this.lastPos.w = "INFILL";
+			break;
+			case "feature inner perimeter":
+			if (this.DEBUG)
+			console.log("wall type: " + "INNER_PERIMETER");
+			this.lastPos.w = "INNER_PERIMETER";
+			break;
+			case "feature outer perimeter":
+			if (this.DEBUG)
+			console.log("wall type: " + "OUTER_PERIMETER");
+			this.lastPos.w = "OUTER_PERIMETER";
+			break;
+			case "feature solid layer":
+			if (this.DEBUG)
+			console.log("wall type: " + "SOLID_LAYER");
+			this.lastPos.w = "SOLID_LAYER";
+			break;
+			case "feature support":
+			if (this.DEBUG)
+			console.log("wall type: " + "SUPPORT");
+			this.lastPos.w = "SUPPORT";
+			break;
+			case "feature dense support":
+			if (this.DEBUG)
+			console.log("wall type: " + "DENSE_SUPPORT");
+			this.lastPos.w = "DENSE_SUPPORT";
+			break;
+
+			/* ====== LAYERS ====== */
+			case "layer":
+			if (this.DEBUG)
+			console.log("Layer " + args.layNum + (this.nbLayers ? "/" + this.nbLayers : ""));
+			var layNum = parseInt(args.layNum);
+			/*if (layNum != 0)
+			gcodeLayers[layNum] = {gcodeLayerStart: startLayer, gcodeLayer: gcodeLayer};*/
+			this.nbLayers++;
+			this.curLay = layNum;
+			break;
+			case "layerHeight":
+			if (this.DEBUG)
+			console.log("Layer height: " + args[0] + "mm");
+			this.layHeight = parseFloat(args[0]);
+			break;
+
+			/* ====== TOOLS PARAMETERS ====== */
+			case "tool":
+			if (this.layHeight === undefined)
+			this.layHeight = args.H;
+			if (this.extruders === undefined)
+			this.extruders = args.W;
+			break;
+			case "extruderName":
+			i = 0;
+			while (args[i] !== undefined) {
+				if (this.extruders[i] === undefined) {
+					this.extruders[i] = {};
+				}
+				this.extruders[i].name = args[i];
+				i++;
+			}
+			break;
+			case "extruderToolheadNumber":
+			i = 0;
+			while (args[i] !== undefined) {
+				if (this.extruders[i] === undefined) {
+					this.extruders[i] = {};
+				}
+				this.extruders[i].number = parseInt(args[i]);
+				i++;
+			}
+			break;
+			case "extruderWidth":
+			i = 0;
+			if (this.DEBUG)
+			console.log("Extruders width: " + args.toSource() + "mm");
+			while (args[i] !== undefined) {
+				if (this.extruders[i] === undefined) {
+					this.extruders[i] = {};
+				}
+				this.extruders[i].width = parseFloat(args[i]);
+				i++;
+			}
+			break;
+			case "extruderDiameter":
+			i = 0;
+			while (args[i] !== undefined) {
+				if (this.extruders[i] === undefined) {
+					this.extruders[i] = {};
+				}
+				this.extruders[i].diameter = parseFloat(args[i]);
+				i++;
+			}
+			break;
+			case "primaryExtruder":
+			for (let i = 0; i < this.extruders.length; i++) {
+				if (this.extruders[i].number == parseInt(args[0])) {
+					this.extruders[i].primary = true;
+				} else {
+					this.extruders[i].primary = false;
+				}
+
+			}
+			break;
+			default:
+			if (this.DEBUG)
+			console.log(args)
+		}
+	},
+	decodeSlicCom: function(comLine) {
+		if (this.DEBUG)
+		console.log(comLine);
+	},
+	toHMS: function(delta, toStr) {
+		var sec = delta % 60,
+		min = (delta = (delta - sec) / 60) % 60,
+		hour = (delta = (delta - min) / 60) % 24,
+		day = delta = (delta - hour) / 24;
+		if (toStr) {
+			var strTime = day + "d " + hour + "h " + min + "m " + sec + "s";
+			return strTime = strTime.replace(/(?:0. )+/, "")
+		}
+		return {
+			d: day,
+			h: hour,
+			m: min,
+			s: sec
+		}
+	},
+},
+mounted() {
+	this.extruders = [];
+}
+}

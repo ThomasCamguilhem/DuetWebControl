@@ -179,7 +179,7 @@ export default {
 		...mapGetters(['isConnected', 'uiFrozen']),
 		...mapState('machine/model', ['state', 'storages']),
 		isRootDirectory() {
-			console.log(this.getTool.substr(0,5))
+			//console.log(this.getTool.substr(0,5))
 			return this.directory === ( this.getTool ?
 				( this.getTool.substr(0,5) ?
 				( Path.gcodes + "/" + this.getTool.substr(0,5) ) :

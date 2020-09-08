@@ -238,14 +238,19 @@ export default {
 			confirmClose: 'The file has been changed. If you proceed, your changes will be lost.'
 		},
 		meshEdit: {
-			title: 'Set Mesh Parameters',
-			radius: 'Probe Radius',
+			title: 'Custom calibration',
+			radius: 'Probe diameter',
 			spacing: 'Spacing',
 			startCoordinate: 'Start coordinate in {0} direction',
 			endCoordinate: 'End coordinate in {0} direction',
 			spacingDirection: 'Spacing in {0} direction',
 			bed: 'Bed temperature',
-			chamber: 'Chamber temperature'
+			chamber: 'Chamber temperature',
+			rectangle: 'Rectangle',
+			circle: 'Circle',
+			diameter: 'Diameter ',
+			success: 'New calibration added',
+			new: "New calibration",
 		},
 		newDirectory: {
 			title: 'New Directory',
@@ -506,7 +511,8 @@ export default {
 			macros: 'Macros',
 			display: 'Display',
 			system: 'System',
-			web: 'Web'
+			web: 'Web',
+			timelapses: 'Timelapses'
 		},
 		material: {
 			materials: 'Materials',
@@ -709,6 +715,7 @@ export default {
 			compensation: 'Compensation & Calibration',
 			runBed: 'True Bed Levelling (G32)',
 			runDelta: 'Delta Calibration (G32)',
+			runAdvanced: 'Machine Calibration',
 			compensationInUse: 'Compensation in use: {0}',
 			disableBedCompensation: 'Disable Bed Compensation (M561)',
 			disableMeshCompensation: 'Disable Mesh Compensation (G29 S2)',

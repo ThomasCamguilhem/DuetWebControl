@@ -103,7 +103,7 @@
 				</span>
 			</v-tooltip>
 		</template>
-		<v-list v-if="selectedMachine !== '[default]' && waited && tools.length > 0 && !loading">
+		<v-list v-if="selectedMachine !== '[default]' && waited && tools.length > 0 && !loading && false">
 			<v-list-tile v-for="(geometry, index) in geometries" :key="index" @click="geoClick(geometry)" :class="{'toolLocal': isLocal}">
 				{{ geometry.name }}
 			</v-list-tile>
@@ -130,7 +130,7 @@
 				<v-icon class="mr-1">build</v-icon> {{ $t('loadTool.calibrationTool') }}
 			</v-btn>
 		</v-layout>
-		<v-list v-if="selectedMachine !== '[default]' && waited && tools.length > 0 && !loading">
+		<v-list v-if="selectedMachine !== '[default]' && waited && tools.length > 0 && !loading && false">
 			<v-list-tile v-for="(mesh, index) in meshes" :key="index" @click="meshClick(mesh)" :class="{'toolLocal': isLocal}">
 				{{ mesh.name }}
 			</v-list-tile>
@@ -302,7 +302,7 @@ export default {
 					this.tools = result
 					if (this.tools.length > 0) {
 						this.calibrationTool = this.tools.filter(tool => tool.tech == "CAL")[0].tools[0];
-						console.log(this.calibrationTool)
+						//console.log(this.calibrationTool)
 					}
 					//this.$forceUpdate();
 				})
@@ -332,7 +332,7 @@ export default {
 				this.geometries = [];
 				this.meshes = [];
 				let files = await this.getFileList(this.calibrationTool.path.substr(0, this.calibrationTool.path.lastIndexOf('/')+1)+'Custom surfaces')
-				console.log(files)
+				//console.log(files)
 				this.geometries = files.filter(item => item.name.startsWith('geometry'))
 				this.meshes = files.filter(item => item.name.startsWith('heightmap'))
 				//clearTimeout(this.timeout);

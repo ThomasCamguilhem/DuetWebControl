@@ -46,48 +46,9 @@
 							</v-list-tile>
 							<v-divider></v-divider>
 						</template>
-						<v-expansion-panel :value="-1" style="margin-bottom: 15px">
-							<v-expansion-panel-content style="background: #ffffff0f">
-								<template v-slot:header style="padding: 0">
-									<span style="font-size: normal;">
-										<v-icon class="mr-1">view_module</v-icon> {{ $t('panel.movement.runAdvanced') }}
-									</span>
-								</template>
-								<v-card style="background: #4d4d4d; padding: 0 20px">
-									<v-list-tile @click="getTool.toUpperCase().startsWith('CAL') ? sendCode('G32') : null" :disabled="!getTool.toUpperCase().startsWith('CAL')">
-										<v-tooltip left>
-											<template v-slot:activator="{ on }">
-												<v-list-tile-content v-on="on">
-													<v-list-tile-title>
-														<v-icon class="mr-1">view_module</v-icon> machine_OF
-													</v-list-tile-title>
-												</v-list-tile-content>
-											</template>
-											<span>
-												{{ 'Chamber: Off' }} <br/>
-												{{ 'Bed: Off' }}
-											</span>
-										</v-tooltip>
-									</v-list-tile>
-									<v-list-tile v-for="calibration in calibrations" @click="getTool.toUpperCase().startsWith('CAL') ? sendCode('M98 P' + calibration.path) : null" :disabled="!getTool.toUpperCase().startsWith('CAL')">
-										<v-tooltip left>
-											<template v-slot:activator="{ on }">
-												<v-list-tile-content v-on="on">
-													<v-list-tile-title>
-														<v-icon class="mr-1">view_module</v-icon>
-														{{ calibration.name.split('_')[1] == 'C' ? calibration.name.substr(0, 9) : calibration.name.substr(0, 10) }}
-													</v-list-tile-title>
-												</v-list-tile-content>
-											</template>
-											<span>
-												{{ 'Chamber: ' + calibration.name.split('_')[2].substr(1) }}°C <br/>
-												{{ 'Bed: ' + calibration.name.split('_')[3].substr(1, calibration.name.split('_')[3].length-3) }}°C
-											</span>
-										</v-tooltip>
-									</v-list-tile>
-								</v-card>
-							</v-expansion-panel-content>
-						</v-expansion-panel>
+						<v-list-tile @click="getTool.toUpperCase().startsWith('CAL') ? sendCode('G32') : null" :disabled="!getTool.toUpperCase().startsWith('CAL')">
+							<v-icon class="mr-1">view_module</v-icon> {{ $t('panel.movement.runDelta') }}
+						</v-list-tile>
 						<v-list-tile :disabled="tools.length == 0" @click="nozzleHeightCalib">
 							<v-icon class="mr-1">vertical_align_bottom</v-icon> {{ $t('panel.movement.runNozzleHeight') }}
 						</v-list-tile>
@@ -104,11 +65,11 @@
 									</v-list-tile>
 									<v-divider></v-divider>
 									<v-list style="background: #4d4d4d;">
-										<v-list-tile @click="sendCode('G29')">
+										<v-list-tile @click="sendCode('G29')" :disabled="!getTool.toUpperCase().startsWith('CAL')">
 											<v-icon class="mr-1">grid_on</v-icon> {{ $t('panel.movement.runMesh') }}
 										</v-list-tile>
-										<v-list-tile @click="showMeshEditDialog = true">
-											<v-icon class="mr-1">edit</v-icon> {{ $t('panel.movement.editMesh') }}
+										<v-list-tile :disabled="!getTool.toUpperCase().startsWith('CAL')" @click="showMeshEditDialog = true">
+											<v-icon class="mr-1">view_module</v-icon> {{ $t('panel.movement.editMesh') }}
 										</v-list-tile>
 										<v-list-tile @click="sendCode('G29 S1')">
 											<v-icon class="mr-1">save</v-icon> {{ $t('panel.movement.loadMesh') }}
@@ -141,9 +102,8 @@
 						</code-btn>
 					</v-layout>
 				</v-flex>
-				<v-flex v-if="false" v-for="axis in displayedAxes" :key="axis.letter">
+				<v-flex v-for="axis in displayedAxes.filter(() => move.geometry.type != 'delta')" :key="axis.letter">
 					<code-btn :color="axis.homed ? 'primary darken-1' : 'warning'" :disabled="uiFrozen" :title="$t('button.home.title', [axis.letter])" :code="`G28 ${axis.letter}`" block>
-
 						{{ $t('button.home.caption', [axis.letter]) }}
 					</code-btn>
 				</v-flex>
@@ -252,7 +212,6 @@ export default {
 			},
 			b4: "",
 			toolHeads: "",
-			calibrations: [],
 		}
 	},
 	methods: {
@@ -458,8 +417,8 @@ export default {
 				out += (this.b4[i] == undefined?"":this.b4[i]);
 				out += "\n"
 				let str = "M563 P" + tool.t + " S\"" + tool.e + "\"" +
-				(tool.d ? " D" + tool.d : '') +
-				(tool.h ? " H" + tool.h : '')
+				(tool.d ? " D" + (typeof(tool.d) == typeof([]) ?  tool.d.join(':') : tool.d) : '') +
+				(tool.h ? " H" + (typeof(tool.h) == typeof([]) ?  tool.h.join(':') : tool.d) : '')
 				out += str.padEnd(40, ' ') + "; Define tool " + tool.t + "\n";
 				str = "G10 P" + tool.t +
 				( sysTool.offsets[0] != undefined ? " X" + parseFloat(sysTool.offsets[0]).toFixed(2) : '' ) +
@@ -476,10 +435,10 @@ export default {
 			//console.log(this.tools);
 			//let filename = "0:/macros/_Toolheads/" + this.toolPath[this.select].matrix;
 			let data =  out;
-			console.log(filename, data);
+			//console.log(filename, data);
 			const content = new Blob([data]);
 			try {
-				//this.upload({ filename: filename, content });
+				this.upload({ filename: filename, content });
 				this.$makeNotification('success',
 				this.$t("panel.toolOffset.dialog.title"),
 				this.$t("panel.toolOffset.dialog.sucess"),
@@ -492,54 +451,6 @@ export default {
 				console.error(e);// TODO Optionally ask user to save file somewhere else
 			}
 		},
-	},
-	mounted: async function() {
-		let files = await this.getFileList("0:/macros/_Toolheads");
-
-		let params = this.name.substr(8).split('_')
-		let name = params[0];
-		let appro = params.length == 4 ? params[1] : '';
-		let model = params.length == 4 ? params[2].split("~")[0] : ''
-		//		let opt = params.length == 4 && params[2].split("~").length == 2 ? params[2].split("~")[1] : ''
-		let vers = params.length == 4 ? params[3].substring(1, params[3].length) : params[1].substring(1, params[1].length)
-
-		let tools = files.filter(tool => tool.name.includes(name) && tool.name.includes(appro) && tool.name.includes(model) && tool.name.includes(vers) && tool.name.includes("CAL"))
-
-		/*console.log(name)
-		console.log(appro)
-		console.log(model)
-		console.log(opt)
-		console.log(vers)
-
-		console.log(tools.length ? tools : "");
-		*/
-
-		let that = this;
-		tools.forEach(async function(item) {
-			if (item.isDirectory)
-			{
-				console.log(item);
-				files = await that.getFileList(item.directory + '/' + item.name);
-				console.log(files)
-				tools = files.filter(item => item.isDirectory && (item.name.includes('Presets') || item.name.includes('Custom calibrations')))
-				console.log(tools)
-				that.calibrations = []
-				tools.forEach(async function(item) {
-					if (item.isDirectory)
-					{
-						console.log(item);
-						files = await that.getFileList(item.directory + '/' + item.name);
-						console.log(files)
-						tools = files.filter(item => !item.isDirectory && item.name.includes('machine'))
-						console.log(tools)
-						tools.forEach((item, i) => {
-							that.calibrations.push(item)
-						});
-					}
-				});
-				console.log(that.calibrations)
-			}
-		});
 	},
 	watch: {
 		isConnected() {

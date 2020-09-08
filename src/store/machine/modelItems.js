@@ -165,6 +165,7 @@ export class Heater {
 	}
 	max = null
 	sensor = null
+	avgPWM = null
 }
 
 export class Laser {

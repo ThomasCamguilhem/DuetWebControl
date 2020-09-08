@@ -180,7 +180,7 @@ export default {
 		...mapState('machine/model', {
 			heightmapPath: (state) => {
 				state = state.state;
-				return (state.heightmap == undefined ?
+				return (state.heightmap == undefined || state.heightmap == "" ?
 					Path.heightmap :
 					(state.heightmap.indexOf('/') >= 0 ?
 						state.heightmap :
@@ -475,7 +475,6 @@ export default {
 					line.name = "gridHelper";
 					this.three.scene.add(line);
 
-					console.log('Scale: ' + gridScale + '\n Step: ' + stepScale)
 					// Create the final object to add to the scene
 					var curve = new EllipseCurve(
 						0,	0,					// ax, aY

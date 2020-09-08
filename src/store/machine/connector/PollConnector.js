@@ -3,7 +3,7 @@
 
 import axios from 'axios'
 import crc32 from 'turbo-crc32/crc32'
-import LineReader from '../../../lynxmod/ChunkReader.js'
+import ChunkReader from '../../../lynxmod/ChunkReader.js'
 
 import i18n from '../../../i18n'
 import { displaySpeed } from '../../../plugins/display.js'
@@ -400,7 +400,9 @@ export default class PollConnector extends BaseConnector {
 						coldRetractTemperature: response.data.coldRetractTemp,
 						heaters: response.data.temps.current.map((current, index) => ({
 							max: response.data.tempLimit,
-							name: (response.data.temps.names !== undefined) ? response.data.temps.names[index] : null
+							name: (response.data.temps.names !== undefined) ? response.data.temps.names[index] : null,
+							sensor: response.data.temps.sensors && response.data.temps.sensors[index] != undefined ?  response.data.temps.sensors[index] : null,
+							avgPWM: response.data.temps.avgPWM && response.data.temps.avgPWM[index] != undefined ? response.data.temps.avgPWM[index] : null
 						}))
 					},
 					move: {
@@ -801,10 +803,10 @@ export default class PollConnector extends BaseConnector {
 
 				if (Math.ceil(payload.size/(4*1024*1024)) > 1 && !filename.endsWith('.zip')) {
 					let totalCount = 0, instructionPos = -1, startTime = new Date();
-					let lineReader = Object.assign(LineReader.methods, LineReader.data);
+					let chunkReader = Object.assign(ChunkReader.methods, ChunkReader.data);
 					document.querySelector('div.iziToast-progressbar').style.height = "5px"
 					document.querySelector('div.iziToast-progressbar > div').style.height = "5px"
-					document.getElementById("fileProgress").style.transition = 'width 2s linear';
+					document.getElementById("fileProgress") ? document.getElementById("fileProgress").style.transition = 'width 2s linear' : null;
 
 					options.params.parts = Math.ceil(payload.size/(4*1024*1024))
 					options.onUploadProgress = function(e) {
@@ -839,15 +841,15 @@ export default class PollConnector extends BaseConnector {
 						document.getElementById("pspeed").innerHTML = i18n.t('notification.parse.speed',
 						[displaySpeed(uploadSpeed), ""]);
 					}
-					lineReader.LineReader({chunkSize: 4*1024*1024})
+					chunkReader.ChunkReader({chunkSize: 4*1024*1024})
 
 					let myResponse;
-					lineReader.on('line', function(line, next) {
+					chunkReader.on('line', function(line, next) {
 
 						if (line) {
 							totalCount++;
 						}
-						//line = send(line, self.lineReader.offset);
+						//line = send(line, self.chunkReader.offset);
 						const payload = (line instanceof(Blob)) ? line : new Blob([line])
 						options.cancelToken = undefined;
 						try {
@@ -855,7 +857,7 @@ export default class PollConnector extends BaseConnector {
 							options.params.part = totalCount
 							that.axios.post('rr_upload', payload, options)
 							.then(function(response) {
-								instructionPos = lineReader.GetReadPos();
+								instructionPos = chunkReader.GetReadPos();
 								myResponse = response;
 								setTimeout(next);
 							})
@@ -865,16 +867,16 @@ export default class PollConnector extends BaseConnector {
 						//next();
 					});
 
-					lineReader.on('abort', function(abo) {
+					chunkReader.on('abort', function(abo) {
 						console.warn("read aborted");
 						console.warn(abo);
 					})
 
-					lineReader.on('error', function(err) {
+					chunkReader.on('error', function(err) {
 						console.error(err);
 					});
 
-					lineReader.on('end', function() {
+					chunkReader.on('end', function() {
 						function toHMS(delta, toStr) {
 							var sec = delta % 60,
 							min = (delta = (delta - sec) / 60) % 60,
@@ -895,6 +897,12 @@ export default class PollConnector extends BaseConnector {
 							}
 						}
 
+						/*if (totalCount != options.params.parts) {
+							options.params.part = options.params.parts
+							const payload = ("" instanceof(Blob)) ? "" : new Blob([""])
+							that.axios.post('rr_upload', payload, options)
+						}*/
+
 						console.log("Read complete!\n" + totalCount + " chunks sent")
 						document.querySelector('.iziToast-wrapper').innerHTML = "";
 
@@ -913,7 +921,7 @@ export default class PollConnector extends BaseConnector {
 					});
 
 					document.getElementById("progress").style.transition = 'width 4s linear';
-					lineReader.read(payload);
+					chunkReader.read(payload);
 				} else {
 					try {
 						// Create file transfer and start it

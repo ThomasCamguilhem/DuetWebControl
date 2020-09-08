@@ -233,16 +233,19 @@ export default {
 			confirmClose: 'Le fichier a été modifié. Si vous continuez, vos modifications seront perdues.'
 		},
 		meshEdit: {
-			title: 'Définir paramètres de maillage',
-			radius: 'Rayon de palpage',
-			spacing: 'Espacement des points',
-			startCoordinate: 'Position {0} min',
-			endCoordinate: 'Position {0} max',
-			spacingDirection: 'Espacement des points en {0}',
-			bed: 'Temperature plateau',
-			chamber: 'Temperature étuve',
+			title: 'Calibration personnalisée',
+			new: "Nouvelle calibration",
+			radius: 'Diamètre de palpage (mm)',
+			spacing: 'Espacement des points (mm)',
+			startCoordinate: 'Position {0} min (mm)',
+			endCoordinate: 'Position {0} max (mm)',
+			spacingDirection: 'Espacement des points en {0} (mm)',
+			bed: 'Temperature plateau (°C)',
+			chamber: 'Temperature étuve (°C)',
 			rectangle: 'Rectangle',
-			circle: 'Cercle'
+			circle: 'Cercle',
+			diameter: 'Diamètre ',
+			success: 'Nouvelle calibration ajoutée a la liste'
 		},
 		newDirectory: {
 			title: 'Nouveau dossier',
@@ -494,7 +497,8 @@ export default {
 			macros: 'Macros',
 			display: 'Affichage',
 			system: 'Système',
-			web: 'Web'
+			web: 'Web',
+			timelapses: 'Timelapses'
 		},
 		material: {
 			materials: 'Materiaux',
@@ -699,7 +703,7 @@ export default {
 			compensationInUse: 'Compensation utilisée : {0}',
 			disableBedCompensation: 'Désactiver compensation (M561)',
 			disableMeshCompensation: 'Désactiver compensation (G29 S2)',
-			editMesh: 'Définir zone pour la compensation (M557)',
+			editMesh: 'Calibration Machine avancée',
 			runMesh: 'Lancer macro compensation (G29)',
 			loadMesh: 'Charger compensation depuis la SD (G29 S1)',
 			axesNotHomed: 'L\'axe suivant  n\'a pas été à son origine:|Les axes suivants n\'ont pas été à leur origine:',
@@ -805,9 +809,9 @@ export default {
 			timelapseInterval: 'Capture a intervalle régulier',
 			timelapseUpdateInterval: 'Prendre une image toutes les {} s',
 			timelapseLayer: 'Prendre une image a chaque couche',
-			timelapseMinFramerate: 'IPS Min',
-			timelapseMaxFramerate: 'IPS Max',
-			timelapseTargetDuration: 'Durée cible'
+			timelapseMinFramerate: 'framerate min Timelapse',
+			timelapseMaxFramerate: 'framerate max Timelapse',
+			timelapseTargetDuration: 'Durée finale Timelapse'
 		},
 		speedFactor: {
 			caption: 'Facteur de vitesse'

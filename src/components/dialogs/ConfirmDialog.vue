@@ -285,35 +285,37 @@ export default {
 	},
 	watch: {
 		shown() {
-			if (document.getElementsByTagName('video').length)
+			if(this.shown && this.item) {
+				if (document.getElementsByTagName('video').length)
 				document.getElementsByTagName('video')[0].pause();
-			if (document.getElementsByClassName('flip-box-inner').length)
+				if (document.getElementsByClassName('flip-box-inner').length)
 				document.getElementsByClassName('flip-box-inner')[0].style.transform = 'rotateY(0deg)';
 
-			var xhr =  new XMLHttpRequest();
-			xhr.timeout = 2000;
+				var xhr =  new XMLHttpRequest();
+				xhr.timeout = 2000;
 
-			console.log(this.shown ? "shown" : "hidden")
-			console.log(this.item)
-			let item = this.item
-			xhr.onload = function() {
-				if(xhr.status == 404)
-				document.getElementById("buildPlate").src = "/img/ressources/file.png"
-				else
-				document.getElementById("buildPlate").src = item.ico.substring(0, item.ico.length-7)+'bp.jpg'
+				console.log(this.shown ? "shown" : "hidden")
+				console.log(this.item)
+				let item = this.item
+				xhr.onload = function() {
+					if(xhr.status == 404)
+					document.getElementById("buildPlate").src = "/img/ressources/file.png"
+					else
+					document.getElementById("buildPlate").src = item.ico.substring(0, item.ico.length-7)+'bp.jpg'
+				}
+
+				xhr.ontimeout = function() {
+					console.log("timed out")
+				}
+
+				xhr.onerror = function() {
+					console.log("error")
+					document.getElementById("buildPlate").src = "/img/ressources/file.png"
+				}
+
+				xhr.open('GET', item.ico.substring(0, item.ico.length-7)+'bp.jpg' , true);
+				xhr.send(null);
 			}
-
-			xhr.ontimeout = function() {
-				console.log("timed out")
-			}
-
-			xhr.onerror = function() {
-				console.log("error")
-				document.getElementById("buildPlate").src = "/img/ressources/file.png"
-			}
-
-			xhr.open('GET', item.ico.substring(0, item.ico.length-7)+'bp.jpg' , true);
-			xhr.send(null);
 		}
 	}
 }

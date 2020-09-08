@@ -73,6 +73,12 @@ export default {
 					pathItems.shift();
 					pathItems[0] = Path.sys;
 					rootCaption = this.$t('directory.sys');
+				} else if (this.value.startsWith("0:/www/img/Timelapses")) {
+					console.log(pathItems);
+					pathItems.splice(0, 3);
+					console.log(pathItems);
+					pathItems[0] = "0:/www/img/Timelapses";
+					rootCaption = "Timelapses";
 				} else if (this.value.startsWith(Path.www)) {
 					pathItems.shift();
 					pathItems[0] = Path.www;
@@ -172,7 +178,7 @@ async moveCallback(newFilename) {
 	try {
 		await this.move({ from, to, force: true});
 	} catch (e) {
-		this.$makeNotification('error', `Failed to move ${data.items[i].name} to ${directory}`, e.message);
+		this.$makeNotification('error', `Failed to move ${from} to ${to}`, e.message);
 	}
 },
 isUnique(file, folder) {

@@ -97,7 +97,7 @@ export default function(hostname, connector) {
 
 					// Perform upload
 					const startTime = new Date();
-					const response = await connector.upload({ filename, content, cancelSource, onProgress: (notification ? notification.onProgress : (e) => {	document.getElementById('fileProgress').style.width = ((e.loaded / e.total) * 100).toFixed(1) + '%'})
+					const response = await connector.upload({ filename, content, cancelSource, onProgress: (notification ? notification.onProgress : (e) => {	document.getElementById("fileProgress") ? document.getElementById('fileProgress').style.width = ((e.loaded / e.total) * 100).toFixed(1) + '%' : null})
 				});
 
 				// Show success message

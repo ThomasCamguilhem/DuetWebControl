@@ -141,13 +141,13 @@ function pushSeriesData(machine, heaterIndex, heater, extra, tools, that) {
 			});
 			let target = -1;
 			if (tool) {
-				target = (heater.state == 2 ? tool.active : (heater.state == 1 ? tool.standby : [-1]))[0]
+				target = (heater.state == 2 ? tool.active : (heater.state == 1 ? tool.standby : [-1]))[tool.heaters.indexOf(heaterIndex)]
 			} else if (heaterIndex == 0) { // Bed Heater
 				let bed = that.heat.beds.filter(bed => bed.heaters.includes(heaterIndex))[0]
-				target = (heater.state == 2 ? bed.active : (heater.state == 1 ? bed.standby : [-1]))[0]
+				target = (heater.state == 2 ? bed.active : (heater.state == 1 ? bed.standby : [-1]))[bed.heaters.indexOf(heaterIndex)]
 			} else if (heaterIndex == 4){ // Chamber Heater
 				let chamber = that.heat.chambers.filter(chamber => chamber.heaters.includes(heaterIndex))[0]
-				target = (heater.state == 2 ?chamber.active : (heater.state == 1 ? chamber.standby : [-1]))[0]
+				target = (heater.state == 2 ?chamber.active : (heater.state == 1 ? chamber.standby : [-1]))[chamber.heaters.indexOf(heaterIndex)]
 			}
 			if (!dataset || dataset.locale !== i18n.locale) {
 				if (dataset) {

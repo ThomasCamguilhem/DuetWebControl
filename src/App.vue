@@ -131,6 +131,7 @@ a:hover {
 							</v-list-tile>
 						</template>
 					</v-list-group>
+					<div class="hidden-sm-and-up" style="margin-top: 25%"></div>
 					<v-list-tile v-if="isLocal && false">
 						<connect-btn class="mb-3" block></connect-btn>
 					</v-list-tile>
@@ -157,7 +158,7 @@ a:hover {
 					</v-list-tile>
 				</v-list>
 
-				<div class=" hidden-md-and-up" v-if="true == false">
+				<div class="hidden-sm-and-up" v-if="true==false">
 					<connect-btn v-if="isLocal && false" class="mb-3" block></connect-btn>
 					<emergency-btn class="hidden-sm-and-up" block></emergency-btn>
 				</div>
@@ -341,7 +342,6 @@ export default {
 		{
 			get() { return this.state.lastConfig },
 			set(value) {
-				console.log(value)
 				this.update({ lastConfig: value });
 			}
 		},
@@ -441,7 +441,7 @@ export default {
 		window.addEventListener('unload', this.disconnectAll);
 
 		if(((location.port === "8080") || (location.port === "8081") || (location.port === "8082"))){
-			this.connect({hostname: "192.168.1.243"});
+			this.connect({hostname: "192.168.1.55"});
 		} else if (!this.isLocal || (location.port === "80") || (location.port === "")) {
 			this.connect();
 		}
@@ -458,7 +458,7 @@ export default {
 					setTimeout(() => {
 						console.log(location.host)
 						if(((location.port === "8080") || (location.port === "8081") || (location.port === "8082"))){
-							that.connect({hostname: "192.168.1.243"});
+							that.connect({hostname: "192.168.1.55"});
 						} else if (!that.isLocal || (location.port === "80") || (location.port === "")) {
 							that.connect();
 						}

@@ -5,7 +5,7 @@
 			<directory-breadcrumbs v-model="directory"></directory-breadcrumbs>
 
 			<v-spacer></v-spacer>
-			<search-input :path="directory" @change="filterSearch"></search-input>
+			<search-input :path="directory" @change="filterSearch" v-if="false"></search-input>
 			<v-btn class="hidden-sm-and-down mr-3" :disabled="uiFrozen" @click="showNewDirectory = true">
 				<v-icon class="mr-1">create_new_folder</v-icon> {{ $t('button.newDirectory.caption') }}
 			</v-btn>

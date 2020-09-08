@@ -41,7 +41,7 @@
 								<b v-if="!isLocal" style="margin: 22px 0px 5px 5px;">%</b>
 								<slider style="margin: 5px" :key="Math.random()" :disabled="uiFrozen || disabled" :min="0" :max="100" v-model="mixC[index]" @input="setExtrusionMix(index, $event)" :labels="extruderMix" :fan="true" step="1"></slider><br/>
 							</v-layout><br/>
-							<div style="height: 15px; overflow: hidden; border-radius: 5px;" :style="{margin: isLocal ? '5px 60px 5px 90px' : '5px 60px 5px 145px', background: 'linear-gradient(to right, red, hsl(43, 98%, 50%) ' + (30/currentTool.extruders.length) + '%, hsl(43, 98%, 50%) ' + (80/currentTool.extruders.length) + '%, green ' + (90/currentTool.extruders.length) + '%, green ' + (110/currentTool.extruders.length) + '%, hsl(43, 98%, 50%) ' + (120/currentTool.extruders.length) + '%, hsl(43, 98%, 50%) ' + (170/currentTool.extruders.length) + '%, red ' + (200/currentTool.extruders.length) + '%)'}">
+							<div style="height: 5px; overflow: hidden; border-radius: 5px;" :style="{margin: isLocal ? '5px 60px 5px 90px' : '5px 60px 5px 145px', background: 'linear-gradient(to right, red, hsl(43, 98%, 50%) ' + (30/currentTool.extruders.length) + '%, hsl(43, 98%, 50%) ' + (80/currentTool.extruders.length) + '%, green ' + (90/currentTool.extruders.length) + '%, green ' + (110/currentTool.extruders.length) + '%, hsl(43, 98%, 50%) ' + (120/currentTool.extruders.length) + '%, hsl(43, 98%, 50%) ' + (170/currentTool.extruders.length) + '%, red ' + (200/currentTool.extruders.length) + '%)'}">
 								<div style="height: 100%; width: 2px; border-radius: 1px; background:black; overflow: hidden" :style="{'margin-left': (extrusionSum/currentTool.extruders.length + '%')}">
 								</div>
 							</div>
@@ -184,7 +184,7 @@ export default {
 		...mapMutations('machine/settings', ['setExtrusionAmount', 'setExtrusionFeedrate']),
 		async buttonClicked(extrude) {
 			//console.log(this.currentTool);
-			if (!this.currentTool.extruders.length) {
+			if (this.currentTool && !this.currentTool.extruders.length) {
 				return;
 			}
 
@@ -192,7 +192,7 @@ export default {
 			if (this.mix.length === 1 && this.mix[0] === 'mix') {
 				// Split total amount to extrude evenly
 				amounts = [this.amount];
-			} else {
+			} else if (this.currentTool) {
 				// Extrude given amount via each selected extruder drive
 				amounts = this.currentTool.extruders.map(extruder => (this.mix.indexOf(extruder) !== -1) ? this.amount : 0);
 			}
@@ -226,6 +226,9 @@ export default {
 		},
 		setExtrusionMix(index, event) {
 			//console.log(index, event)
+			if (!this.currentTool) {
+				return;
+			}
 			this.currentTool.mix[index] = parseFloat(event/100)
 			this.mixBtn[index] = parseFloat(event) + '%'
 			this.mixC[index] = parseFloat(event).toFixed(0)
@@ -233,7 +236,7 @@ export default {
 			let first = true;
 			let letter = 65
 			let out = ""
-			if (!this.disabled){
+			if (!this.disabled && this.currentTool){
 				out += "M563 P" + this.currentTool.number + ' S"'
 				this.currentTool.mix.forEach(extruder => out += (first?(first = false):"+") + Math.round(extruder*100) + String.fromCharCode(letter++))
 				out += '" D'
@@ -265,12 +268,15 @@ export default {
 					}
 				}
 			}
-			console.log(out);
+			//console.log(out);
 			this.sendCode(out)
 			this.extrusionSum = Math.round(this.currentTool.mix.reduce((a,b) => parseFloat(a)+parseFloat(b))*100);
 		},
 		editMix(index, mix) {
 			//console.log(index, mix);
+			if (!this.currentTool) {
+				return;
+			}
 			let first = true;
 			let letter = 65;
 			let newMix = []
@@ -330,8 +336,10 @@ export default {
 				this.mixC[index] = (mix * 100).toFixed(0)
 				this.mixBtn[index] = mix * 100 + '%'
 			})
+			if (this.currentTool && this.currentTool.mix.length > 1) {
+				this.extrusionSum = Math.round(this.currentTool.mix.reduce((a,b) => (parseFloat(a)+parseFloat(b)))*100);
+			}
 		}
-		this.extrusionSum = Math.round(this.currentTool.mix.reduce((a,b) => (parseFloat(a)+parseFloat(b)))*100);
 	},
 	watch: {
 		currentTool: {
@@ -349,12 +357,12 @@ export default {
 					}
 					this.currentTool.mix.forEach((mix, index) => {
 						if (this.mixC[index] != mix * 100)
-						this.mixC[index] = mix * 100
-						this.mixBtn[index] = mix * 100 + '%'
+						this.mixC[index] = (mix * 100).toFixed(0)
+						this.mixBtn[index] = (mix * 100).toFixed(0) + '%'
 					})
-					console.log(this.currentTool)
+					//console.log(this.currentTool)
+					this.extrusionSum = Math.round(this.currentTool.mix.reduce((a,b) => (parseFloat(a)+parseFloat(b)))*100);
 				}
-				this.extrusionSum = Math.round(this.currentTool.mix.reduce((a,b) => (parseFloat(a)+parseFloat(b)))*100);
 			}
 		},
 		extruderAmounts() {
@@ -364,8 +372,11 @@ export default {
 			this.feedrate = this.extruderFeedrates[0];
 		},
 		extrusionSum() {
-			let sumMix = Math.round(this.currentTool.mix.reduce((a,b) => (parseFloat(a)+parseFloat(b)))*100)
-			console.log(this.extrusionSum, sumMix)
+			if (!this.currentTool) {
+				return;
+			}
+			Math.round(this.currentTool.mix.reduce((a,b) => (parseFloat(a)+parseFloat(b)))*100)
+			//console.log(this.extrusionSum, sumMix)
 		}
 	}
 }

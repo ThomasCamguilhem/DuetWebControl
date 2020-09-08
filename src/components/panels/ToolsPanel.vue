@@ -128,6 +128,15 @@ table.extra tr > td:first-child {
 								<th :rowspan="Math.max(1, tool.heaters.length)" class="pl-2"
 								:class="{ 'pt-2 pb-2' : !tool.heaters.length}"
 								:style="isLocal && shown?'border: 2px solid; border-radius: 10px; background: none !important;border-color: #7b7b7b; cursor:pointer':''">
+								<div v-if="tool.heaters.length && heat.heaters[tool.heaters[0]] !== undefined && heat.heaters[tool.heaters[0]].state !== undefined" style="width: 5px; border: 1px solid darkgray; border-radius: 2px; position: absolute; left: 3px; overflow: hidden" :style="{height: isLocal && shown ? '80px' : '50px', 'margin-top': isLocal && shown ? '6px' : '3px'}">
+									<div style="position: relative; bottom: 0; width: 100%; background: linear-gradient(rgb(255, 0, 0) 0%, rgb(255, 255, 0) 30%, rgb(85, 255, 0) 60%);"
+									:style="{
+										height: Math.round(heat.heaters[tool.heaters[0]].avgPWM*(isLocal && shown ? 80 : 50 )) + 'px',
+										'margin-top' : (isLocal && shown ? 80 : 50 ) -Math.round(heat.heaters[tool.heaters[0]].avgPWM*(isLocal && shown ? 80 : 50 )) + 'px',
+										'background-size': isLocal && shown ? '80px 80px' : '50px 50px',
+										'background-position-y': Math.round(heat.heaters[tool.heaters[0]].avgPWM*(isLocal && shown ? 80 : 50 ))-(isLocal && shown ? 80 : 50 ) + 'px'}">
+									</div>
+								</div>
 								<div @click.prevent="( isLocal && shown ? (heat.heaters[tool.heaters[0]] !== undefined ? toolHeaterClick(tool,tool.heaters[0]):toolClick(tool)) : null)">
 									<a href="#" :class="isLocal?getHeaterColor(tool.heaters[0]):''" @click.prevent="isLocal?null:toolClick(tool)">
 										{{ tool.name || $t('panel.tools.tool', [tool.number]) }}
@@ -360,7 +369,11 @@ table.extra tr > td:first-child {
 						&& heat.heaters[bed.heaters[0]].state == 2,
 						[standbyToolClass]: isLocal && heat.heaters[bed.heaters[0]] !== undefined
 						&& heat.heaters[bed.heaters[0]].state == 1,*/}"
-						:style="isLocal && shown? 'background: none !important; border: 2px solid; border-radius: 10px; border-color: #7b7b7b; cursor:pointer':''" @click.prevent="isLocal && shown?bedHeaterClick(bed, index, bed.heaters[0]):null">
+						:style="isLocal && shown? 'background: none !important; border: 2px solid; border-radius: 10px; border-color: #7b7b7b; cursor:pointer':''" @click.prevent="isLocal && shown?bedHeaterClick(bed, index, bed.heaters[0]) : null">
+						<div v-if="bed.heaters.length > 0 && heat.heaters[bed.heaters[0]] !== undefined && heat.heaters[bed.heaters[0]].state !== undefined" style="width: 5px; border: 1px solid darkgray; border-radius: 2px; position: absolute; left: 3px; overflow: hidden" :style="{height: '50px', 'margin-top': isLocal ? '3px' : '-10px'}">
+							<div style="position: relative; bottom: 0; width: 100%; background: linear-gradient(rgb(255, 0, 0) 0%, rgb(255, 255, 0) 30%, rgb(85, 255, 0) 60%); background-size: 50px 50px" :style="{ height: Math.round(heat.heaters[bed.heaters[0]].avgPWM*50) + 'px', 'margin-top' : 50-Math.round(heat.heaters[bed.heaters[0]].avgPWM*50) + 'px', 'background-position-y': Math.round(heat.heaters[bed.heaters[0]].avgPWM*50)-50 + 'px'}">
+							</div>
+						</div>
 						<a href="#" :class="isLocal?getHeaterColor(bed.heaters[0]):''" @click.prevent="isLocal?null:bedClick(bed)">
 							{{ bed.name || $t('panel.tools.bed', [(heat.beds.length !== 1) ? index : '']) }}
 						</a>
@@ -486,6 +499,10 @@ table.extra tr > td:first-child {
 				&& heat.heaters[chamber.heaters[0]].state == 0,*/}"
 				:style="isLocal && shown?'background: none !important; border: 2px solid; border-radius: 10px; border-color: #7b7b7b; cursor:pointer':''"
 				@click.prevent="isLocal && shown?chamberHeaterClick(chamber, index, chamber.heaters[0]):null" >
+				<div v-if="chamber.heaters.length > 0 && heat.heaters[chamber.heaters[0]] !== undefined && heat.heaters[chamber.heaters[0]].state !== undefined" style="width: 5px; border: 1px solid darkgray; border-radius: 2px; position: absolute; left: 3px; overflow: hidden" :style="{height: '50px', 'margin-top':  isLocal ? '3px' : '-10px' }">
+					<div style="position: relative; bottom: 0; width: 100%; background: linear-gradient(rgb(255, 0, 0) 0%, rgb(255, 255, 0) 30%, rgb(85, 255, 0) 60%); background-size:  50px 50px" :style="{height: Math.round(heat.heaters[chamber.heaters[0]].avgPWM*50) + 'px', 'margin-top' : 50-Math.round(heat.heaters[chamber.heaters[0]].avgPWM*50) + 'px', 'background-position-y': Math.round(heat.heaters[chamber.heaters[0]].avgPWM*50)-50 + 'px'}">
+					</div>
+				</div>
 				<a href="#" :class="isLocal?getHeaterColor(chamber.heaters[0]):''" @click.prevent="isLocal?null:chamberClick(chamber)">
 					{{ chamber.name || $t('panel.tools.chamber', [(heat.chambers.length !== 1) ? index : '']) }}
 				</a>
@@ -701,16 +718,18 @@ export default {
 	},
 	destroyed() {
 		window.removeEventListener('resize', this.handleResize);
-		document.getElementById('toolContainer').removeEventListener('resize', this.handleResize);
+		document.getElementById('toolContainer') ? document.getElementById('toolContainer').removeEventListener('resize', this.handleResize) : null;
 	},
 	methods: {
 		...mapActions('machine', ['getFileList', 'sendCode', 'download', 'upload']),
 		...mapMutations('machine/settings', ['toggleExtraHeaterVisibility']),
 		handleResize() {
-			console.log('Handle Resize')
-			this.window.width = document.getElementById('toolContainer').clientWidth;
-			this.window.height = document.getElementById('toolContainer').clientHeight;
-			console.log(this.window)
+			//console.log('Handle Resize')
+			if(document.getElementById('toolContainer')) {
+				this.window.width = document.getElementById('toolContainer').clientWidth;
+				this.window.height = document.getElementById('toolContainer').clientHeight;
+			}
+			//console.log(this.window)
 		},
 		showDropdown() {
 			this.dropdownShown = !this.dropdownShown;
@@ -762,14 +781,14 @@ export default {
 			return this.$t('panel.tools.heater', [index]);
 		},
 		formatHeaterValue(heater) {
-			let unit = (heater.sensor >= 450 && heater.sensor < 500) ? '%RH' : 'C';
+			let unit = (heater.sensor >= 450 && heater.sensor < 500) ? '%RH' : '°C';
 			if (heater.name) {
 				const matches = /(.*)\[(.*)\]$/.exec(heater.name);
 				if (matches) {
-					return this.$display(heater.current.toLocaleString(), 1, matches[2]);
+					return this.$display(heater.current, 1, matches[2]);
 				}
 			}
-			return this.$display(heater.current.toLocaleString(), 1, unit);
+			return this.$display(heater.current, 1, unit);
 		},
 
 		canLoadFilament(tool) {
@@ -927,7 +946,7 @@ export default {
 			this.universe = this.user.loadedTool.substr(0,5)
 
 			let files = await this.getFileList("0:/macros/_Materials/" + this.universe);
-			console.log(files)
+			//console.log(files)
 			const directories = files.filter((file) => file && file.isDirectory)
 			files = files.filter((file) => file && !file.isDirectory)
 			//console.log(directories)
@@ -941,7 +960,7 @@ export default {
 				})})
 			//this.materials.push(file)
 			//console.log(this.universe);
-			console.log(this.materials);
+			//console.log(this.materials);
 		}
 		this.interval = setInterval(() => {
 			if (document.getElementById('toolContainer')) {

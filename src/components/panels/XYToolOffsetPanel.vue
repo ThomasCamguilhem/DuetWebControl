@@ -563,7 +563,7 @@ export default {
 						}
 						if (wasSec)
 						break;
-						if (tools[j].d !== undefined) {
+						if (tools[j].d !== undefined && drives !== undefined) {
 							for( a = 0; a < tools[j].d.length; a++) {
 								if (drives.includes(tools[j].d[a])) {
 									tsec.push(j);
@@ -741,14 +741,16 @@ export default {
 			let img = new Image()
 			img.src = 'http://'+that.selectedMachine+':8080/?action=snapshot&dummy='+Math.random()
 			img.onload = () => {
-				console.log(img.width + 'x' + img.height);
-				document.getElementById('scaleableDiv').parentElement.style.display= "";
-				document.getElementById('webcam').style.left = -((480/img.height)*img.width)/2 + "px";
+				if(document.getElementById('scaleableDiv') && document.getElementById('webcam')) {
+					console.log(img.width + 'x' + img.height);
+					document.getElementById('scaleableDiv').parentElement.style.display= "";
+					document.getElementById('webcam').style.left = -((480/img.height)*img.width)/2 + "px";
+				}
 			}
-			//if (document.getElementById('webcam').src == "") {
-			document.getElementById('webcam').style.transform = "rotate(180deg) scale(1, -1)";
-			document.getElementById('webcam').src = 'http://'+that.selectedMachine+':8080/?action=stream&dummy=' + Math.random()
-
+			if (document.getElementById('scaleableDiv') && document.getElementById('webcam')) {
+				document.getElementById('webcam').style.transform = "rotate(180deg) scale(1, -1)";
+				document.getElementById('webcam').src = 'http://'+that.selectedMachine+':8080/?action=stream&dummy=' + Math.random()
+			}
 			that.showTarget = true;
 		}
 
@@ -789,10 +791,12 @@ export default {
 			xhr.send(null);
 		}, 5000, that);
 
-		document.getElementById('webcam').style.left = "-240px"
-		document.getElementById('webcam').style['min-width'] = "420px";
-		document.getElementById('scaleableDiv').parentElement.style.display= "none";
-		console.log(xhr)
+		if (document.getElementById('scaleableDiv') && document.getElementById('webcam')) {
+			document.getElementById('webcam').style.left = "-240px"
+			document.getElementById('webcam').style['min-width'] = "420px";
+			document.getElementById('scaleableDiv').parentElement.style.display= "none";
+			console.log(xhr)
+		}
 	},
 	watch: {
 		toolHeads: {
@@ -803,49 +807,49 @@ export default {
 			}
 		},
 		/*exposure: {
-			deep: true,
-			handler: async function(post, pre) {
-				//console.log(pre, post)
-				//let protocol = location.protocol;
-				if (pre.dest) {
-					if (!this.axios) {
-						//let protocol = location.protocol;
-						this.axios = await axios.create({
-						baseURL:`http://`+this.selectedMachine+`/`,
-						//cancelToken: BaseConnector.getCancelSource().token,
-						timeout: 8000,	// default session timeout in RepRapFirmware
-						withCredentials: true,
-					});
-				}
+		deep: true,
+		handler: async function(post, pre) {
+		//console.log(pre, post)
+		//let protocol = location.protocol;
+		if (pre.dest) {
+		if (!this.axios) {
+		//let protocol = location.protocol;
+		this.axios = await axios.create({
+		baseURL:`http://`+this.selectedMachine+`/`,
+		//cancelToken: BaseConnector.getCancelSource().token,
+		timeout: 8000,	// default session timeout in RepRapFirmware
+		withCredentials: true,
+	});
+}
 
-				await this.exposure.auto.forEach((item) => {
-					this.axios.get('/pc_webcam', {
-						withCredentials: true,
-						params: {
-							action: "command",
-							dest: item.dest,
-							plugin: 0,
-							id: item.id,
-							group: item.group,
-							value: item.type == 2 ? 0 : 1//item.menu.indexOf("Manual Mode")
-							}
-						})
-					});
+await this.exposure.auto.forEach((item) => {
+this.axios.get('/pc_webcam', {
+withCredentials: true,
+params: {
+action: "command",
+dest: item.dest,
+plugin: 0,
+id: item.id,
+group: item.group,
+value: item.type == 2 ? 0 : 1//item.menu.indexOf("Manual Mode")
+}
+})
+});
 
-				this.axios.get('/pc_webcam', {
-					withCredentials: true,
-					params: {
-						action: "command",
-						dest: this.exposure.dest,
-						plugin: 0,
-						id: this.exposure.id,
-						group: this.exposure.group,
-						value: ((this.exposure.max - this.exposure.min) - this.exposure.value)
-						}
-					})
-				}
-			}
-		},*/
+this.axios.get('/pc_webcam', {
+withCredentials: true,
+params: {
+action: "command",
+dest: this.exposure.dest,
+plugin: 0,
+id: this.exposure.id,
+group: this.exposure.group,
+value: ((this.exposure.max - this.exposure.min) - this.exposure.value)
+}
+})
+}
+}
+},*/
 		focus: {
 			deep: true,
 			handler: async function(post, pre) {
@@ -893,7 +897,7 @@ export default {
 			deep: true,
 			handler: async function() {
 				//console.log(pre, post)
-				if (this.webcam.devs[this.webcam.active]){
+				if (this.webcam.devs[this.webcam.active] && document.getElementById('scaleableDiv') && document.getElementById('webcam')){
 					if (!this.axios){
 						this.axios = await axios.create({
 							baseURL:`http://`+this.selectedMachine+`/`,
@@ -920,21 +924,23 @@ export default {
 		},
 		zoom: async function(post) {
 			//console.log(pre, post)
-			let event = document.getElementById('scaleableDiv')
-			if (!this.axios){
-				this.axios = await axios.create({
-					baseURL:`http://`+this.selectedMachine+`/`,
-					//cancelToken: BaseConnector.getCancelSource().token,
-					timeout: 8000,	// default session timeout in RepRapFirmware
+			if (document.getElementById('scaleableDiv') && document.getElementById('webcam')) {
+				let event = document.getElementById('scaleableDiv')
+				if (!this.axios){
+					this.axios = await axios.create({
+						baseURL:`http://`+this.selectedMachine+`/`,
+						//cancelToken: BaseConnector.getCancelSource().token,
+						timeout: 8000,	// default session timeout in RepRapFirmware
+						withCredentials: true,
+					});
+				}
+				this.axios.get('/pc_webcam', {
 					withCredentials: true,
+					params: {fra: this.framerates['5fps'], res: this.resolutions16_9['480p']}
 				});
+				console.log('480p')
+				event.style.transform = "scale(" + post + ")"
 			}
-			this.axios.get('/pc_webcam', {
-				withCredentials: true,
-				params: {fra: this.framerates['5fps'], res: this.resolutions16_9['480p']}
-			});
-			console.log('480p')
-			event.style.transform = "scale(" + post + ")"
 		}
 	}
 }

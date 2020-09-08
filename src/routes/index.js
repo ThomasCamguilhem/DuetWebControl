@@ -126,6 +126,15 @@ export const Routing = ( [
 				showLocal: false,
 				//minLevel: 3,
 			},
+			// Timelapses
+			{
+				icon: 'report',
+				caption: 'menu.files.timelapses',
+				path: '/Files/Timelapse',
+				component: Lynxter.Timelapse,
+				showLocal: true,
+				//minLevel: 3,
+			},
 			// General
 			{
 				icon: 'settings',

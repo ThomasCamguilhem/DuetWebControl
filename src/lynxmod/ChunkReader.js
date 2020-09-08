@@ -1,6 +1,6 @@
 /**
- * LineReader
- * https://github.com/mgmeyers/LineReader
+ * ChunkReader
+ * https://github.com/mgmeyers/ChunkReader
  *
  * Copyright 2014 Matthew Meyers <hello@matthewmeye.rs>
  * Released under the MIT license:
@@ -15,14 +15,14 @@
  */
 
  export default {
-	name: 'LineReader',
+	name: 'ChunkReader',
 	data() {
     return {
       _internals: {},
     }
 	},
 	methods:{
-		LineReader:async function(options) {
+		ChunkReader:async function(options) {
 
 		/**
 		 * We'll use '_internals' to store data we don't want public facing
@@ -34,7 +34,7 @@
 		var self = this;
 
 		/**
-		 * Let's create a 'FileReader' instance, we'll only need one per 'LineReader'
+		 * Let's create a 'FileReader' instance, we'll only need one per 'ChunkReader'
 		 * instance
 		 */
 		this._internals.reader = new FileReader()
@@ -51,7 +51,7 @@
 		this._internals.events = {}
 
 		/**
-		 * 'canRead' will be set to false if the LineReader#abort method is fired
+		 * 'canRead' will be set to false if the ChunkReader#abort method is fired
 		 */
 		this._internals.canRead = true
 
@@ -138,7 +138,7 @@
 	},
 
 /**
- * LineReader#on
+ * ChunkReader#on
  *
  * Binds events
  *
@@ -150,7 +150,7 @@
 	},
 
 /**
- * LineReader#read
+ * ChunkReader#read
  *
  * Starts the read process
  *
@@ -192,7 +192,7 @@
 		},
 
 	/**
-	 * LineReader#abort
+	 * ChunkReader#abort
 	 *
 	 * Stops the read process
 	 */
@@ -201,7 +201,7 @@
 		},
 
 	/**
-	 * LineReader#_step
+	 * ChunkReader#_step
 	 *
 	 * Internal: gets the next line and emits it as a `line` event
 	 */
@@ -249,7 +249,7 @@
 		},
 
 	/**
-	 * LineReader#_hasMoreData
+	 * ChunkReader#_hasMoreData
 	 *
 	 * Internal: determines if there is still more data to read.
 	 */
@@ -258,7 +258,7 @@
 		},
 
 	/**
-	 * LineReader#_emit
+	 * ChunkReader#_emit
 	 *
 	 * Internal: handles event emissions
 	 *
